@@ -11,7 +11,7 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy:false }));
 app.use(express.json({limit:"100kb"}));
 app.use(cookieParser());
-app.use(express.static("public"));
+app.use(express.static("."));
 
 const loginLimit = rateLimit({windowMs:15*60*1000, max:10, standardHeaders:true, legacyHeaders:false});
 const sessions = new Map();
