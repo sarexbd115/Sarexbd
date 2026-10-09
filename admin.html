@@ -1,208 +1,330 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SAREXBD Admin Panel</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body{margin:0;background:#101010;color:#f5f5f5;font-family:Arial,sans-serif;padding:20px}
-    h1{color:#d4af37}
-    .panel{max-width:1100px;margin:25px auto}
-    input,button,select{padding:10px;margin:5px 0;border-radius:6px;border:1px solid #555;box-sizing:border-box}
-    input,select{background:#222;color:white}
-    input{width:100%}
-    button{background:#d4af37;color:#111;font-weight:bold;cursor:pointer}
-    .tablebox{overflow-x:auto;margin-top:20px}
-    table{border-collapse:collapse;width:100%;min-width:850px;background:#1d1d1d}
-    th,td{padding:10px;border:1px solid #444;text-align:left}
-    th{color:#d4af37}
-    #msg{white-space:pre-wrap;color:#ffd966}
-    .statusSelect{min-width:125px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAREXBD | Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#d4af37;--light:#f3dc91;--bg:#0b0b0d;--card:#171719;--line:#333337;--muted:#aaaab2;--white:#f7f7f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:11px 14px;font-weight:bold}
+button:disabled{opacity:.6;cursor:wait}
+.gold{background:var(--gold);color:#111}
+.dark{background:#29292d;color:white;border:1px solid #444}
+header{background:#111113;border-bottom:1px solid #3a321e;padding:17px}
+.head,main{max-width:1250px;margin:auto}
+.head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.logo{font-size:25px;font-weight:900;letter-spacing:2px;color:var(--gold)}
+.logo span{color:white}
+.small{font-size:12px;color:var(--muted);margin-top:5px}
+main{padding:22px}
+h1{font-size:25px;margin:8px 0}
+h2{font-size:18px}
+.muted{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px}
+.hidden{display:none!important}
+.login{max-width:420px;margin:45px auto}
+input,select{background:#101012;color:white;border:1px solid #45454b;border-radius:8px;padding:11px}
+.login input{width:100%;margin:8px 0 14px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:22px 0}
+.stat-label{color:var(--muted);font-size:13px}
+.stat-num{font-size:29px;font-weight:bold;color:var(--light);margin-top:13px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:20px 0 13px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+#search{min-width:210px}
+#message{color:var(--light);white-space:pre-wrap;font-size:14px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:1080px}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+th{color:var(--light);background:#222225;font-size:12px}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#202023}
+.status{display:inline-block;padding:5px 8px;border-radius:20px;background:#302b1c;color:var(--light);font-size:11px;margin-bottom:7px}
+.status-select{width:180px;max-width:100%;display:block;margin-bottom:7px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+a.contact{display:inline-block;text-decoration:none;background:#202f25;color:#b8f0c8;border:1px solid #385340;padding:7px 9px;border-radius:7px;margin:2px 0;font-size:12px}
+.total{color:var(--light);font-weight:bold}
+#details{margin:18px 0;line-height:1.8}
+footer{text-align:center;color:#777;font-size:12px;padding:25px}
+@media(max-width:720px){
+ main{padding:14px}header{padding:14px}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .stat-num{font-size:25px}
+ h1{font-size:22px}
+ .toolbar{align-items:stretch}
+ #search{width:100%;min-width:0}
+ .filters{width:100%}
+ .filters select{flex:1;min-width:120px}
+}
+</style>
 </head>
 <body>
-<div class="panel">
-  <h1>SAREXBD Admin</h1>
-  <p>Admin Login</p>
-
-  <form id="loginForm">
-    <input id="email" type="email" placeholder="Admin email" required>
-    <input id="password" type="password" placeholder="Password" required>
-    <button type="submit">Login</button>
-  </form>
-
-  <button id="loadBtn" hidden>Refresh Orders</button>
-  <button id="logoutBtn" hidden>Logout</button>
-  <p id="msg">লগইন করে অর্ডার দেখুন।</p>
-
-  <div class="tablebox">
-    <table>
-      <thead>
-        <tr>
-          <th>সময়</th>
-          <th>ক্রেতা</th>
-          <th>ফোন</th>
-          <th>পণ্য</th>
-          <th>পরিমাণ</th>
-          <th>মোট</th>
-          <th>স্ট্যাটাস</th>
-          <th>সেভ</th>
-        </tr>
-      </thead>
-      <tbody id="orders"></tbody>
-    </table>
+<header>
+ <div class="head">
+  <div>
+   <div class="logo">SAREX<span>BD</span></div>
+   <div class="small">PREMIUM LEATHER · ORDER MANAGEMENT</div>
   </div>
-</div>
+  <div class="actions">
+   <button id="refresh" class="dark hidden">↻ Refresh</button>
+   <button id="logout" class="dark hidden">Logout</button>
+  </div>
+ </div>
+</header>
+
+<main>
+ <section id="login" class="card login">
+  <h1>Admin Login</h1>
+  <p class="muted">SAREXBD Order Dashboard</p>
+  <form id="loginForm">
+   <label for="email">Admin Email</label>
+   <input id="email" type="email" placeholder="Admin email" required>
+   <label for="password">Password</label>
+   <input id="password" type="password" placeholder="Password" required>
+   <button class="gold" style="width:100%;margin-top:8px">Login to Dashboard</button>
+  </form>
+  <p id="loginMessage"></p>
+ </section>
+
+ <section id="dashboard" class="hidden">
+  <h1>Order Dashboard</h1>
+  <p class="muted">তোমার অর্ডারগুলো এক জায়গা থেকে পরিচালনা করো।</p>
+
+  <div class="stats">
+   <div class="card"><div class="stat-label">মোট অর্ডার</div><div id="totalCount" class="stat-num">0</div></div>
+   <div class="card"><div class="stat-label">Pending</div><div id="pendingCount" class="stat-num">0</div></div>
+   <div class="card"><div class="stat-label">Confirmed</div><div id="confirmedCount" class="stat-num">0</div></div>
+   <div class="card"><div class="stat-label">Delivered</div><div id="deliveredCount" class="stat-num">0</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+   <div class="stat-label">সব অর্ডারের মোট বিক্রয়মূল্য</div>
+   <div id="salesTotal" class="stat-num">৳0</div>
+   <p class="muted">এটি অর্ডারের মোট টাকার যোগফল; লাভের হিসাব নয়।</p>
+  </div>
+
+  <div class="toolbar">
+   <div>
+    <h2 style="margin:0 0 5px">অর্ডার ম্যানেজমেন্ট</h2>
+    <span class="muted">বিস্তারিত দেখো, স্ট্যাটাস বদলাও ও ক্রেতার সঙ্গে যোগাযোগ করো।</span>
+   </div>
+   <div class="actions">
+    <button id="export" class="dark">Export CSV</button>
+   </div>
+  </div>
+
+  <div class="toolbar">
+   <input id="search" type="search" placeholder="নাম, ফোন, ঠিকানা বা পণ্য খুঁজুন">
+   <div class="filters">
+    <select id="statusFilter" aria-label="স্ট্যাটাস ফিল্টার">
+     <option value="">সব স্ট্যাটাস</option>
+     <option value="Pending">Pending</option>
+     <option value="Confirmed">Confirmed</option>
+     <option value="Shipped">Shipped</option>
+     <option value="Delivered">Delivered</option>
+     <option value="Cancelled">Cancelled</option>
+    </select>
+   </div>
+  </div>
+
+  <p id="message">অর্ডার লোড হচ্ছে...</p>
+  <div class="table-wrap">
+   <table>
+    <thead><tr>
+     <th>সময় / ID</th><th>ক্রেতা</th><th>যোগাযোগ</th>
+     <th>পণ্য</th><th>পরিমাণ</th><th>ডেলিভারি</th>
+     <th>মোট</th><th>স্ট্যাটাস ও কাজ</th>
+    </tr></thead>
+    <tbody id="orders"></tbody>
+   </table>
+  </div>
+  <p class="muted">অর্ডার সম্পাদনার পর Refresh করে পরিবর্তন যাচাই করতে পারো।</p>
+ </section>
+</main>
+<footer>SAREXBD © Premium Leather Collection</footer>
 
 <script>
-const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+const SUPABASE_URL="https://kkjyhhxkdgcbtwysftjt.supabase.co";
+const SUPABASE_KEY="sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+const statuses=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
+const labels={
+ Pending:"Pending (অপেক্ষমাণ)",
+ Confirmed:"Confirmed (নিশ্চিত)",
+ Shipped:"Shipped (পাঠানো হয়েছে)",
+ Delivered:"Delivered (পৌঁছে গেছে)",
+ Cancelled:"Cancelled (বাতিল)"
+};
+let allOrders=[];
 
-// এখানে নিজের বর্তমান Publishable key বসাবে
-const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
-
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const msg = document.getElementById("msg");
-const loginForm = document.getElementById("loginForm");
-const loadBtn = document.getElementById("loadBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const tbody = document.getElementById("orders");
-
-const statuses = ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"];
-
-function cell(row, value) {
-  const td = document.createElement("td");
-  td.textContent = value == null ? "" : String(value);
-  row.appendChild(td);
-  return td;
+function money(v){return "৳"+(Number(v)||0).toLocaleString("en-US")}
+function cell(row,value){
+ const td=document.createElement("td");
+ td.textContent=value==null?"":String(value);
+ row.appendChild(td);
+ return td;
 }
+function updateStats(){
+ $("totalCount").textContent=allOrders.length;
+ $("pendingCount").textContent=allOrders.filter(o=>(o.status||"Pending")==="Pending").length;
+ $("confirmedCount").textContent=allOrders.filter(o=>o.status==="Confirmed").length;
+ $("deliveredCount").textContent=allOrders.filter(o=>o.status==="Delivered").length;
+ $("salesTotal").textContent=money(allOrders.reduce((sum,o)=>sum+(Number(o.total)||0),0));
+}
+function renderOrders(){
+ const q=$("search").value.trim().toLowerCase();
+ const wanted=$("statusFilter").value;
+ const filtered=allOrders.filter(o=>{
+  const text=[o.customer_name,o.phone,o.address,o["delivery area"],o.product,o.status,o.id]
+   .some(v=>String(v??"").toLowerCase().includes(q));
+  return text&&(!wanted||(o.status||"Pending")===wanted);
+ });
+ const tbody=$("orders");
+ tbody.replaceChildren();
 
-async function loadOrders() {
-  msg.textContent = "অর্ডার লোড হচ্ছে...";
-  tbody.replaceChildren();
+ if(!filtered.length){
+  const tr=document.createElement("tr");
+  const td=cell(tr,allOrders.length?"কোনো মিল পাওয়া যায়নি।":"এখনো কোনো অর্ডার নেই।");
+  td.colSpan=8;tbody.appendChild(tr);return;
+ }
 
-  const { data, error } = await db
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
+ for(const order of filtered){
+  const tr=document.createElement("tr");
+  const time=order.created_at?new Date(order.created_at).toLocaleString():"";
+  const timeCell=cell(tr,time);
+  const idLine=document.createElement("div");
+  idLine.className="muted";idLine.textContent="Order #"+order.id;
+  timeCell.appendChild(document.createElement("br"));timeCell.appendChild(idLine);
 
-  if (error) {
-    msg.textContent = "অর্ডার লোড হয়নি: " + error.message;
-    return;
+  const customer=cell(tr,order.customer_name||"");
+  const address=document.createElement("div");
+  address.className="muted";
+  address.textContent=order.address||"ঠিকানা দেওয়া নেই";
+  customer.appendChild(address);
+  if(order["delivery area"]){
+   const area=document.createElement("div");
+   area.className="muted";area.textContent="এলাকা: "+order["delivery area"];
+   customer.appendChild(area);
   }
 
-  for (const order of data) {
-    const tr = document.createElement("tr");
-
-    cell(tr, order.created_at
-      ? new Date(order.created_at).toLocaleString()
-      : "");
-    cell(tr, order.customer_name);
-    cell(tr, order.phone);
-    cell(tr, order.product);
-    cell(tr, order.quantity);
-    cell(tr, "৳" + (order.total ?? ""));
-
-    const statusCell = cell(tr, "");
-    const select = document.createElement("select");
-    select.className = "statusSelect";
-
-    for (const status of statuses) {
-      const option = document.createElement("option");
-      option.value = status;
-    option.textContent = status === "Pending" ? "Pending (অপেক্ষমাণ)" :
-  status === "Confirmed" ? "Confirmed (নিশ্চিত)" :
-  status === "Shipped" ? "Shipped (পাঠানো হয়েছে)" :
-  status === "Delivered" ? "Delivered (পৌঁছে গেছে)" :
-  "Cancelled (বাতিল)";;
-      select.appendChild(option);
-    }
-
-    const currentStatus = statuses.includes(order.status)
-      ? order.status
-      : "Pending";
-    select.value = currentStatus;
-    statusCell.appendChild(select);
-
-    const saveCell = cell(tr, "");
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "Save";
-
-    saveBtn.addEventListener("click", async () => {
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Saving...";
-      msg.textContent = "স্ট্যাটাস সেভ হচ্ছে...";
-
-      const { error: updateError } = await db
-        .from("orders")
-        .update({ status: select.value })
-        .eq("id", order.id);
-
-      if (updateError) {
-        msg.textContent = "স্ট্যাটাস সেভ হয়নি: " + updateError.message;
-      } else {
-        msg.textContent = "অর্ডার #" + order.id +
-          " এর স্ট্যাটাস হয়েছে: " + select.value;
-      }
-
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Save";
-    });
-
-    saveCell.appendChild(saveBtn);
-    tbody.appendChild(tr);
+  const contact=cell(tr,order.phone||"");
+  if(order.phone){
+   const phoneDigits=String(order.phone).replace(/\D/g,"");
+   const waNumber=phoneDigits.startsWith("0")?"88"+phoneDigits:phoneDigits;
+   const wa=document.createElement("a");
+   wa.className="contact";wa.target="_blank";wa.rel="noopener noreferrer";
+   wa.href="https://wa.me/"+waNumber+"?text="+encodeURIComponent(
+    "আসসালামু আলাইকুম। SAREXBD থেকে আপনার অর্ডার #"+order.id+
+    " সম্পর্কে যোগাযোগ করছি। পণ্য: "+(order.product||"")+
+    ", পরিমাণ: "+(order.quantity||1)+", মোট: "+money(order.total)
+   );
+   wa.textContent="WhatsApp";
+   contact.appendChild(document.createElement("br"));contact.appendChild(wa);
   }
 
-  msg.textContent = "মোট অর্ডার: " + data.length;
-}
+  cell(tr,order.product||"");
+  cell(tr,order.quantity??"");
+  cell(tr,"চার্জ: "+money(order.delivery_charge));
+  const totalCell=cell(tr,money(order.total));totalCell.className="total";
 
-async function updateLoginState() {
-  const { data, error } = await db.auth.getSession();
+  const statusCell=cell(tr,"");
+  const badge=document.createElement("div");
+  badge.className="status";
+  badge.textContent=labels[order.status]||labels.Pending;
+  statusCell.appendChild(badge);
 
-  if (error) {
-    msg.textContent = "সেশন যাচাই হয়নি: " + error.message;
-    return;
+  const select=document.createElement("select");
+  select.className="status-select";
+  for(const status of statuses){
+   const option=document.createElement("option");
+   option.value=status;option.textContent=labels[status];
+   select.appendChild(option);
   }
+  select.value=statuses.includes(order.status)?order.status:"Pending";
+  statusCell.appendChild(select);
 
-  const loggedIn = !!data.session;
-  loginForm.hidden = loggedIn;
-  loadBtn.hidden = !loggedIn;
-  logoutBtn.hidden = !loggedIn;
-
-  if (loggedIn) await loadOrders();
-}
-
-loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  msg.textContent = "লগইন হচ্ছে...";
-
-  const { error } = await db.auth.signInWithPassword({
-    email: document.getElementById("email").value.trim(),
-    password: document.getElementById("password").value
+  const save=document.createElement("button");
+  save.className="gold";save.textContent="Save Status";
+  statusCell.appendChild(save);
+  save.addEventListener("click",async()=>{
+   save.disabled=true;save.textContent="Saving...";
+   $("message").textContent="স্ট্যাটাস সেভ হচ্ছে...";
+   const {data,error}=await db.from("orders")
+    .update({status:select.value}).eq("id",order.id).select("id,status");
+   if(error){
+    $("message").textContent="স্ট্যাটাস সেভ হয়নি: "+error.message;
+   }else if(!data||!data.length){
+    $("message").textContent="পরিবর্তন নিশ্চিত হয়নি। UPDATE policy পরীক্ষা করো।";
+   }else{
+    order.status=select.value;
+    updateStats();renderOrders();
+    $("message").textContent="অর্ডার #"+order.id+" এর স্ট্যাটাস হয়েছে: "+select.value;
+   }
+   save.disabled=false;save.textContent="Save Status";
   });
-
-  if (error) {
-    msg.textContent = "লগইন হয়নি: " + error.message;
-    return;
-  }
-
-  await updateLoginState();
-});
-
-loadBtn.addEventListener("click", loadOrders);
-
-logoutBtn.addEventListener("click", async () => {
-  await db.auth.signOut();
-  tbody.replaceChildren();
-  msg.textContent = "লগআউট হয়েছে।";
-  await updateLoginState();
-});
-
-if (SUPABASE_KEY === "PASTE_YOUR_EXISTING_PUBLISHABLE_KEY_HERE") {
-  msg.textContent = "প্রথমে নিজের Publishable key বসাও।";
-} else {
-  updateLoginState();
+  tbody.appendChild(tr);
+ }
 }
+async function loadOrders(){
+ $("message").textContent="অর্ডার লোড হচ্ছে...";
+ $("refresh").disabled=true;
+ const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false});
+ $("refresh").disabled=false;
+ if(error){$("message").textContent="অর্ডার লোড হয়নি: "+error.message;return}
+ allOrders=data||[];updateStats();renderOrders();
+ $("message").textContent="মোট অর্ডার: "+allOrders.length;
+}
+async function updateLoginState(){
+ const {data,error}=await db.auth.getSession();
+ if(error){$("loginMessage").textContent=error.message;return}
+ const logged=!!data.session;
+ $("login").classList.toggle("hidden",logged);
+ $("dashboard").classList.toggle("hidden",!logged);
+ $("refresh").classList.toggle("hidden",!logged);
+ $("logout").classList.toggle("hidden",!logged);
+ if(logged)await loadOrders();
+}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const button=$("loginForm").querySelector("button");
+ button.disabled=true;$("loginMessage").textContent="লগইন হচ্ছে...";
+ const {error}=await db.auth.signInWithPassword({
+  email:$("email").value.trim(),password:$("password").value
+ });
+ button.disabled=false;
+ if(error){$("loginMessage").textContent="লগইন হয়নি: "+error.message;return}
+ await updateLoginState();
+});
+$("refresh").addEventListener("click",loadOrders);
+$("logout").addEventListener("click",async()=>{
+ await db.auth.signOut();allOrders=[];await updateLoginState();
+ $("loginMessage").textContent="লগআউট হয়েছে।";
+});
+$("search").addEventListener("input",renderOrders);
+$("statusFilter").addEventListener("change",renderOrders);
+
+$("export").addEventListener("click",()=>{
+ const headers=["Order ID","Created At","Customer","Phone","Address","Delivery Area","Product","Quantity","Delivery Charge","Total","Status"];
+ const rows=allOrders.map(o=>[
+  o.id,o.created_at,o.customer_name,o.phone,o.address,o["delivery area"],
+  o.product,o.quantity,o.delivery_charge,o.total,o.status
+ ]);
+ const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+ const csv="\uFEFF"+[headers,...rows].map(r=>r.map(quote).join(",")).join("\r\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;a.download="SAREXBD-orders.csv";a.click();
+ URL.revokeObjectURL(url);
+});
+
+if(SUPABASE_KEY==="PASTE_YOUR_EXISTING_PUBLISHABLE_KEY_HERE"){
+ $("loginMessage").textContent="আগের Publishable key বসাও।";
+}else{updateLoginState();}
 </script>
 </body>
 </html>
