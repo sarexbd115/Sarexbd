@@ -110,7 +110,11 @@ async function loadOrders() {
     for (const status of statuses) {
       const option = document.createElement("option");
       option.value = status;
-      option.textContent = status;
+    option.textContent = status === "Pending" ? "Pending (অপেক্ষমাণ)" :
+  status === "Confirmed" ? "Confirmed (নিশ্চিত)" :
+  status === "Shipped" ? "Shipped (পাঠানো হয়েছে)" :
+  status === "Delivered" ? "Delivered (পৌঁছে গেছে)" :
+  "Cancelled (বাতিল)";;
       select.appendChild(option);
     }
 
