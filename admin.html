@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -9,44 +8,57 @@
   <style>
     body{margin:0;background:#101010;color:#f5f5f5;font-family:Arial,sans-serif;padding:20px}
     h1{color:#d4af37}
-    .panel{max-width:950px;margin:25px auto}
-    input,button{padding:12px;margin:6px 0;border-radius:6px;border:1px solid #555;box-sizing:border-box}
-    input{width:100%;background:#222;color:white}
+    .panel{max-width:1100px;margin:25px auto}
+    input,button,select{padding:10px;margin:5px 0;border-radius:6px;border:1px solid #555;box-sizing:border-box}
+    input,select{background:#222;color:white}
+    input{width:100%}
     button{background:#d4af37;color:#111;font-weight:bold;cursor:pointer}
     .tablebox{overflow-x:auto;margin-top:20px}
-    table{border-collapse:collapse;width:100%;min-width:650px;background:#1d1d1d}
-    th,td{padding:12px;border:1px solid #444;text-align:left}
+    table{border-collapse:collapse;width:100%;min-width:850px;background:#1d1d1d}
+    th,td{padding:10px;border:1px solid #444;text-align:left}
     th{color:#d4af37}
     #msg{white-space:pre-wrap;color:#ffd966}
+    .statusSelect{min-width:125px}
   </style>
 </head>
 <body>
-  <div class="panel">
-    <h1>SAREXBD Admin</h1>
-    <p>Admin Login</p>
-    <form id="loginForm">
-      <input id="email" type="email" placeholder="Admin email" required>
-      <input id="password" type="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-    </form>
-    <button id="loadBtn" hidden>Refresh Orders</button>
-    <button id="logoutBtn" hidden>Logout</button>
-    <p id="msg">লগইন করে অর্ডার দেখুন।</p>
-    <div class="tablebox">
-      <table>
-        <thead>
-          <tr>
-            <th>সময়</th><th>ক্রেতা</th><th>ফোন</th>
-            <th>পণ্য</th><th>পরিমাণ</th><th>মোট</th><th>স্ট্যাটাস</th>
-          </tr>
-        </thead>
-        <tbody id="orders"></tbody>
-      </table>
-    </div>
+<div class="panel">
+  <h1>SAREXBD Admin</h1>
+  <p>Admin Login</p>
+
+  <form id="loginForm">
+    <input id="email" type="email" placeholder="Admin email" required>
+    <input id="password" type="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+
+  <button id="loadBtn" hidden>Refresh Orders</button>
+  <button id="logoutBtn" hidden>Logout</button>
+  <p id="msg">লগইন করে অর্ডার দেখুন।</p>
+
+  <div class="tablebox">
+    <table>
+      <thead>
+        <tr>
+          <th>সময়</th>
+          <th>ক্রেতা</th>
+          <th>ফোন</th>
+          <th>পণ্য</th>
+          <th>পরিমাণ</th>
+          <th>মোট</th>
+          <th>স্ট্যাটাস</th>
+          <th>সেভ</th>
+        </tr>
+      </thead>
+      <tbody id="orders"></tbody>
+    </table>
   </div>
+</div>
 
 <script>
 const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+
+// এখানে নিজের বর্তমান Publishable key বসাবে
 const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
 
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -56,10 +68,13 @@ const loadBtn = document.getElementById("loadBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const tbody = document.getElementById("orders");
 
+const statuses = ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"];
+
 function cell(row, value) {
   const td = document.createElement("td");
   td.textContent = value == null ? "" : String(value);
   row.appendChild(td);
+  return td;
 }
 
 async function loadOrders() {
@@ -78,38 +93,95 @@ async function loadOrders() {
 
   for (const order of data) {
     const tr = document.createElement("tr");
-    cell(tr, order.created_at ? new Date(order.created_at).toLocaleString() : "");
+
+    cell(tr, order.created_at
+      ? new Date(order.created_at).toLocaleString()
+      : "");
     cell(tr, order.customer_name);
     cell(tr, order.phone);
     cell(tr, order.product);
     cell(tr, order.quantity);
     cell(tr, "৳" + (order.total ?? ""));
-    cell(tr, order.status);
+
+    const statusCell = cell(tr, "");
+    const select = document.createElement("select");
+    select.className = "statusSelect";
+
+    for (const status of statuses) {
+      const option = document.createElement("option");
+      option.value = status;
+      option.textContent = status;
+      select.appendChild(option);
+    }
+
+    const currentStatus = statuses.includes(order.status)
+      ? order.status
+      : "Pending";
+    select.value = currentStatus;
+    statusCell.appendChild(select);
+
+    const saveCell = cell(tr, "");
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Save";
+
+    saveBtn.addEventListener("click", async () => {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+      msg.textContent = "স্ট্যাটাস সেভ হচ্ছে...";
+
+      const { error: updateError } = await db
+        .from("orders")
+        .update({ status: select.value })
+        .eq("id", order.id);
+
+      if (updateError) {
+        msg.textContent = "স্ট্যাটাস সেভ হয়নি: " + updateError.message;
+      } else {
+        msg.textContent = "অর্ডার #" + order.id +
+          " এর স্ট্যাটাস হয়েছে: " + select.value;
+      }
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save";
+    });
+
+    saveCell.appendChild(saveBtn);
     tbody.appendChild(tr);
   }
+
   msg.textContent = "মোট অর্ডার: " + data.length;
 }
 
 async function updateLoginState() {
-  const { data } = await db.auth.getSession();
+  const { data, error } = await db.auth.getSession();
+
+  if (error) {
+    msg.textContent = "সেশন যাচাই হয়নি: " + error.message;
+    return;
+  }
+
   const loggedIn = !!data.session;
   loginForm.hidden = loggedIn;
   loadBtn.hidden = !loggedIn;
   logoutBtn.hidden = !loggedIn;
+
   if (loggedIn) await loadOrders();
 }
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   msg.textContent = "লগইন হচ্ছে...";
+
   const { error } = await db.auth.signInWithPassword({
     email: document.getElementById("email").value.trim(),
     password: document.getElementById("password").value
   });
+
   if (error) {
     msg.textContent = "লগইন হয়নি: " + error.message;
     return;
   }
+
   await updateLoginState();
 });
 
@@ -122,8 +194,8 @@ logoutBtn.addEventListener("click", async () => {
   await updateLoginState();
 });
 
-if (SUPABASE_KEY === "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1") {
-  msg.textContent = "প্রথমে SUPABASE_KEY-এর জায়গায় Publishable key বসান।";
+if (SUPABASE_KEY === "PASTE_YOUR_EXISTING_PUBLISHABLE_KEY_HERE") {
+  msg.textContent = "প্রথমে নিজের Publishable key বসাও।";
 } else {
   updateLoginState();
 }
