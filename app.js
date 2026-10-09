@@ -366,8 +366,20 @@ Delivery Area: ${deliveryText}
       "Order received. WhatsApp খুলছে...";
 
 
-    window.location.href =
-      whatsappURL;
+    
+/* ORDER SUCCESS — NO WHATSAPP REQUIRED */
+
+message.textContent =
+  "✅ আপনার অর্ডার সফলভাবে জমা হয়েছে! SAREXBD থেকে ফোনে যোগাযোগ করা হবে।";
+
+orderForm.reset();
+
+selectedProduct = null;
+selectedQuantity = 1;
+
+cartBox.innerHTML =
+  "<p>নতুন অর্ডার করতে একটি পণ্য নির্বাচন করুন।</p>";
+
 
   }
 );
