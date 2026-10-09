@@ -17,24 +17,9 @@ if (window.supabase && SUPABASE_KEY !== "PASTE_YOUR_KEY_HERE") {
    PRODUCTS
 ========================= */
 
-const products = [
-  {
-    name: "Premium Leather Wallet",
-    price: 1200
-  },
-  {
-    name: "Premium Leather Belt",
-    price: 1000
-  },
-  {
-    name: "Premium Leather Bag",
-    price: 3500
-  }
-];
-
-let selectedProduct = products[0];
+  let products = [];
+let selectedProduct = null;
 let selectedQuantity = 1;
-
 
 /* =========================
    ELEMENTS
