@@ -317,8 +317,7 @@ orderForm.addEventListener(
           error
         );
 
-        message.textContent =
-          "Order save হয়নি। আবার চেষ্টা করুন।";
+        message.textContent = "Order save হয়নি: " + error.message;
 
         return;
 
