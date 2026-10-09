@@ -1,1 +1,132 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SAREXBD Admin</title><link rel="stylesheet" href="/style.css"></head><body><main class="admin"><h1>SAREXBD Admin</h1><section id="login"><input id="user" value="admin" placeholder="Username"><input id="pass" type="password" placeholder="Password"><button class="btn" onclick="login()">Login</button><p id="loginMsg"></p></section><section id="panel" hidden><button class="btn small" onclick="logout()">Logout</button><h2>Orders</h2><div id="orders"></div><h2>Products</h2><div id="products"></div></section></main><script src="/admin.js"></script></body></html>
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAREXBD Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{margin:0;background:#101010;color:#f5f5f5;font-family:Arial,sans-serif;padding:20px}
+    h1{color:#d4af37}
+    .panel{max-width:950px;margin:25px auto}
+    input,button{padding:12px;margin:6px 0;border-radius:6px;border:1px solid #555;box-sizing:border-box}
+    input{width:100%;background:#222;color:white}
+    button{background:#d4af37;color:#111;font-weight:bold;cursor:pointer}
+    .tablebox{overflow-x:auto;margin-top:20px}
+    table{border-collapse:collapse;width:100%;min-width:650px;background:#1d1d1d}
+    th,td{padding:12px;border:1px solid #444;text-align:left}
+    th{color:#d4af37}
+    #msg{white-space:pre-wrap;color:#ffd966}
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>SAREXBD Admin</h1>
+    <p>Admin Login</p>
+    <form id="loginForm">
+      <input id="email" type="email" placeholder="Admin email" required>
+      <input id="password" type="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+    <button id="loadBtn" hidden>Refresh Orders</button>
+    <button id="logoutBtn" hidden>Logout</button>
+    <p id="msg">লগইন করে অর্ডার দেখুন।</p>
+    <div class="tablebox">
+      <table>
+        <thead>
+          <tr>
+            <th>সময়</th><th>ক্রেতা</th><th>ফোন</th>
+            <th>পণ্য</th><th>পরিমাণ</th><th>মোট</th><th>স্ট্যাটাস</th>
+          </tr>
+        </thead>
+        <tbody id="orders"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+const SUPABASE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const msg = document.getElementById("msg");
+const loginForm = document.getElementById("loginForm");
+const loadBtn = document.getElementById("loadBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const tbody = document.getElementById("orders");
+
+function cell(row, value) {
+  const td = document.createElement("td");
+  td.textContent = value == null ? "" : String(value);
+  row.appendChild(td);
+}
+
+async function loadOrders() {
+  msg.textContent = "অর্ডার লোড হচ্ছে...";
+  tbody.replaceChildren();
+
+  const { data, error } = await db
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    msg.textContent = "অর্ডার লোড হয়নি: " + error.message;
+    return;
+  }
+
+  for (const order of data) {
+    const tr = document.createElement("tr");
+    cell(tr, order.created_at ? new Date(order.created_at).toLocaleString() : "");
+    cell(tr, order.customer_name);
+    cell(tr, order.phone);
+    cell(tr, order.product);
+    cell(tr, order.quantity);
+    cell(tr, "৳" + (order.total ?? ""));
+    cell(tr, order.status);
+    tbody.appendChild(tr);
+  }
+  msg.textContent = "মোট অর্ডার: " + data.length;
+}
+
+async function updateLoginState() {
+  const { data } = await db.auth.getSession();
+  const loggedIn = !!data.session;
+  loginForm.hidden = loggedIn;
+  loadBtn.hidden = !loggedIn;
+  logoutBtn.hidden = !loggedIn;
+  if (loggedIn) await loadOrders();
+}
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  msg.textContent = "লগইন হচ্ছে...";
+  const { error } = await db.auth.signInWithPassword({
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value
+  });
+  if (error) {
+    msg.textContent = "লগইন হয়নি: " + error.message;
+    return;
+  }
+  await updateLoginState();
+});
+
+loadBtn.addEventListener("click", loadOrders);
+
+logoutBtn.addEventListener("click", async () => {
+  await db.auth.signOut();
+  tbody.replaceChildren();
+  msg.textContent = "লগআউট হয়েছে।";
+  await updateLoginState();
+});
+
+if (SUPABASE_KEY === "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1") {
+  msg.textContent = "প্রথমে SUPABASE_KEY-এর জায়গায় Publishable key বসান।";
+} else {
+  updateLoginState();
+}
+</script>
+</body>
+</html>
