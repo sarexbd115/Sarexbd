@@ -1,7 +1,7 @@
 const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
 
 // তোমার নিজের Supabase Publishable Key এখানে রাখবে
-const SUPABASE_KEY = "PASTE_YOUR_KEY_HERE";
+const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
 
 let supabaseClient = null;
 
