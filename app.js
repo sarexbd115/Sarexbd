@@ -392,3 +392,104 @@ cartBox.innerHTML =
 showProducts();
 
 updateCart();
+
+/* ===== SAREXBD CUSTOMER REVIEWS ===== */
+
+const reviewForm = document.getElementById("reviewForm");
+const reviewsList = document.getElementById("reviewsList");
+const reviewMsg = document.getElementById("reviewMsg");
+
+async function loadReviews() {
+  if (!reviewsList || !supabaseClient) return;
+
+  const { data, error } = await supabaseClient
+    .from("reviews")
+    .select("reviewer_name, rating, review_text, created_at")
+    .eq("status", "Approved")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    reviewsList.textContent = "রিভিউ লোড করা যায়নি।";
+    console.error("Review loading error:", error.message);
+    return;
+  }
+
+  reviewsList.replaceChildren();
+
+  if (!data || data.length === 0) {
+    reviewsList.textContent = "এখনো কোনো অনুমোদিত রিভিউ নেই।";
+    return;
+  }
+
+  data.forEach((review) => {
+    const card = document.createElement("article");
+    const name = document.createElement("h4");
+    const stars = document.createElement("p");
+    const content = document.createElement("p");
+
+    name.textContent = review.reviewer_name;
+    stars.textContent =
+      "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+    content.textContent = review.review_text;
+
+    card.append(name, stars, content);
+    reviewsList.appendChild(card);
+  });
+}
+
+if (reviewForm) {
+  reviewForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!supabaseClient) {
+      reviewMsg.textContent = "ডেটাবেস সংযোগ পাওয়া যায়নি।";
+      return;
+    }
+
+    const formData = new FormData(reviewForm);
+    const reviewer_name = String(
+      formData.get("reviewer_name") || ""
+    ).trim();
+    const rating = Number(formData.get("rating"));
+    const review_text = String(
+      formData.get("review_text") || ""
+    ).trim();
+
+    if (
+      !reviewer_name ||
+      reviewer_name.length > 60 ||
+      !Number.isInteger(rating) ||
+      rating < 1 ||
+      rating > 5 ||
+      !review_text ||
+      review_text.length > 1000
+    ) {
+      reviewMsg.textContent = "তথ্যগুলো ঠিকভাবে পূরণ করো।";
+      return;
+    }
+
+    reviewMsg.textContent = "রিভিউ জমা হচ্ছে...";
+
+    const { error } = await supabaseClient
+      .from("reviews")
+      .insert([{
+        reviewer_name,
+        rating,
+        review_text,
+        status: "Pending"
+      }]);
+
+    if (error) {
+      console.error("Review submission error:", error.message);
+      reviewMsg.textContent = "রিভিউ জমা হয়নি। আবার চেষ্টা করো।";
+      return;
+    }
+
+    reviewMsg.textContent =
+      "ধন্যবাদ! অনুমোদনের পর তোমার রিভিউ ওয়েবসাইটে দেখা যাবে।";
+
+    reviewForm.reset();
+  });
+}
+
+loadReviews();
