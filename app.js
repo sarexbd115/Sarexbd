@@ -1,385 +1,309 @@
 const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
-
-// তোমার নিজের Supabase Publishable Key এখানে রাখবে
 const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
 
 let supabaseClient = null;
 
-if (window.supabase && SUPABASE_KEY !== "PASTE_YOUR_KEY_HERE") {
+if (window.supabase && SUPABASE_KEY) {
   supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
   );
 }
 
-
-/* =========================
-   PRODUCTS
-========================= */
-
-  let products = [];
+/* PRODUCTS */
+let products = [];
+let visibleCount = 8;
 let selectedProduct = null;
 let selectedQuantity = 1;
 
-/* =========================
-   ELEMENTS
-========================= */
-
 const productsBox = document.getElementById("products");
 const cartBox = document.getElementById("cart");
-const deliveryArea = document.querySelector(
-  '[name="delivery_area"]'
-);
+const deliveryArea = document.querySelector('[name="delivery_area"]');
 const orderForm = document.getElementById("orderForm");
 const message = document.getElementById("msg");
 
+/* LOAD PRODUCTS FROM SUPABASE */
+async function loadProducts() {
+  if (!productsBox) return;
 
-/* =========================
-   SHOW PRODUCTS
-========================= */
+  productsBox.textContent = "প্রোডাক্ট লোড হচ্ছে...";
 
-function showProducts() {
-
-  productsBox.innerHTML = "";
-
-  products.forEach((product, index) => {
-
-    const card = document.createElement("div");
-
-    card.className = "product-card";
-
-    card.innerHTML = `
-      <div class="product-image">
-        <div class="product-placeholder">
-          SAREXBD
-        </div>
-      </div>
-
-      <h3>${product.name}</h3>
-
-      <p>
-        ৳${product.price.toLocaleString()}
-      </p>
-
-      <button
-        type="button"
-        class="btn"
-        onclick="selectProduct(${index})"
-      >
-        Buy Now
-      </button>
-    `;
-
-    productsBox.appendChild(card);
-
-  });
-
-}
-
-
-/* =========================
-   SELECT PRODUCT
-========================= */
-
-function selectProduct(index) {
-
-  selectedProduct = products[index];
-
-  selectedQuantity = 1;
-
-  updateCart();
-
-  document.getElementById("order").scrollIntoView({
-    behavior: "smooth"
-  });
-
-}
-
-
-/* =========================
-   UPDATE CART
-========================= */
-
-function updateCart() {
-
-  if (!selectedProduct) {
-    cartBox.innerHTML = "";
+  if (!supabaseClient) {
+    productsBox.textContent = "ডেটাবেস সংযোগ পাওয়া যায়নি।";
     return;
   }
 
-  const deliveryCharge =
-    deliveryArea.value === "outside"
-      ? 130
-      : 80;
+  const { data, error } = await supabaseClient
+    .from("products")
+    .select("id,name,description,price,image_url,stock,active")
+    .eq("active", true)
+    .gt("stock", 0)
+    .order("id", { ascending: true });
 
-  const subtotal =
-    selectedProduct.price * selectedQuantity;
+  if (error) {
+    console.error("Product loading error:", error.message);
+    productsBox.textContent = "প্রোডাক্ট লোড করা যায়নি। পরে আবার চেষ্টা করুন।";
+    return;
+  }
 
-  const total =
-    subtotal + deliveryCharge;
+  products = data || [];
+  visibleCount = 8;
+  selectedProduct = null;
 
-
-  cartBox.innerHTML = `
-
-    <div class="cart-item">
-
-      <strong>
-        ${selectedProduct.name}
-      </strong>
-
-      <p>
-        Price:
-        ৳${selectedProduct.price.toLocaleString()}
-      </p>
-
-      <label>
-        Quantity
-      </label>
-
-      <input
-        type="number"
-        id="quantity"
-        min="1"
-        value="${selectedQuantity}"
-      >
-
-      <p>
-        Subtotal:
-        ৳${subtotal.toLocaleString()}
-      </p>
-
-      <p>
-        Delivery:
-        ৳${deliveryCharge}
-      </p>
-
-      <h3>
-        Total:
-        ৳${total.toLocaleString()}
-      </h3>
-
-    </div>
-
-  `;
-
-
-  const quantityInput =
-    document.getElementById("quantity");
-
-
-  quantityInput.addEventListener(
-    "input",
-    function () {
-
-      selectedQuantity =
-        Math.max(
-          1,
-          Number(this.value) || 1
-        );
-
-      updateCart();
-
-    }
-  );
-
+  showProducts();
+  updateCart();
 }
 
+/* SHOW PRODUCTS */
+function showProducts() {
+  if (!productsBox) return;
 
-/* =========================
-   DELIVERY CHANGE
-========================= */
+  productsBox.replaceChildren();
 
-deliveryArea.addEventListener(
-  "change",
-  updateCart
-);
+  if (products.length === 0) {
+    productsBox.textContent = "এখনো কোনো প্রোডাক্ট পাওয়া যায়নি।";
+    return;
+  }
 
+  products.slice(0, visibleCount).forEach((product) => {
+    const card = document.createElement("div");
+    card.className = "product-card";
 
-/* =========================
-   ORDER SUBMIT
-========================= */
+    const imageBox = document.createElement("div");
+    imageBox.className = "product-image";
 
-orderForm.addEventListener(
-  "submit",
-  async function (event) {
+    if (product.image_url) {
+      const img = document.createElement("img");
+      img.src = product.image_url;
+      img.alt = product.name;
+      img.loading = "lazy";
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
 
-    event.preventDefault();
+      img.onerror = () => {
+        img.remove();
+        imageBox.textContent = "SAREXBD";
+      };
 
-
-    if (!selectedProduct) {
-
-      message.textContent =
-        "Please select a product first.";
-
-      return;
-
+      imageBox.appendChild(img);
+    } else {
+      imageBox.textContent = "SAREXBD";
     }
 
+    const title = document.createElement("h3");
+    title.textContent = product.name;
 
-    const formData =
-      new FormData(orderForm);
+    const price = document.createElement("p");
+    price.textContent =
+      "৳" + Number(product.price).toLocaleString("en-BD");
 
+    const buyButton = document.createElement("button");
+    buyButton.type = "button";
+    buyButton.className = "btn";
+    buyButton.textContent = "Buy Now";
+    buyButton.addEventListener("click", () => selectProduct(product.id));
 
-    const customerName =
-      formData.get("customer_name");
+    card.append(imageBox, title, price);
 
-    const phone =
-      formData.get("phone");
+    if (product.description) {
+      const description = document.createElement("p");
+      description.textContent = product.description;
+      card.appendChild(description);
+    }
 
-    const address =
-      formData.get("address");
+    card.appendChild(buyButton);
+    productsBox.appendChild(card);
+  });
 
+  if (visibleCount < products.length) {
+    const loadMore = document.createElement("button");
+    loadMore.type = "button";
+    loadMore.className = "btn";
+    loadMore.textContent = "Load More";
 
-    const deliveryCharge =
-      deliveryArea.value === "outside"
-        ? 130
-        : 80;
+    loadMore.addEventListener("click", () => {
+      visibleCount += 8;
+      showProducts();
+    });
 
+    productsBox.appendChild(loadMore);
+  }
+}
 
-    const subtotal =
-      selectedProduct.price *
-      selectedQuantity;
+/* SELECT PRODUCT */
+function selectProduct(productId) {
+  selectedProduct = products.find(
+    (product) => String(product.id) === String(productId)
+  );
 
+  if (!selectedProduct) return;
 
-    const total =
-      subtotal + deliveryCharge;
+  selectedQuantity = 1;
+  updateCart();
 
+  document.getElementById("order")?.scrollIntoView({
+    behavior: "smooth"
+  });
+}
+
+/* UPDATE CART */
+function updateCart() {
+  if (!cartBox) return;
+
+  if (!selectedProduct) {
+    cartBox.textContent = "অর্ডার করতে একটি প্রোডাক্ট নির্বাচন করুন।";
+    return;
+  }
+
+  const price = Number(selectedProduct.price);
+  const deliveryCharge =
+    deliveryArea?.value === "outside" ? 130 : 80;
+  const subtotal = price * selectedQuantity;
+  const total = subtotal + deliveryCharge;
+
+  cartBox.replaceChildren();
+
+  const item = document.createElement("div");
+  item.className = "cart-item";
+
+  const title = document.createElement("strong");
+  title.textContent = selectedProduct.name;
+
+  const priceText = document.createElement("p");
+  priceText.textContent =
+    "দাম: ৳" + price.toLocaleString("en-BD");
+
+  const quantityLabel = document.createElement("label");
+  quantityLabel.htmlFor = "quantity";
+  quantityLabel.textContent = "পরিমাণ";
+
+  const quantityInput = document.createElement("input");
+  quantityInput.type = "number";
+  quantityInput.id = "quantity";
+  quantityInput.min = "1";
+  quantityInput.max = String(selectedProduct.stock);
+  quantityInput.value = String(selectedQuantity);
+  quantityInput.required = true;
+
+  quantityInput.addEventListener("change", () => {
+    selectedQuantity = Math.max(
+      1,
+      Math.min(
+        Number(selectedProduct.stock) || 1,
+        Math.floor(Number(quantityInput.value) || 1)
+      )
+    );
+    updateCart();
+  });
+
+  const subtotalText = document.createElement("p");
+  subtotalText.textContent =
+    "সাবটোটাল: ৳" + subtotal.toLocaleString("en-BD");
+
+  const deliveryText = document.createElement("p");
+  deliveryText.textContent = "ডেলিভারি: ৳" + deliveryCharge;
+
+  const totalText = document.createElement("h3");
+  totalText.textContent =
+    "সর্বমোট: ৳" + total.toLocaleString("en-BD");
+
+  item.append(
+    title,
+    priceText,
+    quantityLabel,
+    quantityInput,
+    subtotalText,
+    deliveryText,
+    totalText
+  );
+
+  cartBox.appendChild(item);
+}
+
+deliveryArea?.addEventListener("change", updateCart);
+
+/* SUBMIT ORDER */
+if (orderForm) {
+  orderForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!selectedProduct) {
+      message.textContent = "আগে একটি প্রোডাক্ট নির্বাচন করুন।";
+      return;
+    }
+
+    const formData = new FormData(orderForm);
+    const customerName = String(
+      formData.get("customer_name") || ""
+    ).trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const address = String(
+      formData.get("address") || ""
+    ).trim();
+
+    if (!customerName || !phone || !address) {
+      message.textContent = "নাম, ফোন ও ঠিকানা পূরণ করুন।";
+      return;
+    }
+
+    if (selectedQuantity > Number(selectedProduct.stock)) {
+      message.textContent = "এতগুলো পণ্য বর্তমানে স্টকে নেই।";
+      return;
+    }
 
     const deliveryText =
-      deliveryArea.value === "outside"
+      deliveryArea?.value === "outside"
         ? "Outside Dhaka"
         : "Dhaka";
 
+    const deliveryCharge =
+      deliveryArea?.value === "outside" ? 130 : 80;
 
-    /* =========================
-       SAVE TO SUPABASE
-    ========================= */
+    const subtotal =
+      Number(selectedProduct.price) * selectedQuantity;
+    const total = subtotal + deliveryCharge;
 
-    if (supabaseClient) {
+    message.textContent = "অর্ডার জমা হচ্ছে...";
 
-      const { error } =
-        await supabaseClient
-          .from("orders")
-          .insert([
-            {
-              customer_name:
-                customerName,
-
-              phone:
-                phone,
-
-              address:
-                address,
-
-              product:
-                selectedProduct.name,
-
-              quantity:
-                String(selectedQuantity),
-
-              "delivery area":
-                deliveryText,
-
-              subtotal:
-                subtotal,
-
-              delivery_charge:
-                deliveryCharge,
-
-              total:
-                total,
-
-              status:
-                "Pending"
-            }
-          ]);
-
-
-      if (error) {
-
-        console.error(
-          "Supabase error:",
-          error
-        );
-
-        message.textContent = "Order save হয়নি: " + error.message;
-
-        return;
-
-      }
-
+    if (!supabaseClient) {
+      message.textContent = "ডেটাবেস সংযোগ পাওয়া যায়নি।";
+      return;
     }
 
+    const { error } = await supabaseClient
+      .from("orders")
+      .insert([{
+        customer_name: customerName,
+        phone,
+        address,
+        product: selectedProduct.name,
+        quantity: String(selectedQuantity),
+        "delivery area": deliveryText,
+        subtotal,
+        delivery_charge: deliveryCharge,
+        total,
+        status: "Pending"
+      }]);
 
-    /* =========================
-       WHATSAPP ORDER
-    ========================= */
-
-    const whatsappMessage = `
-
-SAREXBD ORDER
-
-Customer: ${customerName}
-
-Phone: ${phone}
-
-Address: ${address}
-
-Product: ${selectedProduct.name}
-
-Quantity: ${selectedQuantity}
-
-Subtotal: ৳${subtotal}
-
-Delivery: ৳${deliveryCharge}
-
-Total: ৳${total}
-
-Delivery Area: ${deliveryText}
-
-`;
-
-
-    const whatsappURL =
-      "https://wa.me/8801610244533?text=" +
-      encodeURIComponent(
-        whatsappMessage
-      );
-
+    if (error) {
+      console.error("Order error:", error.message);
+      message.textContent =
+        "অর্ডার জমা হয়নি। আবার চেষ্টা করুন।";
+      return;
+    }
 
     message.textContent =
-      "Order received. WhatsApp খুলছে...";
+      "✅ আপনার অর্ডার সফলভাবে জমা হয়েছে! SAREXBD থেকে ফোনে যোগাযোগ করা হবে।";
 
+    orderForm.reset();
+    selectedProduct = null;
+    selectedQuantity = 1;
+    updateCart();
+  });
+}
 
-    
-/* ORDER SUCCESS — NO WHATSAPP REQUIRED */
-
-message.textContent =
-  "✅ আপনার অর্ডার সফলভাবে জমা হয়েছে! SAREXBD থেকে ফোনে যোগাযোগ করা হবে।";
-
-orderForm.reset();
-
-selectedProduct = null;
-selectedQuantity = 1;
-
-cartBox.innerHTML =
-  "<p>নতুন অর্ডার করতে একটি পণ্য নির্বাচন করুন।</p>";
-
-
-  }
-);
-
-
-/* =========================
-   START WEBSITE
-========================= */
-
-showProducts();
-
-updateCart();
-
-/* ===== SAREXBD CUSTOMER REVIEWS ===== */
-
+/* CUSTOMER REVIEWS */
 const reviewForm = document.getElementById("reviewForm");
 const reviewsList = document.getElementById("reviewsList");
 const reviewMsg = document.getElementById("reviewMsg");
@@ -389,13 +313,13 @@ async function loadReviews() {
 
   const { data, error } = await supabaseClient
     .from("reviews")
-    .select("reviewer_name, rating, review_text, created_at")
+    .select("reviewer_name,rating,review_text,created_at")
     .eq("status", "Approved")
     .order("created_at", { ascending: false });
 
   if (error) {
-    reviewsList.textContent = "রিভিউ লোড করা যায়নি।";
     console.error("Review loading error:", error.message);
+    reviewsList.textContent = "রিভিউ লোড করা যায়নি।";
     return;
   }
 
@@ -449,7 +373,7 @@ if (reviewForm) {
       !review_text ||
       review_text.length > 1000
     ) {
-      reviewMsg.textContent = "তথ্যগুলো ঠিকভাবে পূরণ করো।";
+      reviewMsg.textContent = "তথ্যগুলো ঠিকভাবে পূরণ করুন।";
       return;
     }
 
@@ -466,7 +390,8 @@ if (reviewForm) {
 
     if (error) {
       console.error("Review submission error:", error.message);
-      reviewMsg.textContent = "রিভিউ জমা হয়নি। আবার চেষ্টা করো।";
+      reviewMsg.textContent =
+        "রিভিউ জমা হয়নি। আবার চেষ্টা করুন।";
       return;
     }
 
@@ -477,4 +402,6 @@ if (reviewForm) {
   });
 }
 
+/* START WEBSITE */
+loadProducts();
 loadReviews();
