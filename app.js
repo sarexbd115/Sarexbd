@@ -23,6 +23,11 @@ let visibleCount = 8;
 let selectedProduct = null;
 let selectedQuantity = 1;
 
+// কুপন (সার্ভারে যাচাই হয়; এখানে শুধু দেখানোর জন্য)
+let appliedCoupon = null;
+let couponInput = null;
+let couponMsg = null;
+
 const productsBox = document.getElementById("products");
 const cartBox = document.getElementById("cart");
 const deliveryArea = document.querySelector('[name="delivery_area"]');
@@ -81,6 +86,87 @@ async function loadDeliveryCharges() {
 
   setupDeliveryOptions();
   updateCart();
+}
+
+/* COUPON */
+function setupCouponUI() {
+  if (!cartBox || !orderForm) return;
+
+  const wrap = document.createElement("div");
+
+  const label = document.createElement("label");
+  label.htmlFor = "couponCode";
+  label.textContent = "Coupon code (optional)";
+
+  couponInput = document.createElement("input");
+  couponInput.id = "couponCode";
+  couponInput.name = "coupon";
+  couponInput.type = "text";
+  couponInput.placeholder = "e.g. SAREXBD5";
+  couponInput.maxLength = 30;
+  couponInput.autocomplete = "off";
+  couponInput.autocapitalize = "characters";
+
+  const applyButton = document.createElement("button");
+  applyButton.type = "button";
+  applyButton.className = "btn";
+  applyButton.textContent = "Apply Coupon";
+  applyButton.addEventListener("click", () => applyCoupon(applyButton));
+
+  couponMsg = document.createElement("p");
+  couponMsg.setAttribute("role", "status");
+
+  // কোড বদলালে আগের যাচাই বাতিল হয়
+  couponInput.addEventListener("input", () => {
+    appliedCoupon = null;
+    couponMsg.textContent = "";
+    updateCart();
+  });
+
+  wrap.append(label, couponInput, applyButton, couponMsg);
+  cartBox.before(wrap);
+}
+
+async function applyCoupon(button) {
+  const code = couponInput.value.trim();
+
+  if (!code) {
+    couponMsg.textContent = "কুপন কোড লিখুন।";
+    return;
+  }
+
+  if (!supabaseClient) {
+    couponMsg.textContent = "ডেটাবেস সংযোগ পাওয়া যায়নি।";
+    return;
+  }
+
+  button.disabled = true;
+  couponMsg.textContent = "কুপন যাচাই হচ্ছে...";
+
+  try {
+    const { data, error } = await supabaseClient.rpc("check_coupon", {
+      p_code: code
+    });
+
+    if (error) {
+      console.error("Coupon error:", error.message);
+      appliedCoupon = null;
+      couponMsg.textContent = "কুপন যাচাই করা যায়নি। আবার চেষ্টা করুন।";
+    } else if (!data?.valid) {
+      appliedCoupon = null;
+      couponMsg.textContent = "কুপন কোডটি সঠিক নয় বা মেয়াদ শেষ।";
+    } else {
+      appliedCoupon = {
+        code: data.code,
+        percent: Number(data.percent)
+      };
+      couponMsg.textContent =
+        "✅ কুপন প্রযোজ্য: " + appliedCoupon.percent + "% ছাড়";
+    }
+  } finally {
+    button.disabled = false;
+    updateCart();
+  }
 }
 
 /* LOAD PRODUCTS FROM SUPABASE */
@@ -227,7 +313,10 @@ function updateCart() {
   const price = Number(selectedProduct.price);
   const charge = deliveryCharge();
   const subtotal = price * selectedQuantity;
-  const total = subtotal + charge;
+  const discount = appliedCoupon
+    ? Math.round((subtotal * appliedCoupon.percent) / 100)
+    : 0;
+  const total = subtotal - discount + charge;
 
   cartBox.replaceChildren();
 
@@ -262,21 +351,28 @@ function updateCart() {
   const subtotalText = document.createElement("p");
   subtotalText.textContent = "সাবটোটাল: " + taka(subtotal);
 
+  item.append(
+    title,
+    priceText,
+    quantityLabel,
+    quantityInput,
+    subtotalText
+  );
+
+  if (discount > 0) {
+    const discountText = document.createElement("p");
+    discountText.textContent =
+      "কুপন ছাড় (" + appliedCoupon.code + "): −" + taka(discount);
+    item.appendChild(discountText);
+  }
+
   const deliveryText = document.createElement("p");
   deliveryText.textContent = "ডেলিভারি: " + taka(charge);
 
   const totalText = document.createElement("h3");
   totalText.textContent = "সর্বমোট: " + taka(total);
 
-  item.append(
-    title,
-    priceText,
-    quantityLabel,
-    quantityInput,
-    subtotalText,
-    deliveryText,
-    totalText
-  );
+  item.append(deliveryText, totalText);
 
   cartBox.appendChild(item);
 }
@@ -304,9 +400,16 @@ function showOrderSuccess(summary) {
     "নাম: " + summary.name,
     "ফোন: " + summary.phone,
     "পণ্য: " + summary.product,
-    "পরিমাণ: " + summary.quantity,
-    "সর্বমোট: " + taka(summary.total)
+    "পরিমাণ: " + summary.quantity
   );
+
+  if (summary.discount > 0) {
+    lines.push(
+      "কুপন (" + summary.coupon + "): −" + taka(summary.discount)
+    );
+  }
+
+  lines.push("সর্বমোট: " + taka(summary.total));
 
   const link = document.createElement("a");
   link.className = "btn";
@@ -334,6 +437,12 @@ function orderErrorMessage(error) {
   }
   if (text.includes("too_many_orders")) {
     return "অল্প সময়ে অনেকগুলো অর্ডার হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন বা WhatsApp-এ জানান।";
+  }
+  if (text.includes("invalid_coupon")) {
+    return "কুপন কোডটি সঠিক নয় বা মেয়াদ শেষ। কোডটি মুছে বা ঠিক করে আবার চেষ্টা করুন।";
+  }
+  if (text.includes("coupon_used")) {
+    return "এই ফোন নম্বরে কুপনটি আগেই ব্যবহার করা হয়েছে।";
   }
   if (text.includes("invalid_input")) {
     return "তথ্য ঠিক নেই। নাম, ফোন ও ঠিকানা আবার দেখুন।";
@@ -395,15 +504,22 @@ if (orderForm) {
     }
 
     const area = deliveryArea?.value === "outside" ? "outside" : "dhaka";
+    const couponText = couponInput ? couponInput.value.trim() : "";
+
+    const subtotalEstimate =
+      Number(selectedProduct.price) * selectedQuantity;
+    const discountEstimate = appliedCoupon
+      ? Math.round((subtotalEstimate * appliedCoupon.percent) / 100)
+      : 0;
 
     const summary = {
       name: customerName,
       phone,
       product: selectedProduct.name,
       quantity: selectedQuantity,
-      total:
-        Number(selectedProduct.price) * selectedQuantity +
-        deliveryCharge(),
+      total: subtotalEstimate - discountEstimate + deliveryCharge(),
+      discount: discountEstimate,
+      coupon: appliedCoupon ? appliedCoupon.code : "",
       orderId: ""
     };
 
@@ -413,14 +529,15 @@ if (orderForm) {
     message.textContent = "অর্ডার জমা হচ্ছে...";
 
     try {
-      // দাম, ডেলিভারি ও স্টক সার্ভারে যাচাই হয়; ব্রাউজারের হিসাব ব্যবহার হয় না
+      // দাম, ছাড়, ডেলিভারি ও স্টক সার্ভারে যাচাই হয়; ব্রাউজারের হিসাব ব্যবহার হয় না
       const { data, error } = await supabaseClient.rpc("place_order", {
         p_name: customerName,
         p_phone: phone,
         p_address: address,
         p_product_id: String(selectedProduct.id),
         p_quantity: selectedQuantity,
-        p_area: area
+        p_area: area,
+        p_coupon: couponText || null
       });
 
       if (error) {
@@ -436,10 +553,14 @@ if (orderForm) {
       const result = data || {};
       summary.orderId = result.order_id || "";
       summary.total = Number(result.total) || summary.total;
+      summary.discount = Number(result.discount) || 0;
+      summary.coupon = result.coupon || summary.coupon;
 
       orderForm.reset();
       selectedProduct = null;
       selectedQuantity = 1;
+      appliedCoupon = null;
+      if (couponMsg) couponMsg.textContent = "";
       updateCart();
       showOrderSuccess(summary);
       await loadProducts(true); // স্টক বদলেছে, তাই তালিকা নতুন করে আনা
@@ -569,6 +690,7 @@ if (reviewForm) {
 }
 
 /* START WEBSITE */
+setupCouponUI();
 setupDeliveryOptions();
 loadDeliveryCharges();
 loadProducts();
