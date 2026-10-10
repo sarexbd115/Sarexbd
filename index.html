@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>SAREXBD | Premium Leather</title>
+  <meta name="description" content="SAREXBD — প্রিমিয়াম জেনুইন লেদার পণ্য। অনলাইনে অর্ডার করুন, ঢাকার ভেতরে ও বাইরে ডেলিভারি।">
+  <meta name="theme-color" content="#090909">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SAREXBD | Premium Leather">
+  <meta property="og:description" content="প্রিমিয়াম জেনুইন লেদার পণ্য। অনলাইনে অর্ডার করুন।">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -66,61 +72,70 @@
         Featured Products
       </h2>
 
+      <noscript>
+        <p>প্রোডাক্ট দেখতে ব্রাউজারে JavaScript চালু করুন।</p>
+      </noscript>
+
       <div id="products" class="grid"></div>
 
     </section>
 
 
-<!-- CUSTOMER REVIEWS -->
+    <!-- CUSTOMER REVIEWS -->
 
-<section id="reviews" class="reviews">
+    <section id="reviews" class="reviews">
 
-  <h2>Customer Reviews</h2>
+      <h2>Customer Reviews</h2>
 
-  <p>Share your experience with SAREXBD.</p>
+      <p>Share your experience with SAREXBD.</p>
 
-  <div id="reviewsList">
-    <p>Customer reviews will appear here.</p>
-  </div>
+      <div id="reviewsList">
+        <p>Customer reviews will appear here.</p>
+      </div>
 
-  <h3>Write a Review</h3>
+      <h3>Write a Review</h3>
 
-  <form id="reviewForm">
+      <form id="reviewForm">
 
-    <input
-      type="text"
-      name="reviewer_name"
-      placeholder="Your name"
-      maxlength="60"
-      required
-    >
+        <label for="reviewName">Your name</label>
+        <input
+          id="reviewName"
+          type="text"
+          name="reviewer_name"
+          placeholder="Your name"
+          maxlength="60"
+          autocomplete="name"
+          required
+        >
 
-    <label for="reviewRating">Your rating</label>
+        <label for="reviewRating">Your rating</label>
 
-    <select id="reviewRating" name="rating" required>
-      <option value="5">★★★★★ — Excellent</option>
-      <option value="4">★★★★ — Very good</option>
-      <option value="3">★★★ — Good</option>
-      <option value="2">★★ — Fair</option>
-      <option value="1">★ — Poor</option>
-    </select>
+        <select id="reviewRating" name="rating" required>
+          <option value="5">★★★★★ — Excellent</option>
+          <option value="4">★★★★ — Very good</option>
+          <option value="3">★★★ — Good</option>
+          <option value="2">★★ — Fair</option>
+          <option value="1">★ — Poor</option>
+        </select>
 
-    <textarea
-      name="review_text"
-      placeholder="Write your review..."
-      maxlength="1000"
-      required
-    ></textarea>
+        <label for="reviewText">Your review</label>
+        <textarea
+          id="reviewText"
+          name="review_text"
+          placeholder="Write your review..."
+          maxlength="1000"
+          required
+        ></textarea>
 
-    <button class="btn" type="submit">
-      Submit Review
-    </button>
+        <button class="btn" type="submit">
+          Submit Review
+        </button>
 
-    <p id="reviewMsg"></p>
+        <p id="reviewMsg" role="status"></p>
 
-  </form>
+      </form>
 
-</section>
+    </section>
 
     <!-- ORDER -->
 
@@ -132,34 +147,48 @@
 
       <form id="orderForm">
 
+        <label for="orderName">Full name</label>
         <input
+          id="orderName"
           type="text"
           name="customer_name"
           placeholder="Full name"
+          maxlength="80"
+          autocomplete="name"
           required
         >
 
+        <label for="orderPhone">Phone number</label>
         <input
+          id="orderPhone"
           type="tel"
+          inputmode="tel"
           name="phone"
-          placeholder="Phone number"
+          placeholder="01XXXXXXXXX"
+          maxlength="20"
+          autocomplete="tel"
           required
         >
 
+        <label for="orderAddress">Delivery address</label>
         <textarea
+          id="orderAddress"
           name="address"
-          placeholder="Full delivery address"
+          placeholder="Full delivery address (area, thana, district)"
+          maxlength="300"
+          autocomplete="street-address"
           required
         ></textarea>
 
-        <select name="delivery_area">
+        <label for="deliveryArea">Delivery area</label>
+        <select id="deliveryArea" name="delivery_area">
 
           <option value="dhaka">
             Dhaka — ৳80
           </option>
 
           <option value="outside">
-            Outside Dhaka — ৳130
+            Outside Dhaka — ৳120
           </option>
 
         </select>
@@ -173,7 +202,7 @@
           Confirm Order
         </button>
 
-        <p id="msg"></p>
+        <p id="msg" role="status"></p>
 
       </form>
 
@@ -199,13 +228,14 @@
 
 
   <footer>
-    SAREXBD • Premium Leather Goods
+    SAREXBD • Premium Leather Goods<br>
+    <a href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">WhatsApp: 01610244533</a>
   </footer>
 
 
   <!-- Supabase -->
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
 
   <!-- Website JavaScript -->
 
