@@ -593,7 +593,7 @@ function renderOrder(o){
  zone.value=/ঢাকা|dhaka/i.test(o.address||"")?"inside":"outside";
  const zoneWrap=field("ইনভয়েসে ডেলিভারি চার্জ",zone);
  zoneWrap.className="zone";
- box.appendChild(zoneWrap);
+ if(!(o.subtotal!=null&&o.delivery_charge!=null))box.appendChild(zoneWrap);
 
  const save=document.createElement("button");
  save.className="gold";save.type="button";save.textContent="Save Status";
@@ -612,7 +612,7 @@ function renderOrder(o){
 
  const invoice=document.createElement("button");
  invoice.className="dark";invoice.type="button";invoice.textContent="Invoice PDF";
- invoice.onclick=()=>printInvoice(o,select.value,zone.value);
+ invoice.onclick=()=>printInvoice(o,select.value,(o.subtotal!=null&&o.delivery_charge!=null)?"stored":zone.value);
  box.appendChild(invoice);
  return box;
 }
@@ -662,13 +662,13 @@ $("exportOrders").onclick=async()=>{
    if(!data||data.length<step)break;
   }
   if(!rows.length){$("orderMessage").textContent="ডাউনলোড করার মতো অর্ডার নেই।";return}
-  const head=["অর্ডার নম্বর","তারিখ","গ্রাহকের নাম","ফোন","ঠিকানা","পণ্য","পরিমাণ","মোট","স্ট্যাটাস"];
+  const head=["অর্ডার নম্বর","তারিখ","গ্রাহকের নাম","ফোন","ঠিকানা","পণ্য","পরিমাণ","সাবটোটাল","ডেলিভারি এলাকা","ডেলিভারি চার্জ","মোট","স্ট্যাটাস"];
   const lines=[head.map(csvCell).join(",")];
   rows.forEach(o=>{
    lines.push([
     o.id,
     o.created_at?new Date(o.created_at).toLocaleString("sv-SE"):"",
-    o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.total,o.status
+    o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.subtotal,o["delivery area"],o.delivery_charge,o.total,o.status
    ].map(csvCell).join(","));
   });
   const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
@@ -692,10 +692,10 @@ function printInvoice(o,status,zone){
  const w=window.open("","_blank");
  if(!w){showMessage("পপ-আপ ব্লক করা আছে। পপ-আপ অনুমতি দিয়ে আবার চেষ্টা করো।");return}
  const date=o.created_at?new Date(o.created_at).toLocaleString("bn-BD"):"";
- const subtotal=Number(o.total)||0;
- const delivery=zone==="inside"?S.deliveryInside:(zone==="outside"?S.deliveryOutside:0);
- const zoneLabel=zone==="inside"?"ঢাকার ভেতরে":"ঢাকার বাইরে";
- const grand=subtotal+delivery;
+ const subtotal=zone==="stored"?(Number(o.subtotal)||0):(Number(o.total)||0);
+ const delivery=zone==="stored"?(Number(o.delivery_charge)||0):(zone==="inside"?S.deliveryInside:(zone==="outside"?S.deliveryOutside:0));
+ const zoneLabel=zone==="stored"?(/outside/i.test(o["delivery area"]||"")?"ঢাকার বাইরে":"ঢাকার ভেতরে"):(zone==="inside"?"ঢাকার ভেতরে":"ঢাকার বাইরে");
+ const grand=zone==="stored"?(Number(o.total)||(subtotal+delivery)):(subtotal+delivery);
  const contact=[S.whatsapp?"WhatsApp/ফোন: "+S.whatsapp:"",S.address].filter(Boolean).map(esc).join("<br>");
  const totalsHtml=zone==="none"
   ? '<div class="total">মোট: '+esc(money(grand))+'</div>'
