@@ -3,20 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
 <title>SAREXBD Admin</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// যেকোনো স্ক্রিপ্ট এরর লগইন বক্সের নিচে দেখাবে
+window.addEventListener("error",function(e){
+ var m=document.getElementById("loginMessage");
+ if(m)m.textContent="স্ক্রিপ্ট এরর: "+(e.message||"অজানা");
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script>
+// প্রথম সার্ভার লোড না হলে বিকল্প সার্ভার থেকে চেষ্টা
+window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"><\/script>');
+</script>
 <style>
 :root{--gold:#d4af37;--bg:#0b0b0d;--card:#171719;--line:#333337;--white:#f7f7f7;--muted:#aaaab2}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--white);font-family:"Noto Sans Bengali","Hind Siliguri",Arial,sans-serif;line-height:1.5}
 header{padding:16px;background:#111;border-bottom:1px solid #493d1c}
 main{max-width:1100px;margin:auto;padding:16px}
 .logo{font-size:25px;font-weight:bold;color:var(--gold)}
-.logo span{color:white}
-button{padding:11px 14px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:3px}
+.logo span{color:#fff}
+button{padding:11px 14px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:3px;font-family:inherit}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:hover:not(:disabled){filter:brightness(1.12)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .gold{background:var(--gold);color:#111}
-.dark{background:#29292d;color:white;border:1px solid #444}
-input,textarea,select{width:100%;padding:11px;margin:6px 0 12px;background:#101012;color:white;border:1px solid #45454b;border-radius:8px}
+.dark{background:#29292d;color:#fff;border:1px solid #444}
+.danger{background:#4a1c1c;color:#ffb4b4;border:1px solid #7a2c2c}
+input,textarea,select{width:100%;padding:11px;margin:6px 0 12px;background:#101012;color:#fff;border:1px solid #45454b;border-radius:8px;font-family:inherit}
 label{font-size:13px;color:#ddd}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
 .hidden{display:none!important}
@@ -25,6 +41,7 @@ label{font-size:13px;color:#ddd}
 .products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .product img{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#222}
 .product h3{margin:9px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#29292d;border:1px solid #444}
 #message{white-space:pre-wrap;color:#f3dc91}
 hr{border-color:var(--line)}
 @media(max-width:600px){.row,.products{grid-template-columns:1fr}main{padding:10px}}
@@ -34,17 +51,19 @@ hr{border-color:var(--line)}
 <header>
  <div class="logo">SAREX<span>BD</span></div>
  <p class="muted">ADMIN · PRODUCTS · ORDERS</p>
- <button id="logout" class="dark hidden">Logout</button>
+ <button id="logout" class="dark hidden" type="button">Logout</button>
 </header>
 <main>
  <section id="login" class="card">
   <h2>Admin Login</h2>
-  <form id="loginForm">
-   <label>Email</label><input id="email" type="email" required>
-   <label>Password</label><input id="password" type="password" required>
-   <button class="gold">Login</button>
+  <form id="loginForm" onsubmit="return false">
+   <label for="email">Email</label>
+   <input id="email" type="email" autocomplete="username" required>
+   <label for="password">Password</label>
+   <input id="password" type="password" autocomplete="current-password" required>
+   <button class="gold" type="submit">Login</button>
   </form>
-  <p id="loginMessage"></p>
+  <p id="loginMessage" role="status"></p>
  </section>
 
  <section id="dashboard" class="hidden">
@@ -52,64 +71,115 @@ hr{border-color:var(--line)}
   <div class="card">
    <form id="productForm">
     <input id="productId" type="hidden">
-    <label>প্রোডাক্টের নাম</label>
-    <input id="name" required placeholder="Premium Leather Wallet">
-    <label>বিবরণ</label>
-    <textarea id="description" rows="3" placeholder="প্রোডাক্টের বিবরণ"></textarea>
+    <label for="name">প্রোডাক্টের নাম</label>
+    <input id="name" required maxlength="150" placeholder="Premium Leather Wallet">
+    <label for="description">বিবরণ</label>
+    <textarea id="description" rows="3" maxlength="2000" placeholder="প্রোডাক্টের বিবরণ"></textarea>
     <div class="row">
-     <div><label>দাম (৳)</label><input id="price" type="number" min="0" step="0.01" required></div>
-     <div><label>স্টক</label><input id="stock" type="number" min="0" step="1" required></div>
+     <div><label for="price">দাম (৳)</label><input id="price" type="number" min="0" step="0.01" required></div>
+     <div><label for="stock">স্টক</label><input id="stock" type="number" min="0" step="1" required></div>
     </div>
-    <label>প্রোডাক্টের ছবি</label>
-    <input id="image" type="file" accept="image/*">
+    <label for="image">প্রোডাক্টের ছবি (JPG, PNG, WEBP · সর্বোচ্চ ৫ MB)</label>
+    <input id="image" type="file" accept="image/jpeg,image/png,image/webp">
     <p class="muted">নতুন ছবি না দিলে আগের ছবিই থাকবে।</p>
-    <label><input id="active" type="checkbox" checked style="width:auto"> ওয়েবসাইটে দেখাবে</label>
-    <p><button class="gold" type="submit">Save Product</button>
-    <button class="dark" id="cancelEdit" type="button">নতুন প্রোডাক্ট</button></p>
+    <label><input id="active" type="checkbox" checked style="width:auto"> ওয়েবসাইটে দেখাবে</label>
+    <p>
+     <button class="gold" type="submit">Save Product</button>
+     <button class="dark" id="cancelEdit" type="button">নতুন প্রোডাক্ট</button>
+    </p>
    </form>
   </div>
 
   <h2>প্রোডাক্ট তালিকা</h2>
-  <button class="dark" id="reloadProducts">Refresh Products</button>
+  <button class="dark" id="reloadProducts" type="button">Refresh Products</button>
   <div id="productList" class="products"></div>
 
   <hr>
   <h2>অর্ডার ম্যানেজমেন্ট</h2>
-  <button class="dark" id="reloadOrders">Refresh Orders</button>
-  <p id="orderMessage" class="muted"></p>
+  <button class="dark" id="reloadOrders" type="button">Refresh Orders</button>
+  <p id="orderMessage" class="muted" role="status"></p>
   <div id="orderList"></div>
+  <button class="dark hidden" id="moreOrders" type="button">আরও অর্ডার দেখাও</button>
  </section>
- <p id="message"></p>
+ <p id="message" role="status"></p>
 </main>
 
 <script>
-const URL="https://kkjyhhxkdgcbtwysftjt.supabase.co";
-const KEY="sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
-const db=window.supabase.createClient(URL,KEY);
+const SUPABASE_URL="https://kkjyhhxkdgcbtwysftjt.supabase.co";
+const SUPABASE_KEY="sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1"; // publishable key; সুরক্ষা আসে RLS থেকে
+const BUCKET="product-images";
+const ORDERS_PER_PAGE=20;
+const MAX_IMAGE_BYTES=5*1024*1024;
+const IMAGE_TYPES={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
+const STATUSES=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
+
+if(!window.supabase){
+ document.getElementById("loginMessage").textContent="Supabase লাইব্রেরি লোড হয়নি। নেট চেক করো, VPN/ডেটা সেভার বন্ধ করো বা অন্য নেটওয়ার্কে চেষ্টা করো।";
+ throw new Error("supabase library missing");
+}
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 let products=[];
+let orderCount=0;
+let shownFor=null; // কোন ইউজারের জন্য ড্যাশবোর্ড খোলা আছে
 
-function money(v){
- return "৳"+(Number(v)||0).toLocaleString("en-US");
-}
+function money(v){return "৳"+(Number(v)||0).toLocaleString("en-US")}
 function showMessage(s){$("message").textContent=s}
-function safeImage(url){
- return url||"";
+function errText(e){return (e&&e.message)||String(e)}
+
+// পাবলিক URL থেকে স্টোরেজের ফাইল পাথ বের করে
+function storagePath(url){
+ const part=(url||"").split("/"+BUCKET+"/")[1];
+ return part?decodeURIComponent(part.split("?")[0]):null;
+}
+async function removeImage(url){
+ const path=storagePath(url);
+ if(!path)return;
+ const {error}=await db.storage.from(BUCKET).remove([path]);
+ if(error)console.warn("পুরনো ছবি মোছা যায়নি:",error.message);
 }
 
-async function updateScreen(){
- const {data,error}=await db.auth.getSession();
- if(error){$("loginMessage").textContent=error.message;return}
- const logged=!!data.session;
+/* ---------- লগইন / সেশন ---------- */
+function applySession(session){
+ const logged=!!session;
  $("login").classList.toggle("hidden",logged);
  $("dashboard").classList.toggle("hidden",!logged);
  $("logout").classList.toggle("hidden",!logged);
+ const uid=logged?session.user.id:null;
+ if(uid===shownFor)return; // টোকেন রিফ্রেশে বারবার লোড হবে না
+ shownFor=uid;
  if(logged){
-  await loadProducts();
-  await loadOrders();
+  loadProducts();
+  loadOrders(true);
+ }else{
+  products=[];
+  $("productList").replaceChildren();
+  $("orderList").replaceChildren();
+  showMessage("");
  }
 }
+// callback-এর ভেতরে সরাসরি Supabase কল না করে setTimeout ব্যবহার করা নিরাপদ
+db.auth.onAuthStateChange((event,session)=>{
+ setTimeout(()=>applySession(session),0);
+});
 
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const btn=$("loginForm").querySelector("button");
+ btn.disabled=true;
+ $("loginMessage").textContent="লগইন হচ্ছে...";
+ const {error}=await db.auth.signInWithPassword({
+  email:$("email").value.trim(),
+  password:$("password").value
+ });
+ btn.disabled=false;
+ if(error){$("loginMessage").textContent="লগইন হয়নি: "+error.message;return}
+ $("loginMessage").textContent="";
+ $("password").value="";
+});
+$("logout").onclick=async()=>{await db.auth.signOut()};
+
+/* ---------- প্রোডাক্ট ---------- */
 function resetForm(){
  $("productForm").reset();
  $("productId").value="";
@@ -119,9 +189,8 @@ function resetForm(){
 
 async function loadProducts(){
  showMessage("প্রোডাক্ট লোড হচ্ছে...");
- const {data,error}=await db.from("products")
-  .select("*").order("id",{ascending:false});
- if(error){showMessage("প্রোডাক্ট লোড হয়নি: "+error.message);return}
+ const {data,error}=await db.from("products").select("*").order("id",{ascending:false});
+ if(error){showMessage("প্রোডাক্ট লোড হয়নি: "+error.message);return}
  products=data||[];
  const list=$("productList");
  list.replaceChildren();
@@ -131,27 +200,42 @@ async function loadProducts(){
   box.className="card product";
   if(p.image_url){
    const img=document.createElement("img");
-   img.src=safeImage(p.image_url);
+   img.src=p.image_url;
    img.alt=p.name||"Product";
-   img.onerror=()=>img.style.display="none";
+   img.loading="lazy";
+   img.onerror=()=>{img.style.display="none"};
    box.appendChild(img);
   }
   const title=document.createElement("h3");
-  title.textContent=p.name;box.appendChild(title);
+  title.textContent=p.name;
+  box.appendChild(title);
   const price=document.createElement("p");
-  price.textContent=money(p.price);box.appendChild(price);
+  price.textContent=money(p.price);
+  box.appendChild(price);
   const stock=document.createElement("p");
-  stock.textContent="স্টক: "+p.stock+" · "+(p.active?"Active":"Hidden");
+  stock.textContent="স্টক: "+p.stock+" · ";
+  const badge=document.createElement("span");
+  badge.className="badge";
+  badge.textContent=p.active?"Active":"Hidden";
+  stock.appendChild(badge);
   box.appendChild(stock);
+
   const edit=document.createElement("button");
-  edit.className="gold";edit.textContent="Edit";
+  edit.className="gold";edit.type="button";edit.textContent="Edit";
   edit.onclick=()=>editProduct(p.id);
   box.appendChild(edit);
+
   const toggle=document.createElement("button");
-  toggle.className="dark";
+  toggle.className="dark";toggle.type="button";
   toggle.textContent=p.active?"Hide":"Show";
-  toggle.onclick=()=>toggleProduct(p);
+  toggle.onclick=()=>toggleProduct(p,toggle);
   box.appendChild(toggle);
+
+  const del=document.createElement("button");
+  del.className="danger";del.type="button";del.textContent="Delete";
+  del.onclick=()=>deleteProduct(p,del);
+  box.appendChild(del);
+
   list.appendChild(box);
  });
  showMessage("মোট প্রোডাক্ট: "+products.length);
@@ -170,11 +254,21 @@ function editProduct(id){
  window.scrollTo({top:0,behavior:"smooth"});
 }
 
-async function toggleProduct(p){
+async function toggleProduct(p,btn){
+ btn.disabled=true;
  showMessage("আপডেট হচ্ছে...");
- const {error}=await db.from("products")
-  .update({active:!p.active}).eq("id",p.id);
- if(error){showMessage("আপডেট হয়নি: "+error.message);return}
+ const {error}=await db.from("products").update({active:!p.active}).eq("id",p.id);
+ if(error){showMessage("আপডেট হয়নি: "+error.message);btn.disabled=false;return}
+ await loadProducts();
+}
+
+async function deleteProduct(p,btn){
+ if(!confirm("\""+p.name+"\" প্রোডাক্টটি স্থায়ীভাবে মুছে ফেলবে?"))return;
+ btn.disabled=true;
+ const {error}=await db.from("products").delete().eq("id",p.id);
+ if(error){showMessage("মোছা যায়নি: "+error.message);btn.disabled=false;return}
+ await removeImage(p.image_url);
+ showMessage("প্রোডাক্ট মোছা হয়েছে।");
  await loadProducts();
 }
 
@@ -182,25 +276,24 @@ $("productForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const button=$("productForm").querySelector('button[type="submit"]');
  button.disabled=true;
+ let newPath=null; // নতুন আপলোড হলে, সেভ ব্যর্থ হলে মুছে ফেলার জন্য
  try{
-  let imageUrl="";
   const id=$("productId").value;
   const old=products.find(p=>String(p.id)===String(id));
-  imageUrl=old?.image_url||"";
+  let imageUrl=old?.image_url||"";
   const file=$("image").files[0];
 
   if(file){
-   if(!file.type.startsWith("image/"))throw Error("ছবি ফাইল নির্বাচন করো।");
-   if(file.size>5*1024*1024)throw Error("ছবির সাইজ ৫ MB-এর কম রাখো।");
-   const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-zA-Z0-9]/g,"");
+   const ext=IMAGE_TYPES[file.type];
+   if(!ext)throw Error("শুধু JPG, PNG বা WEBP ছবি দেওয়া যাবে।");
+   if(file.size>MAX_IMAGE_BYTES)throw Error("ছবির সাইজ ৫ MB-এর কম রাখো।");
    const path=Date.now()+"-"+Math.random().toString(36).slice(2)+"."+ext;
-   const {data:uploaded,error:uploadError}=await db.storage
-    .from("product-images").upload(path,file,{
-     cacheControl:"3600",upsert:false,contentType:file.type
-    });
+   const {data:uploaded,error:uploadError}=await db.storage.from(BUCKET).upload(path,file,{
+    cacheControl:"3600",upsert:false,contentType:file.type
+   });
    if(uploadError)throw uploadError;
-   const {data:urlData}=db.storage.from("product-images").getPublicUrl(uploaded.path);
-   imageUrl=urlData.publicUrl;
+   newPath=uploaded.path;
+   imageUrl=db.storage.from(BUCKET).getPublicUrl(newPath).data.publicUrl;
   }
 
   const product={
@@ -212,20 +305,23 @@ $("productForm").addEventListener("submit",async e=>{
    active:$("active").checked
   };
   if(!product.name)throw Error("প্রোডাক্টের নাম দাও।");
-  if(product.price<0||product.stock<0)throw Error("দাম বা স্টক ঋণাত্মক হতে পারবে না।");
+  if(!Number.isFinite(product.price)||product.price<0)throw Error("দাম সঠিক নয়।");
+  if(!Number.isInteger(product.stock)||product.stock<0)throw Error("স্টক অবশ্যই ০ বা তার বেশি পূর্ণ সংখ্যা হতে হবে।");
 
-  let result;
-  if(id){
-   result=await db.from("products").update(product).eq("id",id);
-  }else{
-   result=await db.from("products").insert(product);
-  }
+  const result=id
+   ? await db.from("products").update(product).eq("id",id)
+   : await db.from("products").insert(product);
   if(result.error)throw result.error;
+
+  // সেভ সফল হলে পুরনো ছবি মুছে ফেলা
+  if(file&&old?.image_url&&old.image_url!==imageUrl)await removeImage(old.image_url);
+  newPath=null;
   resetForm();
-  showMessage("প্রোডাক্ট সেভ হয়েছে।");
+  showMessage("প্রোডাক্ট সেভ হয়েছে।");
   await loadProducts();
  }catch(err){
-  showMessage("সেভ হয়নি: "+(err.message||String(err)));
+  if(newPath)await db.storage.from(BUCKET).remove([newPath]); // অনাথ ছবি রাখা হবে না
+  showMessage("সেভ হয়নি: "+errText(err));
  }finally{
   button.disabled=false;
  }
@@ -234,68 +330,120 @@ $("productForm").addEventListener("submit",async e=>{
 $("cancelEdit").onclick=resetForm;
 $("reloadProducts").onclick=loadProducts;
 
-async function loadOrders(){
- $("orderMessage").textContent="অর্ডার লোড হচ্ছে...";
- const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false});
- if(error){$("orderMessage").textContent="অর্ডার লোড হয়নি: "+error.message;return}
- const list=$("orderList");
- list.replaceChildren();
- const statuses=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
- (data||[]).forEach(o=>{
-  const box=document.createElement("div");
-  box.className="card";
-  const heading=document.createElement("h3");
-  heading.textContent="Order #"+o.id+" — "+(o.customer_name||"");
-  box.appendChild(heading);
-  const info=document.createElement("p");
-  info.textContent="ফোন: "+(o.phone||"")+" | পণ্য: "+(o.product||"")+" | পরিমাণ: "+(o.quantity||1)+" | মোট: "+money(o.total);
-  box.appendChild(info);
-  const address=document.createElement("p");
-  address.textContent="ঠিকানা: "+(o.address||"");
-  box.appendChild(address);
-  const select=document.createElement("select");
-  statuses.forEach(s=>{
-   const opt=document.createElement("option");
-   opt.value=s;opt.textContent=s;select.appendChild(opt);
-  });
-  select.value=statuses.includes(o.status)?o.status:"Pending";
-  box.appendChild(select);
-  const save=document.createElement("button");
-  save.className="gold";save.textContent="Save Status";
-  save.onclick=async()=>{
-   save.disabled=true;
-   const {error:updateError}=await db.from("orders")
-    .update({status:select.value}).eq("id",o.id);
-   save.disabled=false;
-   if(updateError){
-    $("orderMessage").textContent="স্ট্যাটাস সেভ হয়নি: "+updateError.message;
-   }else{
-    $("orderMessage").textContent="Order #"+o.id+" আপডেট হয়েছে।";
-    await loadOrders();
-   }
-  };
-  box.appendChild(save);
-  list.appendChild(box);
+/* ---------- অর্ডার (পেজিং সহ) ---------- */
+function renderOrder(o){
+ const box=document.createElement("div");
+ box.className="card";
+ const heading=document.createElement("h3");
+ heading.textContent="Order #"+o.id+" — "+(o.customer_name||"");
+ box.appendChild(heading);
+ const info=document.createElement("p");
+ info.textContent="ফোন: "+(o.phone||"")+" | পণ্য: "+(o.product||"")+" | পরিমাণ: "+(o.quantity||1)+" | মোট: "+money(o.total);
+ box.appendChild(info);
+ const address=document.createElement("p");
+ address.textContent="ঠিকানা: "+(o.address||"");
+ box.appendChild(address);
+
+ const select=document.createElement("select");
+ select.setAttribute("aria-label","অর্ডারের স্ট্যাটাস");
+ STATUSES.forEach(s=>{
+  const opt=document.createElement("option");
+  opt.value=s;opt.textContent=s;
+  select.appendChild(opt);
  });
- $("orderMessage").textContent="মোট অর্ডার: "+(data||[]).length;
+ select.value=STATUSES.includes(o.status)?o.status:"Pending";
+ box.appendChild(select);
+
+ const save=document.createElement("button");
+ save.className="gold";save.type="button";save.textContent="Save Status";
+ save.onclick=async()=>{
+  save.disabled=true;
+  const {error}=await db.from("orders").update({status:select.value}).eq("id",o.id);
+  save.disabled=false;
+  $("orderMessage").textContent=error
+   ? "স্ট্যাটাস সেভ হয়নি: "+error.message
+   : "Order #"+o.id+" আপডেট হয়েছে।";
+ };
+ box.appendChild(save);
+
+ const invoice=document.createElement("button");
+ invoice.className="dark";invoice.type="button";invoice.textContent="Invoice PDF";
+ invoice.onclick=()=>printInvoice(o,select.value);
+ box.appendChild(invoice);
+ return box;
 }
 
-$("reloadOrders").onclick=loadOrders;
-$("loginForm").addEventListener("submit",async e=>{
- e.preventDefault();
- $("loginMessage").textContent="লগইন হচ্ছে...";
- const {error}=await db.auth.signInWithPassword({
-  email:$("email").value.trim(),
-  password:$("password").value
- });
- if(error){$("loginMessage").textContent="লগইন হয়নি: "+error.message;return}
- await updateScreen();
-});
-$("logout").onclick=async()=>{
- await db.auth.signOut();
- await updateScreen();
-};
-updateScreen();
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// নতুন উইন্ডোতে রসিদ খুলে প্রিন্ট ডায়ালগ দেয়; সেখান থেকে "Save as PDF" বেছে নিলেই PDF হয়
+function printInvoice(o,status){
+ const w=window.open("","_blank");
+ if(!w){showMessage("পপ-আপ ব্লক করা আছে। পপ-আপ অনুমতি দিয়ে আবার চেষ্টা করো।");return}
+ const date=o.created_at?new Date(o.created_at).toLocaleString("bn-BD"):"";
+ const html=`<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invoice-${esc(o.id)}</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:"Noto Sans Bengali","Hind Siliguri",Arial,sans-serif;color:#111;margin:0;padding:32px;line-height:1.6}
+.wrap{max-width:720px;margin:auto}
+.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #d4af37;padding-bottom:14px;margin-bottom:20px}
+.logo{font-size:28px;font-weight:bold;color:#b8921f}
+.logo span{color:#111}
+h2{margin:0;font-size:22px}
+.meta{text-align:right;font-size:14px;color:#444}
+table{width:100%;border-collapse:collapse;margin:18px 0}
+th,td{border:1px solid #ccc;padding:10px;text-align:left;font-size:14px}
+th{background:#f4f1e6;width:30%}
+.total{font-size:18px;font-weight:bold;text-align:right;margin-top:10px}
+.note{margin-top:30px;text-align:center;color:#666;font-size:13px}
+button{padding:10px 18px;margin-bottom:20px;border:0;border-radius:8px;background:#d4af37;font-weight:bold;cursor:pointer}
+@media print{button{display:none}body{padding:0}}
+</style></head><body><div class="wrap">
+<button onclick="window.print()">Print / Save as PDF</button>
+<div class="top">
+ <div class="logo">SAREX<span>BD</span></div>
+ <div class="meta"><h2>রসিদ / INVOICE</h2>Order #${esc(o.id)}<br>${esc(date)}</div>
+</div>
+<table>
+<tr><th>গ্রাহকের নাম</th><td>${esc(o.customer_name)}</td></tr>
+<tr><th>ফোন</th><td>${esc(o.phone)}</td></tr>
+<tr><th>ঠিকানা</th><td>${esc(o.address)}</td></tr>
+<tr><th>পণ্য</th><td>${esc(o.product)}</td></tr>
+<tr><th>পরিমাণ</th><td>${esc(o.quantity||1)}</td></tr>
+<tr><th>স্ট্যাটাস</th><td>${esc(status)}</td></tr>
+</table>
+<div class="total">মোট: ${esc(money(o.total))}</div>
+<p class="note">ধন্যবাদ, SAREXBD থেকে কেনাকাটার জন্য।</p>
+</div>
+<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},400)})<\/script>
+</body></html>`;
+ w.document.open();
+ w.document.write(html);
+ w.document.close();
+}
+
+async function loadOrders(reset){
+ const list=$("orderList");
+ if(reset){orderCount=0;list.replaceChildren()}
+ $("orderMessage").textContent="অর্ডার লোড হচ্ছে...";
+ const from=orderCount;
+ const {data,error,count}=await db.from("orders")
+  .select("*",{count:"exact"})
+  .order("created_at",{ascending:false})
+  .range(from,from+ORDERS_PER_PAGE-1);
+ if(error){$("orderMessage").textContent="অর্ডার লোড হয়নি: "+error.message;return}
+ (data||[]).forEach(o=>list.appendChild(renderOrder(o)));
+ orderCount+=(data||[]).length;
+ const total=count??orderCount;
+ $("orderMessage").textContent="দেখানো হচ্ছে "+orderCount+" / মোট "+total+" অর্ডার";
+ $("moreOrders").classList.toggle("hidden",orderCount>=total);
+}
+
+$("reloadOrders").onclick=()=>loadOrders(true);
+$("moreOrders").onclick=()=>loadOrders(false);
 </script>
 </body>
 </html>
