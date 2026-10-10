@@ -39,6 +39,13 @@ function taka(value) {
   return "৳" + Number(value || 0).toLocaleString("en-BD");
 }
 
+// প্রোডাক্ট ছাড়ের পরের একক দাম (সার্ভারের হিসাবের সাথে মেলানো)
+function unitPrice(product) {
+  const price = Number(product.price) || 0;
+  const percent = Number(product.discount_percent) || 0;
+  return percent > 0 ? Math.round((price * (100 - percent)) / 100) : price;
+}
+
 function deliveryCharge() {
   return deliveryArea?.value === "outside"
     ? DELIVERY.outside
@@ -182,7 +189,7 @@ async function loadProducts(silent = false) {
 
   const { data, error } = await supabaseClient
     .from("products")
-    .select("id,name,description,price,image_url,stock,active")
+    .select("id,name,description,price,discount_percent,image_url,stock,active")
     .eq("active", true)
     .gt("stock", 0)
     .order("id", { ascending: true });
@@ -240,8 +247,26 @@ function showProducts() {
     const title = document.createElement("h3");
     title.textContent = product.name;
 
+    // দাম: ছাড় থাকলে নতুন দাম, পাশে কাটা দাগে পুরনো দাম ও ব্যাজ
+    const percentOff = Number(product.discount_percent) || 0;
     const price = document.createElement("p");
-    price.textContent = taka(product.price);
+
+    if (percentOff > 0) {
+      price.append(taka(unitPrice(product)));
+
+      const oldPrice = document.createElement("s");
+      oldPrice.textContent = taka(product.price);
+      oldPrice.style.cssText =
+        "opacity:.6;font-size:.7em;font-weight:400;margin-left:6px";
+      price.appendChild(oldPrice);
+
+      const badge = document.createElement("span");
+      badge.className = "discount-badge";
+      badge.textContent = "-" + percentOff + "%";
+      card.appendChild(badge);
+    } else {
+      price.textContent = taka(product.price);
+    }
 
     const buyButton = document.createElement("button");
     buyButton.type = "button";
@@ -310,7 +335,8 @@ function updateCart() {
     return;
   }
 
-  const price = Number(selectedProduct.price);
+  const percentOff = Number(selectedProduct.discount_percent) || 0;
+  const price = unitPrice(selectedProduct);
   const charge = deliveryCharge();
   const subtotal = price * selectedQuantity;
   const discount = appliedCoupon
@@ -327,7 +353,16 @@ function updateCart() {
   title.textContent = selectedProduct.name;
 
   const priceText = document.createElement("p");
-  priceText.textContent = "দাম: " + taka(price);
+  priceText.textContent =
+    percentOff > 0
+      ? "দাম: " +
+        taka(price) +
+        " (মূল " +
+        taka(selectedProduct.price) +
+        ", −" +
+        percentOff +
+        "%)"
+      : "দাম: " + taka(price);
 
   const quantityLabel = document.createElement("label");
   quantityLabel.htmlFor = "quantity";
@@ -507,7 +542,7 @@ if (orderForm) {
     const couponText = couponInput ? couponInput.value.trim() : "";
 
     const subtotalEstimate =
-      Number(selectedProduct.price) * selectedQuantity;
+      unitPrice(selectedProduct) * selectedQuantity;
     const discountEstimate = appliedCoupon
       ? Math.round((subtotalEstimate * appliedCoupon.percent) / 100)
       : 0;
@@ -688,12 +723,13 @@ if (reviewForm) {
     }
   });
 }
+
 /* PRODUCT GRID STYLE: মোবাইলে ২টা, বড় স্ক্রিনে ৩টা করে প্রোডাক্ট */
 (function () {
   const style = document.createElement("style");
   style.textContent = `
 #products.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#products .product-card{min-width:0;padding:10px;display:flex;flex-direction:column}
+#products .product-card{position:relative;min-width:0;padding:10px;display:flex;flex-direction:column}
 #products .product-image{height:auto;aspect-ratio:1/1;margin-bottom:10px;overflow:hidden}
 #products .product-card h3{font-size:15px;line-height:1.3;margin:4px 0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #products .product-card p{font-size:13px;margin:4px 0}
@@ -701,13 +737,16 @@ if (reviewForm) {
 #products .product-card h3+p~p{font-size:12px;opacity:.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #products .product-card p:last-of-type{margin-bottom:10px}
 #products .product-card .btn{margin-top:auto;width:100%;padding:9px 8px;font-size:14px}
+#products .discount-badge{position:absolute;top:16px;left:16px;z-index:2;background:#d4af37;color:#090909;font-weight:700;font-size:12px;padding:2px 8px;border-radius:99px}
 #products>.btn{grid-column:1/-1}
 @media(min-width:700px){
 #products.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 #products .product-card{padding:14px}
+#products .discount-badge{top:20px;left:20px}
 }`;
   document.head.appendChild(style);
 })();
+
 /* START WEBSITE */
 setupCouponUI();
 setupDeliveryOptions();
