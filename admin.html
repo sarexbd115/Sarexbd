@@ -80,6 +80,7 @@ hr{border-color:var(--line)}
    <div class="stat"><b id="stMonthSales">৳0</b><span>এই মাসের বিক্রি</span></div>
    <div class="stat"><b id="stPending">0</b><span>পেন্ডিং অর্ডার</span></div>
    <div class="stat"><b id="stLow">0</b><span>কম স্টকের প্রোডাক্ট</span></div>
+   <div class="stat"><b id="stReviews">0</b><span>অপেক্ষমাণ রিভিউ</span></div>
   </div>
   <p id="lowList" class="muted"></p>
   <p id="statsNote" class="muted"></p>
@@ -134,6 +135,38 @@ hr{border-color:var(--line)}
   <button class="dark hidden" id="moreOrders" type="button">আরও অর্ডার দেখাও</button>
 
   <hr>
+  <h2>রিভিউ ম্যানেজমেন্ট</h2>
+  <div class="card">
+   <label for="reviewFilter">দেখাও</label>
+   <select id="reviewFilter">
+    <option value="Pending">অপেক্ষমাণ (Pending)</option>
+    <option value="Approved">অনুমোদিত (Approved)</option>
+    <option value="">সব</option>
+   </select>
+   <button class="dark" id="reloadReviews" type="button">Refresh Reviews</button>
+  </div>
+  <p id="reviewMessage" class="muted" role="status"></p>
+  <div id="reviewList"></div>
+
+  <hr>
+  <h2>কুপন</h2>
+  <div class="card">
+   <form id="couponForm" onsubmit="return false">
+    <div class="row">
+     <div><label for="cpCode">কুপন কোড</label><input id="cpCode" maxlength="30" placeholder="SAREXBD5" autocapitalize="characters"></div>
+     <div><label for="cpPercent">ছাড় (%)</label><input id="cpPercent" type="number" min="1" max="100" step="0.5"></div>
+    </div>
+    <div class="row">
+     <div><label for="cpMax">সর্বোচ্চ ব্যবহার (খালি = সীমাহীন)</label><input id="cpMax" type="number" min="1" step="1"></div>
+     <div><label for="cpExpiry">মেয়াদ শেষের তারিখ (খালি = মেয়াদহীন)</label><input id="cpExpiry" type="date"></div>
+    </div>
+    <button class="gold" type="submit">কুপন যোগ করো</button>
+   </form>
+  </div>
+  <p id="couponMessage" class="muted" role="status"></p>
+  <div id="couponList"></div>
+
+  <hr>
   <h2>সেটিংস</h2>
   <div class="card">
    <form id="settingsForm" onsubmit="return false">
@@ -147,13 +180,14 @@ hr{border-color:var(--line)}
      <div><label for="setIn">ডেলিভারি চার্জ: ঢাকার ভেতরে (৳)</label><input id="setIn" type="number" min="0" step="1"></div>
      <div><label for="setOut">ডেলিভারি চার্জ: ঢাকার বাইরে (৳)</label><input id="setOut" type="number" min="0" step="1"></div>
     </div>
+    <p class="muted">ডেলিভারি চার্জ সার্ভারে সেভ হয়, তাই কাস্টমারের সাইটেও সঙ্গে সঙ্গে বদলে যায়।</p>
     <label for="setLow">কম স্টকের সীমা (এর সমান বা কম হলে সতর্ক করবে)</label>
     <input id="setLow" type="number" min="0" step="1">
     <button class="gold" type="submit">Save Settings</button>
     <button class="dark" id="resetSettings" type="button">ডিফল্টে ফেরাও</button>
    </form>
    <p id="settingsMessage" class="muted" role="status"></p>
-   <p class="muted">এই সেটিংস শুধু এই ফোন/ব্রাউজারে সেভ থাকে।</p>
+   <p class="muted">দোকানের নাম, নম্বর, ঠিকানা ও স্টকের সীমা শুধু এই ফোন/ব্রাউজারে সেভ থাকে।</p>
   </div>
  </section>
  <p id="message" role="status"></p>
@@ -168,7 +202,7 @@ const MAX_IMAGE_BYTES=5*1024*1024;
 const IMAGE_TYPES={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
 const STATUSES=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
 
-/* ---------- সেটিংস (এই ব্রাউজারে সেভ থাকে) ---------- */
+/* ---------- সেটিংস ---------- */
 const DEFAULTS={shopName:"SAREXBD",whatsapp:"01610244533",address:"",deliveryInside:80,deliveryOutside:120,lowStock:5};
 const SETTINGS_KEY="sarexbd_admin_settings_v1";
 function loadSettings(){
@@ -242,14 +276,18 @@ function applySession(session){
  shownFor=uid;
  if(logged){
   fillSettingsForm();
+  loadServerSettings();
+  loadCoupons();
   loadProducts();
   loadOrders(true);
   loadStats();
+  loadReviews();
  }else{
   products=[];
   statOrders=[];
   $("productList").replaceChildren();
   $("orderList").replaceChildren();
+  $("reviewList").replaceChildren();
   showMessage("");
  }
 }
@@ -549,7 +587,7 @@ function renderOrder(o){
  heading.textContent="Order #"+o.id+" — "+(o.customer_name||"");
  box.appendChild(heading);
  const info=document.createElement("p");
- info.textContent="ফোন: "+(o.phone||"")+" | পণ্য: "+(o.product||"")+" | পরিমাণ: "+(o.quantity||1)+" | মোট: "+money(o.total);
+ info.textContent="ফোন: "+(o.phone||"")+" | পণ্য: "+(o.product||"")+" | পরিমাণ: "+(o.quantity||1)+" | মোট: "+money(o.total)+(Number(o.discount)>0?" | কুপন "+(o.coupon_code||"")+": −"+money(o.discount):"");
  box.appendChild(info);
  const address=document.createElement("p");
  address.textContent="ঠিকানা: "+(o.address||"");
@@ -582,7 +620,7 @@ function renderOrder(o){
  select.value=STATUSES.includes(o.status)?o.status:"Pending";
  box.appendChild(select);
 
- // ইনভয়েসের ডেলিভারি চার্জ
+ // ইনভয়েসের ডেলিভারি চার্জ (পুরনো অর্ডারের জন্য; নতুন অর্ডারে সার্ভারের হিসাব ব্যবহার হয়)
  const zone=document.createElement("select");
  zone.setAttribute("aria-label","ইনভয়েসের ডেলিভারি চার্জ");
  [["inside","ঢাকার ভেতরে"],["outside","ঢাকার বাইরে"],["none","ডেলিভারি চার্জ যোগ করবে না (মোটে ধরা আছে)"]].forEach(z=>{
@@ -606,6 +644,7 @@ function renderOrder(o){
   }else{
    $("orderMessage").textContent="Order #"+o.id+" আপডেট হয়েছে।";
    loadStats();
+   loadProducts(); // Cancel করলে স্টক ফেরত আসে, তাই তালিকা নতুন করে আনা
   }
  };
  box.appendChild(save);
@@ -662,13 +701,13 @@ $("exportOrders").onclick=async()=>{
    if(!data||data.length<step)break;
   }
   if(!rows.length){$("orderMessage").textContent="ডাউনলোড করার মতো অর্ডার নেই।";return}
-  const head=["অর্ডার নম্বর","তারিখ","গ্রাহকের নাম","ফোন","ঠিকানা","পণ্য","পরিমাণ","সাবটোটাল","ডেলিভারি এলাকা","ডেলিভারি চার্জ","মোট","স্ট্যাটাস"];
+  const head=["অর্ডার নম্বর","তারিখ","গ্রাহকের নাম","ফোন","ঠিকানা","পণ্য","পরিমাণ","সাবটোটাল","ডেলিভারি এলাকা","ডেলিভারি চার্জ","কুপন","ছাড়","মোট","স্ট্যাটাস"];
   const lines=[head.map(csvCell).join(",")];
   rows.forEach(o=>{
    lines.push([
     o.id,
     o.created_at?new Date(o.created_at).toLocaleString("sv-SE"):"",
-    o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.subtotal,o["delivery area"],o.delivery_charge,o.total,o.status
+    o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.subtotal,o["delivery area"],o.delivery_charge,o.coupon_code,o.discount,o.total,o.status
    ].map(csvCell).join(","));
   });
   const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
@@ -696,11 +735,13 @@ function printInvoice(o,status,zone){
  const delivery=zone==="stored"?(Number(o.delivery_charge)||0):(zone==="inside"?S.deliveryInside:(zone==="outside"?S.deliveryOutside:0));
  const zoneLabel=zone==="stored"?(/outside/i.test(o["delivery area"]||"")?"ঢাকার বাইরে":"ঢাকার ভেতরে"):(zone==="inside"?"ঢাকার ভেতরে":"ঢাকার বাইরে");
  const grand=zone==="stored"?(Number(o.total)||(subtotal+delivery)):(subtotal+delivery);
+ const discountAmount=zone==="stored"?(Number(o.discount)||0):0;
+ const discountRow=discountAmount>0?'<tr><th>কুপন ছাড় ('+esc(o.coupon_code||"")+')</th><td>−'+esc(money(discountAmount))+'</td></tr>':"";
  const contact=[S.whatsapp?"WhatsApp/ফোন: "+S.whatsapp:"",S.address].filter(Boolean).map(esc).join("<br>");
  const totalsHtml=zone==="none"
   ? '<div class="total">মোট: '+esc(money(grand))+'</div>'
   : '<table class="sum"><tr><th>পণ্যের মোট</th><td>'+esc(money(subtotal))+'</td></tr>'
-   +'<tr><th>ডেলিভারি চার্জ ('+esc(zoneLabel)+')</th><td>'+esc(money(delivery))+'</td></tr></table>'
+   +discountRow+'<tr><th>ডেলিভারি চার্জ ('+esc(zoneLabel)+')</th><td>'+esc(money(delivery))+'</td></tr></table>'
    +'<div class="total">সর্বমোট: '+esc(money(grand))+'</div>';
  const html=`<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -746,6 +787,178 @@ ${totalsHtml}
  w.document.close();
 }
 
+/* ---------- রিভিউ ম্যানেজমেন্ট ---------- */
+function starsText(n){
+ const r=Math.max(0,Math.min(5,Math.floor(Number(n)||0)));
+ return "★".repeat(r)+"☆".repeat(5-r);
+}
+
+async function loadReviewCount(){
+ const {count,error}=await db.from("reviews")
+  .select("*",{count:"exact",head:true}).eq("status","Pending");
+ if(!error)$("stReviews").textContent=count??0;
+}
+
+async function loadReviews(){
+ $("reviewMessage").textContent="রিভিউ লোড হচ্ছে...";
+ let q=db.from("reviews").select("*").order("created_at",{ascending:false}).limit(50);
+ const f=$("reviewFilter").value;
+ if(f)q=q.eq("status",f);
+ const {data,error}=await q;
+ if(error){$("reviewMessage").textContent="রিভিউ লোড হয়নি: "+error.message;return}
+ const list=$("reviewList");
+ list.replaceChildren();
+ const rows=data||[];
+ rows.forEach(r=>list.appendChild(renderReview(r)));
+ $("reviewMessage").textContent=rows.length?"দেখানো হচ্ছে "+rows.length+"টি রিভিউ":"এই তালিকায় কোনো রিভিউ নেই।";
+ loadReviewCount();
+}
+
+function renderReview(r){
+ const box=document.createElement("div");
+ box.className="card";
+ const h=document.createElement("h3");
+ h.textContent=(r.reviewer_name||"")+" — "+starsText(r.rating);
+ box.appendChild(h);
+ const t=document.createElement("p");
+ t.textContent=r.review_text||"";
+ box.appendChild(t);
+ const meta=document.createElement("p");
+ meta.className="muted";
+ meta.textContent=(r.created_at?new Date(r.created_at).toLocaleString("bn-BD"):"")+" · ";
+ const b=document.createElement("span");
+ b.className="badge"+(r.status==="Approved"?"":" warn");
+ b.textContent=r.status||"Pending";
+ meta.appendChild(b);
+ box.appendChild(meta);
+
+ if(r.status!=="Approved"){
+  const ok=document.createElement("button");
+  ok.className="gold";ok.type="button";ok.textContent="অনুমোদন করো";
+  ok.onclick=()=>setReviewStatus(r,"Approved",ok);
+  box.appendChild(ok);
+ }else{
+  const hide=document.createElement("button");
+  hide.className="dark";hide.type="button";hide.textContent="লুকাও (Pending)";
+  hide.onclick=()=>setReviewStatus(r,"Pending",hide);
+  box.appendChild(hide);
+ }
+ const del=document.createElement("button");
+ del.className="danger";del.type="button";del.textContent="Delete";
+ del.onclick=()=>deleteReview(r,del);
+ box.appendChild(del);
+ return box;
+}
+
+async function setReviewStatus(r,status,btn){
+ btn.disabled=true;
+ const {error}=await db.from("reviews").update({status:status}).eq("id",r.id);
+ if(error){$("reviewMessage").textContent="আপডেট হয়নি: "+error.message;btn.disabled=false;return}
+ await loadReviews();
+ $("reviewMessage").textContent=status==="Approved"?"রিভিউ অনুমোদিত হয়েছে, এখন সাইটে দেখা যাবে।":"রিভিউ সাইট থেকে সরানো হয়েছে।";
+}
+
+async function deleteReview(r,btn){
+ if(!confirm("রিভিউটি স্থায়ীভাবে মুছে ফেলবে?"))return;
+ btn.disabled=true;
+ const {error}=await db.from("reviews").delete().eq("id",r.id);
+ if(error){$("reviewMessage").textContent="মোছা যায়নি: "+error.message;btn.disabled=false;return}
+ await loadReviews();
+ $("reviewMessage").textContent="রিভিউ মোছা হয়েছে।";
+}
+
+$("reviewFilter").addEventListener("change",loadReviews);
+$("reloadReviews").onclick=loadReviews;
+
+/* ---------- কুপন ---------- */
+async function loadCoupons(){
+ $("couponMessage").textContent="কুপন লোড হচ্ছে...";
+ const {data,error}=await db.from("coupons").select("*").order("created_at",{ascending:false});
+ if(error){$("couponMessage").textContent="কুপন লোড হয়নি: "+error.message;return}
+ const list=$("couponList");
+ list.replaceChildren();
+ const rows=data||[];
+ rows.forEach(c=>list.appendChild(renderCoupon(c)));
+ $("couponMessage").textContent=rows.length?"মোট "+rows.length+"টি কুপন":"এখনো কোনো কুপন নেই।";
+}
+
+function renderCoupon(c){
+ const box=document.createElement("div");
+ box.className="card";
+ const h=document.createElement("h3");
+ h.textContent=c.code+" — "+Number(c.percent)+"% ছাড়";
+ box.appendChild(h);
+ const info=document.createElement("p");
+ info.textContent="ব্যবহার: "+(c.used_count||0)+(c.max_uses?" / "+c.max_uses:" (সীমাহীন)")+" · মেয়াদ: "+(c.expires_at?new Date(c.expires_at).toLocaleDateString("bn-BD"):"নেই")+" · ";
+ const b=document.createElement("span");
+ b.className="badge"+(c.active?"":" warn");
+ b.textContent=c.active?"চালু":"বন্ধ";
+ info.appendChild(b);
+ if(c.expires_at&&new Date(c.expires_at)<new Date()){
+  const x=document.createElement("span");
+  x.className="badge warn";x.textContent="মেয়াদ শেষ";
+  info.appendChild(x);
+ }
+ box.appendChild(info);
+
+ const toggle=document.createElement("button");
+ toggle.className="dark";toggle.type="button";
+ toggle.textContent=c.active?"বন্ধ করো":"চালু করো";
+ toggle.onclick=()=>toggleCoupon(c,toggle);
+ box.appendChild(toggle);
+
+ const del=document.createElement("button");
+ del.className="danger";del.type="button";del.textContent="Delete";
+ del.onclick=()=>deleteCoupon(c,del);
+ box.appendChild(del);
+ return box;
+}
+
+async function toggleCoupon(c,btn){
+ btn.disabled=true;
+ const {error}=await db.from("coupons").update({active:!c.active}).eq("code",c.code);
+ if(error){$("couponMessage").textContent="আপডেট হয়নি: "+error.message;btn.disabled=false;return}
+ await loadCoupons();
+}
+
+async function deleteCoupon(c,btn){
+ if(!confirm("\""+c.code+"\" কুপনটি মুছে ফেলবে? (আগের অর্ডারের হিসাব বদলাবে না)"))return;
+ btn.disabled=true;
+ const {error}=await db.from("coupons").delete().eq("code",c.code);
+ if(error){$("couponMessage").textContent="মোছা যায়নি: "+error.message;btn.disabled=false;return}
+ await loadCoupons();
+ $("couponMessage").textContent="কুপন মোছা হয়েছে।";
+}
+
+$("couponForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const code=$("cpCode").value.trim().toUpperCase().replace(/[\s%]/g,"");
+ const percent=Number($("cpPercent").value);
+ const maxRaw=$("cpMax").value.trim();
+ const maxUses=maxRaw===""?null:Number(maxRaw);
+ const expiry=$("cpExpiry").value;
+ const msg=$("couponMessage");
+ if(!/^[A-Z0-9_-]{2,30}$/.test(code)){msg.textContent="কোডে শুধু ইংরেজি অক্ষর, সংখ্যা, - বা _ থাকবে (২-৩০ অক্ষর)।";return}
+ if(!Number.isFinite(percent)||percent<=0||percent>100){msg.textContent="ছাড়ের হার ০ থেকে ১০০ এর মধ্যে হতে হবে।";return}
+ if(maxUses!==null&&(!Number.isInteger(maxUses)||maxUses<1)){msg.textContent="সর্বোচ্চ ব্যবহার ১ বা তার বেশি পূর্ণ সংখ্যা হতে হবে।";return}
+ const btn=$("couponForm").querySelector('button[type="submit"]');
+ btn.disabled=true;
+ const {error}=await db.from("coupons").insert({
+  code:code,
+  percent:percent,
+  max_uses:maxUses,
+  expires_at:expiry?new Date(expiry+"T23:59:59").toISOString():null
+ });
+ btn.disabled=false;
+ if(error){
+  msg.textContent=/duplicate|unique/i.test(error.message)?"এই কোড আগেই আছে।":"কুপন যোগ হয়নি: "+error.message;
+  return;
+ }
+ $("couponForm").reset();
+ await loadCoupons();
+ msg.textContent="কুপন যোগ হয়েছে: "+code;
+});
+
 /* ---------- সেটিংস ফর্ম ---------- */
 function fillSettingsForm(){
  $("setShop").value=S.shopName;
@@ -755,7 +968,22 @@ function fillSettingsForm(){
  $("setOut").value=S.deliveryOutside;
  $("setLow").value=S.lowStock;
 }
-$("settingsForm").addEventListener("submit",e=>{
+
+// ডেলিভারি চার্জ সার্ভার (shop_settings) থেকে আনে
+async function loadServerSettings(){
+ const {data,error}=await db.from("shop_settings").select("key,value");
+ if(error){
+  $("settingsMessage").textContent="ডেলিভারি চার্জ সার্ভার থেকে আনা যায়নি: "+error.message;
+  return;
+ }
+ const map={};
+ (data||[]).forEach(r=>{map[r.key]=Number(r.value)});
+ if(Number.isFinite(map.delivery_dhaka)&&map.delivery_dhaka>=0)S.deliveryInside=map.delivery_dhaka;
+ if(Number.isFinite(map.delivery_outside)&&map.delivery_outside>=0)S.deliveryOutside=map.delivery_outside;
+ fillSettingsForm();
+}
+
+$("settingsForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const next={
   shopName:$("setShop").value.trim()||DEFAULTS.shopName,
@@ -767,15 +995,31 @@ $("settingsForm").addEventListener("submit",e=>{
  };
  const bad=["deliveryInside","deliveryOutside","lowStock"].some(k=>!Number.isFinite(next[k])||next[k]<0);
  if(bad){$("settingsMessage").textContent="চার্জ ও স্টকের সংখ্যা ০ বা তার বেশি হতে হবে।";return}
+ const btn=$("settingsForm").querySelector('button[type="submit"]');
+ btn.disabled=true;
  S=next;
- $("settingsMessage").textContent=persistSettings()?"সেটিংস সেভ হয়েছে।":"সেভ করা যায়নি (ব্রাউজারে স্টোরেজ বন্ধ থাকতে পারে)। এই সেশনে কাজ করবে।";
+ const saved=persistSettings();
+ const {error}=await db.from("shop_settings").upsert([
+  {key:"delivery_dhaka",value:next.deliveryInside},
+  {key:"delivery_outside",value:next.deliveryOutside}
+ ],{onConflict:"key"});
+ btn.disabled=false;
+ if(error){
+  $("settingsMessage").textContent="ডেলিভারি চার্জ সার্ভারে সেভ হয়নি: "+error.message;
+ }else{
+  $("settingsMessage").textContent=saved
+   ? "সেটিংস সেভ হয়েছে। ডেলিভারি চার্জ কাস্টমারের সাইটেও বদলেছে।"
+   : "ডেলিভারি চার্জ সেভ হয়েছে। বাকি সেটিংস এই ব্রাউজারে সেভ করা যায়নি।";
+ }
  renderProducts();
 });
-$("resetSettings").onclick=()=>{
+
+$("resetSettings").onclick=async()=>{
  S=Object.assign({},DEFAULTS);
  try{localStorage.removeItem(SETTINGS_KEY)}catch(e){}
  fillSettingsForm();
- $("settingsMessage").textContent="ডিফল্ট সেটিংস ফিরিয়ে আনা হয়েছে।";
+ await loadServerSettings(); // ডেলিভারি চার্জ সার্ভারের মান থেকে ফিরে আসবে
+ $("settingsMessage").textContent="ডিফল্ট সেটিংস ফিরেছে (ডেলিভারি চার্জ সার্ভারের মানই থাকবে)।";
  renderProducts();
 };
 </script>
