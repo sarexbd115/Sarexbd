@@ -688,7 +688,26 @@ if (reviewForm) {
     }
   });
 }
-
+/* PRODUCT GRID STYLE: মোবাইলে ২টা, বড় স্ক্রিনে ৩টা করে প্রোডাক্ট */
+(function () {
+  const style = document.createElement("style");
+  style.textContent = `
+#products.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#products .product-card{min-width:0;padding:10px;display:flex;flex-direction:column}
+#products .product-image{height:auto;aspect-ratio:1/1;margin-bottom:10px;overflow:hidden}
+#products .product-card h3{font-size:15px;line-height:1.3;margin:4px 0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#products .product-card p{font-size:13px;margin:4px 0}
+#products .product-card h3+p{font-size:17px;font-weight:700}
+#products .product-card h3+p~p{font-size:12px;opacity:.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#products .product-card p:last-of-type{margin-bottom:10px}
+#products .product-card .btn{margin-top:auto;width:100%;padding:9px 8px;font-size:14px}
+#products>.btn{grid-column:1/-1}
+@media(min-width:700px){
+#products.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+#products .product-card{padding:14px}
+}`;
+  document.head.appendChild(style);
+})();
 /* START WEBSITE */
 setupCouponUI();
 setupDeliveryOptions();
