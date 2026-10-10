@@ -1,10 +1,12 @@
 const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
 
-// দোকানের সেটিংস — বদলাতে হলে শুধু এখানে বদলান
+// দোকানের সেটিংস
 const SHOP_WHATSAPP = "8801610244533";
+// ডেলিভারি চার্জ সার্ভার (shop_settings টেবিল) থেকে আসে; এখানকার মান শুধু ব্যাকআপ
 const DELIVERY = { dhaka: 80, outside: 120 };
 const BD_PHONE = /^(?:\+?88)?01[3-9]\d{8}$/;
+const MAX_QUANTITY = 50;
 
 let supabaseClient = null;
 
@@ -47,7 +49,7 @@ function cleanPhone(text) {
   return toEnglishDigits(text).replace(/[\s\-().]/g, "");
 }
 
-// ডেলিভারির অপশনের লেখা উপরের DELIVERY থেকে বসায়, যাতে ভুল না মিলে
+// ডেলিভারির অপশনের লেখা DELIVERY থেকে বসায়
 function setupDeliveryOptions() {
   if (!deliveryArea) return;
 
@@ -60,11 +62,32 @@ function setupDeliveryOptions() {
   });
 }
 
+// সার্ভার থেকে বর্তমান ডেলিভারি চার্জ আনে
+async function loadDeliveryCharges() {
+  if (!supabaseClient) return;
+
+  const { data, error } = await supabaseClient.rpc("get_delivery_charges");
+
+  if (error || !data) {
+    console.warn("Delivery charge loading skipped:", error?.message);
+    return;
+  }
+
+  const dhaka = Number(data.dhaka);
+  const outside = Number(data.outside);
+
+  if (Number.isFinite(dhaka) && dhaka >= 0) DELIVERY.dhaka = dhaka;
+  if (Number.isFinite(outside) && outside >= 0) DELIVERY.outside = outside;
+
+  setupDeliveryOptions();
+  updateCart();
+}
+
 /* LOAD PRODUCTS FROM SUPABASE */
-async function loadProducts() {
+async function loadProducts(silent = false) {
   if (!productsBox) return;
 
-  productsBox.textContent = "প্রোডাক্ট লোড হচ্ছে...";
+  if (!silent) productsBox.textContent = "প্রোডাক্ট লোড হচ্ছে...";
 
   if (!supabaseClient) {
     productsBox.textContent = "ডেটাবেস সংযোগ পাওয়া যায়নি।";
@@ -85,7 +108,6 @@ async function loadProducts() {
   }
 
   products = data || [];
-  visibleCount = 8;
   selectedProduct = null;
 
   showProducts();
@@ -185,16 +207,15 @@ function selectProduct(productId) {
 }
 
 function clampQuantity(value) {
-  return Math.max(
-    1,
-    Math.min(
-      Number(selectedProduct?.stock) || 1,
-      Math.floor(Number(value) || 1)
-    )
+  const limit = Math.min(
+    Number(selectedProduct?.stock) || 1,
+    MAX_QUANTITY
   );
+
+  return Math.max(1, Math.min(limit, Math.floor(Number(value) || 1)));
 }
 
-/* UPDATE CART */
+/* UPDATE CART (শুধু দেখানোর জন্য; আসল দাম সার্ভারে হিসাব হয়) */
 function updateCart() {
   if (!cartBox) return;
 
@@ -227,7 +248,9 @@ function updateCart() {
   quantityInput.type = "number";
   quantityInput.id = "quantity";
   quantityInput.min = "1";
-  quantityInput.max = String(selectedProduct.stock);
+  quantityInput.max = String(
+    Math.min(Number(selectedProduct.stock) || 1, MAX_QUANTITY)
+  );
   quantityInput.value = String(selectedQuantity);
   quantityInput.required = true;
 
@@ -260,33 +283,63 @@ function updateCart() {
 
 deliveryArea?.addEventListener("change", updateCart);
 
-/* ORDER SUCCESS (WhatsApp নিশ্চিতকরণ বাটনসহ) */
+/* ORDER SUCCESS (অর্ডার নম্বর ও WhatsApp বাটনসহ) */
 function showOrderSuccess(summary) {
   if (!message) return;
 
   message.replaceChildren();
   message.append(
-    "✅ আপনার অর্ডার সফলভাবে জমা হয়েছে! SAREXBD থেকে ফোনে যোগাযোগ করা হবে।"
+    "✅ আপনার অর্ডার সফলভাবে জমা হয়েছে!" +
+      (summary.orderId ? " অর্ডার নম্বর: #" + summary.orderId + "।" : "") +
+      " SAREXBD থেকে ফোনে যোগাযোগ করা হবে।"
   );
 
-  const text = [
-    "আসসালামু আলাইকুম, আমি SAREXBD-তে অর্ডার দিয়েছি।",
+  const lines = [
+    "আসসালামু আলাইকুম, আমি SAREXBD-তে অর্ডার দিয়েছি।"
+  ];
+
+  if (summary.orderId) lines.push("অর্ডার নম্বর: #" + summary.orderId);
+
+  lines.push(
     "নাম: " + summary.name,
     "ফোন: " + summary.phone,
     "পণ্য: " + summary.product,
     "পরিমাণ: " + summary.quantity,
     "সর্বমোট: " + taka(summary.total)
-  ].join("\n");
+  );
 
   const link = document.createElement("a");
   link.className = "btn";
   link.href =
-    "https://wa.me/" + SHOP_WHATSAPP + "?text=" + encodeURIComponent(text);
+    "https://wa.me/" +
+    SHOP_WHATSAPP +
+    "?text=" +
+    encodeURIComponent(lines.join("\n"));
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   link.textContent = "WhatsApp-এ নিশ্চিত করুন";
 
   message.append(document.createElement("br"), link);
+}
+
+// সার্ভারের এরর কোডকে বাংলা বার্তায় বদলায়
+function orderErrorMessage(error) {
+  const text = String(error?.message || "");
+
+  if (text.includes("out_of_stock")) {
+    return "দুঃখিত, এই পণ্যের এতগুলো স্টকে নেই। পরিমাণ কমিয়ে আবার চেষ্টা করুন।";
+  }
+  if (text.includes("product_unavailable")) {
+    return "দুঃখিত, প্রোডাক্টটি এখন পাওয়া যাচ্ছে না।";
+  }
+  if (text.includes("too_many_orders")) {
+    return "অল্প সময়ে অনেকগুলো অর্ডার হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন বা WhatsApp-এ জানান।";
+  }
+  if (text.includes("invalid_input")) {
+    return "তথ্য ঠিক নেই। নাম, ফোন ও ঠিকানা আবার দেখুন।";
+  }
+
+  return "অর্ডার জমা হয়নি। আবার চেষ্টা করুন।";
 }
 
 /* SUBMIT ORDER */
@@ -341,22 +394,17 @@ if (orderForm) {
       return;
     }
 
-    const deliveryText =
-      deliveryArea?.value === "outside"
-        ? "Outside Dhaka"
-        : "Dhaka";
-
-    const charge = deliveryCharge();
-    const subtotal =
-      Number(selectedProduct.price) * selectedQuantity;
-    const total = subtotal + charge;
+    const area = deliveryArea?.value === "outside" ? "outside" : "dhaka";
 
     const summary = {
       name: customerName,
       phone,
       product: selectedProduct.name,
       quantity: selectedQuantity,
-      total
+      total:
+        Number(selectedProduct.price) * selectedQuantity +
+        deliveryCharge(),
+      orderId: ""
     };
 
     const submitButton = orderForm.querySelector('button[type="submit"]');
@@ -365,33 +413,36 @@ if (orderForm) {
     message.textContent = "অর্ডার জমা হচ্ছে...";
 
     try {
-      const { error } = await supabaseClient
-        .from("orders")
-        .insert([{
-          customer_name: customerName,
-          phone,
-          address,
-          product: selectedProduct.name,
-          quantity: String(selectedQuantity),
-          "delivery area": deliveryText,
-          subtotal,
-          delivery_charge: charge,
-          total,
-          status: "Pending"
-        }]);
+      // দাম, ডেলিভারি ও স্টক সার্ভারে যাচাই হয়; ব্রাউজারের হিসাব ব্যবহার হয় না
+      const { data, error } = await supabaseClient.rpc("place_order", {
+        p_name: customerName,
+        p_phone: phone,
+        p_address: address,
+        p_product_id: String(selectedProduct.id),
+        p_quantity: selectedQuantity,
+        p_area: area
+      });
 
       if (error) {
         console.error("Order error:", error.message);
-        message.textContent =
-          "অর্ডার জমা হয়নি। আবার চেষ্টা করুন।";
+        message.textContent = orderErrorMessage(error);
+
+        if (/out_of_stock|product_unavailable/.test(error.message || "")) {
+          await loadProducts(true);
+        }
         return;
       }
+
+      const result = data || {};
+      summary.orderId = result.order_id || "";
+      summary.total = Number(result.total) || summary.total;
 
       orderForm.reset();
       selectedProduct = null;
       selectedQuantity = 1;
       updateCart();
       showOrderSuccess(summary);
+      await loadProducts(true); // স্টক বদলেছে, তাই তালিকা নতুন করে আনা
     } catch (err) {
       console.error("Order error:", err);
       message.textContent =
@@ -519,5 +570,6 @@ if (reviewForm) {
 
 /* START WEBSITE */
 setupDeliveryOptions();
+loadDeliveryCharges();
 loadProducts();
 loadReviews();
