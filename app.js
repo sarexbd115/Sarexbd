@@ -928,3 +928,96 @@ footer a{color:#d4af37}
   const input = document.getElementById("couponCode");
   if (input) input.placeholder = "Enter your coupon code";
 })();
+/* CATEGORY FILTER: ক্যাটাগরি অনুযায়ী প্রোডাক্ট দেখানো */
+(function () {
+  if (!productsBox || !supabaseClient) return;
+
+  let activeCategory = "";
+  let allProducts = [];
+  let lastShown = null;
+  const categoryById = {};
+
+  const style = document.createElement("style");
+  style.textContent = `
+#categoryBar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 18px}
+#categoryBar button{background:transparent;color:#d4af37;border:1px solid #d4af37;border-radius:99px;padding:7px 14px;font-size:14px;font-weight:600;cursor:pointer}
+#categoryBar button.active{background:#d4af37;color:#090909}`;
+  document.head.appendChild(style);
+
+  const bar = document.createElement("div");
+  bar.id = "categoryBar";
+  bar.hidden = true;
+  productsBox.before(bar);
+
+  function renderBar() {
+    const names = [
+      ...new Set(allProducts.map((p) => p.category).filter(Boolean))
+    ];
+
+    bar.replaceChildren();
+    bar.hidden = names.length < 2;
+    if (names.length < 2) return;
+
+    ["", ...names].forEach((name) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = name || "All";
+      if (name === activeCategory) button.className = "active";
+
+      button.addEventListener("click", () => {
+        activeCategory = name;
+        visibleCount = 8;
+        showProducts();
+      });
+
+      bar.appendChild(button);
+    });
+  }
+
+  const originalShowProducts = showProducts;
+
+  showProducts = function () {
+    if (products !== lastShown) allProducts = products; // নতুন তালিকা এলে
+
+    allProducts.forEach((p) => {
+      p.category = categoryById[String(p.id)] || "";
+    });
+
+    if (
+      activeCategory &&
+      !allProducts.some((p) => p.category === activeCategory)
+    ) {
+      activeCategory = "";
+    }
+
+    const visible = activeCategory
+      ? allProducts.filter((p) => p.category === activeCategory)
+      : allProducts;
+
+    lastShown = visible;
+    products = visible;
+
+    originalShowProducts();
+    renderBar();
+  };
+
+  async function loadCategories() {
+    const { data, error } = await supabaseClient
+      .from("products")
+      .select("id,category")
+      .eq("active", true);
+
+    if (error || !data) {
+      console.warn("Category loading skipped:", error?.message);
+      return;
+    }
+
+    data.forEach((row) => {
+      categoryById[String(row.id)] = row.category || "";
+    });
+
+    if (products.length) showProducts();
+  }
+
+  loadCategories();
+})();
