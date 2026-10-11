@@ -753,3 +753,112 @@ setupDeliveryOptions();
 loadDeliveryCharges();
 loadProducts();
 loadReviews();
+/* HOME HIGHLIGHTS: অফার ব্যানার, ভরসার ঘর ও ডেলিভারি নোট */
+(function () {
+  const OFFER_CODE = "SAREXBD5";
+  let couponPercent = 0;
+
+  const hero = document.getElementById("home");
+  if (!hero) return;
+
+  const style = document.createElement("style");
+  style.textContent = `
+#home.hero{min-height:0!important;padding-top:56px!important;padding-bottom:36px!important}
+#highlights{max-width:1100px;margin:0 auto;padding:10px 6% 0}
+#highlights .offer-bar{border:1px dashed #d4af37;border-radius:12px;padding:12px 14px;background:rgba(212,175,55,.08);text-align:center;margin-bottom:14px}
+#highlights .offer-bar p{margin:4px 0;font-size:14px}
+#highlights .offer-bar b{color:#d4af37}
+#highlights .copy-code{background:#d4af37;color:#090909;border:0;border-radius:6px;padding:4px 10px;font-weight:700;cursor:pointer;margin-left:8px}
+#highlights .trust{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#highlights .trust-item{border:1px solid #332a16;background:#101010;border-radius:12px;padding:12px 8px;text-align:center;font-size:12px;line-height:1.35;color:#ddd;text-decoration:none}
+#highlights .trust-item span{display:block;font-size:22px}
+#highlights .trust-item strong{display:block;font-size:13px;margin:4px 0 2px;color:#fff}
+#highlights .delivery-note{color:#999;font-size:12px;text-align:center;margin:10px 0 0}`;
+  document.head.appendChild(style);
+
+  const section = document.createElement("section");
+  section.id = "highlights";
+  section.innerHTML = `
+<div class="offer-bar" hidden>
+  <p class="offer-product" hidden></p>
+  <p class="offer-coupon" hidden></p>
+</div>
+<div class="trust">
+  <div class="trust-item"><span>🧵</span><strong>জেনুইন লেদার</strong>আসল চামড়ার পণ্য</div>
+  <div class="trust-item"><span>🚚</span><strong>ডেলিভারি</strong>ঢাকার ভেতরে ও বাইরে</div>
+  <a class="trust-item" href="https://wa.me/${SHOP_WHATSAPP}" target="_blank" rel="noopener noreferrer"><span>💬</span><strong>সরাসরি সহায়তা</strong>WhatsApp-এ জানান</a>
+</div>
+<p class="delivery-note">ডেলিভারির সময় পণ্যভেদে আলাদা হয়। যেমন জ্যাকেটে প্রায় ১০ দিন লাগে।</p>`;
+  hero.after(section);
+
+  const bar = section.querySelector(".offer-bar");
+  const productLine = section.querySelector(".offer-product");
+  const couponLine = section.querySelector(".offer-coupon");
+
+  function setOffers() {
+    const maxOff = Math.max(
+      0,
+      ...products.map((p) => Number(p.discount_percent) || 0)
+    );
+
+    productLine.hidden = maxOff <= 0;
+    productLine.textContent =
+      maxOff > 0 ? "🔥 ছাড় চলছে: সর্বোচ্চ " + maxOff + "% পর্যন্ত" : "";
+
+    couponLine.hidden = couponPercent <= 0;
+    bar.hidden = maxOff <= 0 && couponPercent <= 0;
+  }
+
+  function buildCouponLine() {
+    couponLine.textContent = "";
+    couponLine.append("কুপন কোড ");
+
+    const code = document.createElement("b");
+    code.textContent = OFFER_CODE;
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "copy-code";
+    copy.textContent = "কপি";
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(OFFER_CODE);
+        copy.textContent = "কপি হয়েছে ✓";
+      } catch (e) {
+        copy.textContent = "কোড: " + OFFER_CODE;
+      }
+      setTimeout(() => {
+        copy.textContent = "কপি";
+      }, 2000);
+    });
+
+    couponLine.append(
+      code,
+      " দিলে অতিরিক্ত " + couponPercent + "% ছাড়",
+      copy
+    );
+  }
+
+  // প্রোডাক্ট তালিকা দেখানোর পর অফার ব্যানার নতুন করে হিসাব করে
+  const originalShowProducts = showProducts;
+  showProducts = function () {
+    originalShowProducts();
+    setOffers();
+  };
+
+  async function loadOffer() {
+    if (!supabaseClient) return;
+
+    const { data, error } = await supabaseClient.rpc("check_coupon", {
+      p_code: OFFER_CODE
+    });
+
+    if (!error && data?.valid) {
+      couponPercent = Number(data.percent) || 0;
+      buildCouponLine();
+      setOffers();
+    }
+  }
+
+  loadOffer();
+})();
