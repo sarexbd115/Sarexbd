@@ -923,3 +923,8 @@ footer a{color:#d4af37}
     footer.append(" · ", fbLink);
   }
 })();
+/* PRIVATE COUPON: কুপন ঘরে কোনো কোড দেখাবে না */
+(function () {
+  const input = document.getElementById("couponCode");
+  if (input) input.placeholder = "Enter your coupon code";
+})();
