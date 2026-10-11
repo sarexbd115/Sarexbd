@@ -862,3 +862,64 @@ loadReviews();
 
   loadOffer();
 })();
+
+/* ABOUT যোগাযোগ বাটন, ফুটার ও অর্ডার ফর্মের ছোট উন্নতি */
+(function () {
+  const FACEBOOK_URL =
+    "https://www.facebook.com/profile.php?id=100087606876298";
+
+  const style = document.createElement("style");
+  style.textContent = `
+#about .contact-buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
+#about .contact-buttons .btn{margin:0;text-decoration:none}
+#about .contact-buttons .btn.alt{background:transparent;color:#d4af37;border:1px solid #d4af37}
+#about .contact-note{text-align:center;color:#999;font-size:13px;margin:12px 0 0}
+footer a{color:#d4af37}
+#cart{margin:10px 0 14px;line-height:1.6;color:#bbb}
+#cart .cart-item{color:#eee}
+#orderForm button[type="submit"]{margin-top:6px}`;
+  document.head.appendChild(style);
+
+  const about = document.getElementById("about");
+
+  if (about && !document.getElementById("contactButtons")) {
+    const wrap = document.createElement("div");
+    wrap.id = "contactButtons";
+    wrap.className = "contact-buttons";
+
+    const wa = document.createElement("a");
+    wa.className = "btn";
+    wa.href = "https://wa.me/" + SHOP_WHATSAPP;
+    wa.target = "_blank";
+    wa.rel = "noopener noreferrer";
+    wa.textContent = "WhatsApp-এ মেসেজ করুন";
+
+    const fb = document.createElement("a");
+    fb.className = "btn alt";
+    fb.href = FACEBOOK_URL;
+    fb.target = "_blank";
+    fb.rel = "noopener noreferrer";
+    fb.textContent = "Facebook পেজ";
+
+    wrap.append(wa, fb);
+    about.appendChild(wrap);
+
+    const note = document.createElement("p");
+    note.className = "contact-note";
+    note.textContent =
+      "অর্ডার বা পণ্য নিয়ে প্রশ্নে যোগাযোগ করুন: " +
+      SHOP_WHATSAPP.replace(/^88/, "");
+    about.appendChild(note);
+  }
+
+  const footer = document.querySelector("footer");
+
+  if (footer) {
+    const fbLink = document.createElement("a");
+    fbLink.href = FACEBOOK_URL;
+    fbLink.target = "_blank";
+    fbLink.rel = "noopener noreferrer";
+    fbLink.textContent = "Facebook";
+    footer.append(" · ", fbLink);
+  }
+})();
