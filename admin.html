@@ -97,6 +97,9 @@ hr{border-color:var(--line)}
      <div><label for="price">দাম (৳)</label><input id="price" type="number" min="0" step="0.01" required></div>
      <div><label for="stock">স্টক</label><input id="stock" type="number" min="0" step="1" required></div>
     </div>
+    <label for="category">ক্যাটাগরি (খালি রাখলে নাম দেখে নিজে বসবে)</label>
+    <input id="category" list="categoryOptions" maxlength="40" placeholder="যেমন: Wallet">
+    <datalist id="categoryOptions"><option value="Wallet"><option value="Belt"><option value="Bag"><option value="Jacket"></datalist>
     <label for="discount">প্রোডাক্ট ছাড় (%) — ০ মানে ছাড় নেই</label>
     <input id="discount" type="number" min="0" max="99" step="0.5" value="0">
     <label for="image">প্রোডাক্টের ছবি (JPG, PNG, WEBP · সর্বোচ্চ ৫ MB)</label>
@@ -418,6 +421,11 @@ function renderProducts(){
   badge.className="badge";
   badge.textContent=p.active?"Active":"Hidden";
   stock.appendChild(badge);
+  if(p.category){
+   const cb=document.createElement("span");
+   cb.className="badge";cb.textContent=p.category;
+   stock.appendChild(cb);
+  }
   const n=Number(p.stock);
   if(n<=0){
    const w=document.createElement("span");
@@ -492,6 +500,7 @@ function editProduct(id){
  $("price").value=p.price||0;
  $("stock").value=p.stock||0;
  $("discount").value=p.discount_percent||0;
+ $("category").value=p.category||"";
  $("active").checked=!!p.active;
  $("image").value="";
  window.scrollTo({top:0,behavior:"smooth"});
@@ -546,6 +555,7 @@ $("productForm").addEventListener("submit",async e=>{
    stock:Number($("stock").value),
    image_url:imageUrl,
    discount_percent:Number($("discount").value)||0,
+   category:$("category").value.trim(),
    active:$("active").checked
   };
   if(!product.name)throw Error("প্রোডাক্টের নাম দাও।");
