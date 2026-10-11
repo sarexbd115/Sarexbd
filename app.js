@@ -764,7 +764,7 @@ loadReviews();
   const style = document.createElement("style");
   style.textContent = `
 #home.hero{min-height:0!important;padding-top:56px!important;padding-bottom:36px!important}
-#highlights{max-width:1100px;margin:0 auto;padding:10px 6% 0}
+#highlights{max-width:1100px;margin:0 auto;padding:18px 6% 0}
 #highlights .offer-bar{border:1px dashed #d4af37;border-radius:12px;padding:12px 14px;background:rgba(212,175,55,.08);text-align:center;margin-bottom:14px}
 #highlights .offer-bar p{margin:4px 0;font-size:14px}
 #highlights .offer-bar b{color:#d4af37}
