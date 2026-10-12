@@ -1,1079 +1,530 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>SAREXBD Admin</title>
-<script>
-window.addEventListener("error",function(e){
- var m=document.getElementById("loginMessage");
- if(m)m.textContent="স্ক্রিপ্ট এরর: "+(e.message||"অজানা");
-});
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script>
-window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"><\/script>');
-</script>
+<title>SAREXBD | Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--gold:#d4af37;--bg:#0b0b0d;--card:#171719;--line:#333337;--white:#f7f7f7;--muted:#aaaab2}
+:root{--gold:#d6ad55;--bg:#0b0b0b;--panel:#171717;--line:#35302a;--muted:#aaa}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--white);font-family:"Noto Sans Bengali","Hind Siliguri",Arial,sans-serif;line-height:1.5}
-header{padding:16px;background:#111;border-bottom:1px solid #493d1c}
-main{max-width:1100px;margin:auto;padding:16px}
-.logo{font-size:25px;font-weight:bold;color:var(--gold)}
-.logo span{color:#fff}
-button{padding:11px 14px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:3px;font-family:inherit}
-button:disabled{opacity:.5;cursor:not-allowed}
-button:hover:not(:disabled),.btnlink:hover{filter:brightness(1.12)}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.btnlink:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.gold{background:var(--gold);color:#111}
-.dark{background:#29292d;color:#fff;border:1px solid #444}
-.danger{background:#4a1c1c;color:#ffb4b4;border:1px solid #7a2c2c}
-.btnlink{display:inline-block;padding:11px 14px;border-radius:8px;font-weight:bold;margin:3px;text-decoration:none;font-size:13.33px}
-input,textarea,select{width:100%;padding:11px;margin:6px 0 12px;background:#101012;color:#fff;border:1px solid #45454b;border-radius:8px;font-family:inherit}
-label{font-size:13px;color:#ddd}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+body{margin:0;background:var(--bg);color:#f6f2e9;font-family:Arial,sans-serif}
+header{padding:16px;background:#111;border-bottom:1px solid var(--gold);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{font-size:23px;font-weight:bold;letter-spacing:2px;color:var(--gold)}
+small,.muted{color:var(--muted)}
+button,input,select,textarea{font:inherit}
+button{background:var(--gold);color:#111;border:0;border-radius:7px;padding:10px 13px;font-weight:bold;cursor:pointer;margin:3px}
+button.secondary{background:#292929;color:#fff;border:1px solid #555}
+button.danger{background:#8b2929;color:white}
+button:disabled{opacity:.5}
+input,select,textarea{width:100%;padding:11px;background:#0e0e0e;color:#fff;border:1px solid #48413a;border-radius:7px;margin:5px 0 12px}
+label{font-size:13px;color:#d7c8a7}
+.wrap{max-width:1200px;margin:auto;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+h1,h2,h3{margin-top:0}h2{font-size:20px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:#111;border:1px solid var(--line);padding:15px;border-radius:10px}
+.stat strong{display:block;font-size:24px;color:var(--gold);margin-top:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.tabs button{background:#252525;color:#eee;border:1px solid #4a4030}
+.tabs button.active{background:var(--gold);color:#111}
+.section{display:none}.section.active{display:block}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+th{color:var(--gold);background:#111}
+img.product-img{width:62px;height:62px;object-fit:cover;border-radius:6px}
+.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#30291b;color:#f1d38c;font-size:12px}
+.msg{padding:10px;margin:8px 0;border-radius:7px;background:#202020;white-space:pre-wrap}
 .hidden{display:none!important}
-.muted{color:var(--muted);font-size:13px}
-.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.product img{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#222}
-.product h3{margin:9px 0}
-.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#29292d;border:1px solid #444;margin-right:4px}
-.badge.warn{background:#4a3a0f;border-color:#8a6d1f;color:#ffd978}
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
-.stat b{display:block;font-size:22px;color:var(--gold)}
-.stat span{font-size:13px;color:var(--muted)}
-.toolbar{display:grid;grid-template-columns:2fr 1fr;gap:10px}
-.zone{margin-top:8px}
-#message{white-space:pre-wrap;color:#f3dc91}
-hr{border-color:var(--line)}
-@media(max-width:600px){.row,.products,.toolbar{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:10px}}
+.actions{min-width:190px}
+#loginBox{max-width:430px;margin:8vh auto}
+@media(max-width:750px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:10px}.panel{padding:12px}.logo{font-size:20px}}
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
- <div class="logo">SAREX<span>BD</span></div>
- <p class="muted">ADMIN · PRODUCTS · ORDERS</p>
- <button id="logout" class="dark hidden" type="button">Logout</button>
+  <div>
+    <div class="logo">SAREXBD</div>
+    <small>PREMIUM LEATHER · ADMIN PANEL</small>
+  </div>
+  <button id="logoutBtn" class="secondary hidden" onclick="logout()">Logout</button>
 </header>
-<main>
- <section id="login" class="card">
-  <h2>Admin Login</h2>
-  <form id="loginForm" onsubmit="return false">
-   <label for="email">Email</label>
-   <input id="email" type="email" autocomplete="username" required>
-   <label for="password">Password</label>
-   <input id="password" type="password" autocomplete="current-password" required>
-   <button class="gold" type="submit">Login</button>
-  </form>
-  <p id="loginMessage" role="status"></p>
- </section>
 
- <section id="dashboard" class="hidden">
-  <h2>সারসংক্ষেপ</h2>
-  <div class="stats">
-   <div class="stat"><b id="stToday">0</b><span>আজকের অর্ডার</span></div>
-   <div class="stat"><b id="stTodaySales">৳0</b><span>আজকের বিক্রি</span></div>
-   <div class="stat"><b id="stMonthSales">৳0</b><span>এই মাসের বিক্রি</span></div>
-   <div class="stat"><b id="stPending">0</b><span>পেন্ডিং অর্ডার</span></div>
-   <div class="stat"><b id="stLow">0</b><span>কম স্টকের প্রোডাক্ট</span></div>
-   <div class="stat"><b id="stReviews">0</b><span>অপেক্ষমাণ রিভিউ</span></div>
-  </div>
-  <p id="lowList" class="muted"></p>
-  <p id="statsNote" class="muted"></p>
+<main class="wrap">
+  <div id="message" class="msg hidden"></div>
 
-  <h2>প্রোডাক্ট যোগ / এডিট</h2>
-  <div class="card">
-   <form id="productForm">
-    <input id="productId" type="hidden">
-    <label for="name">প্রোডাক্টের নাম</label>
-    <input id="name" required maxlength="150" placeholder="Premium Leather Wallet">
-    <label for="description">বিবরণ</label>
-    <textarea id="description" rows="3" maxlength="2000" placeholder="প্রোডাক্টের বিবরণ"></textarea>
-    <div class="row">
-     <div><label for="price">দাম (৳)</label><input id="price" type="number" min="0" step="0.01" required></div>
-     <div><label for="stock">স্টক</label><input id="stock" type="number" min="0" step="1" required></div>
+  <section id="loginBox" class="panel">
+    <h2>Admin Login</h2>
+    <p class="muted">শুধু অনুমোদিত অ্যাডমিন অ্যাকাউন্ট দিয়ে প্রবেশ করো।</p>
+    <form id="loginForm">
+      <label>Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Login</button>
+    </form>
+  </section>
+
+  <div id="app" class="hidden">
+    <div class="grid">
+      <div class="stat">মোট অর্ডার<strong id="totalOrders">0</strong></div>
+      <div class="stat">পেন্ডিং অর্ডার<strong id="pendingOrders">0</strong></div>
+      <div class="stat">ডেলিভারড বিক্রি<strong id="salesTotal">৳0</strong></div>
+      <div class="stat">কম স্টক<strong id="lowStock">0</strong></div>
     </div>
-    <label for="category">ক্যাটাগরি (খালি রাখলে নাম দেখে নিজে বসবে)</label>
-    <input id="category" list="categoryOptions" maxlength="40" placeholder="যেমন: Wallet">
-    <datalist id="categoryOptions"><option value="Wallet"><option value="Belt"><option value="Bag"><option value="Jacket"></datalist>
-    <label for="discount">প্রোডাক্ট ছাড় (%) — ০ মানে ছাড় নেই</label>
-    <input id="discount" type="number" min="0" max="99" step="0.5" value="0">
-    <label for="image">প্রোডাক্টের ছবি (JPG, PNG, WEBP · সর্বোচ্চ ৫ MB)</label>
-    <input id="image" type="file" accept="image/jpeg,image/png,image/webp">
-    <p class="muted">নতুন ছবি না দিলে আগের ছবিই থাকবে।</p>
-    <label><input id="active" type="checkbox" checked style="width:auto"> ওয়েবসাইটে দেখাবে</label>
-    <p>
-     <button class="gold" type="submit">Save Product</button>
-     <button class="dark" id="cancelEdit" type="button">নতুন প্রোডাক্ট</button>
-    </p>
-   </form>
-  </div>
 
-  <h2>প্রোডাক্ট তালিকা</h2>
-  <div class="card">
-   <label for="bulkDiscount">সব প্রোডাক্টে একসাথে ছাড় (%)</label>
-   <input id="bulkDiscount" type="number" min="0" max="99" step="0.5" placeholder="যেমন: 10">
-   <button class="gold" id="applyBulk" type="button">সবগুলোতে প্রয়োগ করো</button>
-   <button class="danger" id="clearBulk" type="button">সব ছাড় তুলে নাও</button>
-   <p id="bulkMessage" class="muted" role="status"></p>
-  </div>
-  <button class="dark" id="reloadProducts" type="button">Refresh Products</button>
-  <div id="productList" class="products"></div>
+    <nav class="tabs">
+      <button class="active" onclick="showTab('dashboard',this)">Dashboard</button>
+      <button onclick="showTab('products',this)">Products</button>
+      <button onclick="showTab('orders',this)">Orders</button>
+      <button onclick="showTab('reviews',this)">Reviews</button>
+      <button onclick="showTab('coupons',this)">Coupons</button>
+      <button onclick="showTab('settings',this)">Settings</button>
+    </nav>
 
-  <hr>
-  <h2>অর্ডার ম্যানেজমেন্ট</h2>
-  <form id="orderFilter" class="card" onsubmit="return false">
-   <div class="toolbar">
-    <div>
-     <label for="orderSearch">খোঁজো (নাম / ফোন / পণ্য / অর্ডার নম্বর)</label>
-     <input id="orderSearch" type="search" placeholder="যেমন: 01712 বা রহিম">
-    </div>
-    <div>
-     <label for="orderStatus">স্ট্যাটাস</label>
-     <select id="orderStatus"><option value="">সব</option></select>
-    </div>
-   </div>
-   <button class="gold" type="submit">খুঁজুন</button>
-   <button class="dark" id="clearFilter" type="button">রিসেট</button>
-   <button class="dark" id="reloadOrders" type="button">Refresh Orders</button>
-   <button class="dark" id="exportOrders" type="button">CSV ডাউনলোড</button>
-  </form>
-  <p id="orderMessage" class="muted" role="status"></p>
-  <div id="orderList"></div>
-  <button class="dark hidden" id="moreOrders" type="button">আরও অর্ডার দেখাও</button>
+    <section id="dashboard" class="section active">
+      <div class="panel">
+        <h2>Dashboard</h2>
+        <p>স্বাগতম, SAREXBD Admin.</p>
+        <button onclick="refreshAll()">Refresh Data</button>
+        <button class="secondary" onclick="exportOrders()">Export Orders CSV</button>
+        <p class="muted">বিক্রির হিসাব শুধু Delivered অর্ডার থেকে গণনা করা হয়।</p>
+      </div>
+      <div class="panel">
+        <h2>সাম্প্রতিক অর্ডার</h2>
+        <div id="recentOrders" class="table-wrap">লোড হচ্ছে…</div>
+      </div>
+    </section>
 
-  <hr>
-  <h2>রিভিউ ম্যানেজমেন্ট</h2>
-  <div class="card">
-   <label for="reviewFilter">দেখাও</label>
-   <select id="reviewFilter">
-    <option value="Pending">অপেক্ষমাণ (Pending)</option>
-    <option value="Approved">অনুমোদিত (Approved)</option>
-    <option value="">সব</option>
-   </select>
-   <button class="dark" id="reloadReviews" type="button">Refresh Reviews</button>
-  </div>
-  <p id="reviewMessage" class="muted" role="status"></p>
-  <div id="reviewList"></div>
+    <section id="products" class="section">
+      <div class="panel">
+        <h2 id="productFormTitle">পণ্য যোগ করো</h2>
+        <form id="productForm">
+          <input id="productId" type="hidden">
+          <div class="row">
+            <div><label>পণ্যের নাম</label><input id="pName" required></div>
+            <div><label>দাম (৳)</label><input id="pPrice" type="number" min="0" required></div>
+          </div>
+          <div class="row">
+            <div><label>স্টক</label><input id="pStock" type="number" min="0" value="0"></div>
+            <div><label>Discount (%)</label><input id="pDiscount" type="number" min="0" max="100" value="0"></div>
+          </div>
+          <div class="row">
+            <div><label>Category</label><input id="pCategory" placeholder="Wallet / Belt / Bag"></div>
+            <div><label>পণ্যের ছবি</label><input id="pImage" type="file" accept="image/*"></div>
+          </div>
+          <label>Description</label><textarea id="pDescription" rows="3"></textarea>
+          <label><input id="pActive" type="checkbox" checked style="width:auto"> ওয়েবসাইটে পণ্য দেখাবে</label>
+          <div>
+            <button type="submit">Save Product</button>
+            <button type="button" class="secondary" onclick="resetProductForm()">Clear</button>
+          </div>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>পণ্যের তালিকা</h2>
+        <input id="productSearch" placeholder="পণ্যের নাম দিয়ে খুঁজো…" oninput="renderProducts()">
+        <div id="productsList" class="table-wrap">লোড হচ্ছে…</div>
+      </div>
+    </section>
 
-  <hr>
-  <h2>কুপন</h2>
-  <div class="card">
-   <form id="couponForm" onsubmit="return false">
-    <div class="row">
-     <div><label for="cpCode">কুপন কোড</label><input id="cpCode" maxlength="30" placeholder="SAREXBD5" autocapitalize="characters"></div>
-     <div><label for="cpPercent">ছাড় (%)</label><input id="cpPercent" type="number" min="1" max="100" step="0.5"></div>
-    </div>
-    <div class="row">
-     <div><label for="cpMax">সর্বোচ্চ ব্যবহার (খালি = সীমাহীন)</label><input id="cpMax" type="number" min="1" step="1"></div>
-     <div><label for="cpExpiry">মেয়াদ শেষের তারিখ (খালি = মেয়াদহীন)</label><input id="cpExpiry" type="date"></div>
-    </div>
-    <button class="gold" type="submit">কুপন যোগ করো</button>
-   </form>
-  </div>
-  <p id="couponMessage" class="muted" role="status"></p>
-  <div id="couponList"></div>
+    <section id="orders" class="section">
+      <div class="panel">
+        <h2>Orders Management</h2>
+        <div class="row">
+          <input id="orderSearch" placeholder="নাম / ফোন দিয়ে খুঁজো" oninput="renderOrders()">
+          <select id="orderFilter" onchange="renderOrders()">
+            <option value="">সব অর্ডার</option>
+            <option>Pending</option><option>Confirmed</option>
+            <option>Shipped</option><option>Delivered</option><option>Cancelled</option>
+          </select>
+        </div>
+        <button class="secondary" onclick="exportOrders()">Export CSV</button>
+        <div id="ordersList" class="table-wrap"></div>
+      </div>
+    </section>
 
-  <hr>
-  <h2>সেটিংস</h2>
-  <div class="card">
-   <form id="settingsForm" onsubmit="return false">
-    <label for="setShop">দোকানের নাম</label>
-    <input id="setShop" maxlength="60">
-    <label for="setWa">দোকানের WhatsApp/ফোন নম্বর (ইনভয়েসে দেখাবে)</label>
-    <input id="setWa" inputmode="tel" maxlength="20">
-    <label for="setAddr">ঠিকানা (খালি রাখলে ইনভয়েসে দেখাবে না)</label>
-    <input id="setAddr" maxlength="200">
-    <div class="row">
-     <div><label for="setIn">ডেলিভারি চার্জ: ঢাকার ভেতরে (৳)</label><input id="setIn" type="number" min="0" step="1"></div>
-     <div><label for="setOut">ডেলিভারি চার্জ: ঢাকার বাইরে (৳)</label><input id="setOut" type="number" min="0" step="1"></div>
-    </div>
-    <p class="muted">ডেলিভারি চার্জ সার্ভারে সেভ হয়, তাই কাস্টমারের সাইটেও সঙ্গে সঙ্গে বদলে যায়।</p>
-    <label for="setLow">কম স্টকের সীমা (এর সমান বা কম হলে সতর্ক করবে)</label>
-    <input id="setLow" type="number" min="0" step="1">
-    <button class="gold" type="submit">Save Settings</button>
-    <button class="dark" id="resetSettings" type="button">ডিফল্টে ফেরাও</button>
-   </form>
-   <p id="settingsMessage" class="muted" role="status"></p>
-   <p class="muted">দোকানের নাম, নম্বর, ঠিকানা ও স্টকের সীমা শুধু এই ফোন/ব্রাউজারে সেভ থাকে।</p>
+    <section id="reviews" class="section">
+      <div class="panel">
+        <h2>Customer Reviews</h2>
+        <p class="muted">রিভিউ অনুমোদন করলে তবেই তা কাস্টমারদের দেখানোর জন্য রাখা হবে।</p>
+        <select id="reviewFilter" onchange="loadReviews()">
+          <option value="Pending">Pending Reviews</option>
+          <option value="Approved">Approved Reviews</option>
+          <option value="Hidden">Hidden Reviews</option>
+          <option value="">সব রিভিউ</option>
+        </select>
+        <div id="reviewsList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="coupons" class="section">
+      <div class="panel">
+        <h2>Coupon Management</h2>
+        <p class="muted">এই অংশটি কাজ করতে Supabase-এ উপযুক্ত coupons টেবিল থাকতে হবে।</p>
+        <form id="couponForm">
+          <div class="row">
+            <div><label>Coupon Code</label><input id="cCode" required placeholder="SAREX10"></div>
+            <div><label>Discount (%)</label><input id="cDiscount" type="number" min="1" max="100" required></div>
+          </div>
+          <div class="row">
+            <div><label>Expiry date (ঐচ্ছিক)</label><input id="cExpiry" type="date"></div>
+            <div><label><input id="cActive" type="checkbox" checked style="width:auto"> Active</label></div>
+          </div>
+          <button type="submit">Save Coupon</button>
+        </form>
+        <div id="couponsList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="settings" class="section">
+      <div class="panel">
+        <h2>Shop Settings</h2>
+        <form id="settingsForm">
+          <label>Shop Name</label><input id="sName" value="SAREXBD">
+          <label>WhatsApp number (country code সহ)</label><input id="sWhatsApp" placeholder="8801XXXXXXXXX">
+          <label>Shop Address</label><textarea id="sAddress" rows="2"></textarea>
+          <div class="row">
+            <div><label>ঢাকার ডেলিভারি চার্জ (৳)</label><input id="sDhaka" type="number" min="0" value="80"></div>
+            <div><label>ঢাকার বাইরে (৳)</label><input id="sOutside" type="number" min="0" value="130"></div>
+          </div>
+          <label>Low stock alert threshold</label><input id="sLowStock" type="number" min="0" value="5">
+          <button type="submit">Save Settings</button>
+        </form>
+        <p class="muted">ডেলিভারি চার্জ এখানে সেভ হলেও অর্ডার ফর্মে কার্যকর করতে কাস্টমার-সাইটের কোডেও সেটিংস ব্যবহার করতে হবে।</p>
+      </div>
+    </section>
   </div>
- </section>
- <p id="message" role="status"></p>
 </main>
 
 <script>
-const SUPABASE_URL="https://kkjyhhxkdgcbtwysftjt.supabase.co";
-const SUPABASE_KEY="sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
-const BUCKET="product-images";
-const ORDERS_PER_PAGE=20;
-const MAX_IMAGE_BYTES=5*1024*1024;
-const IMAGE_TYPES={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
-const STATUSES=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
+/* Supabase project configuration */
+const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ---------- সেটিংস ---------- */
-const DEFAULTS={shopName:"SAREXBD",whatsapp:"01610244533",address:"",deliveryInside:80,deliveryOutside:120,lowStock:5};
-const SETTINGS_KEY="sarexbd_admin_settings_v1";
-function loadSettings(){
- const s=Object.assign({},DEFAULTS);
- try{
-  const raw=localStorage.getItem(SETTINGS_KEY);
-  if(raw){
-   const o=JSON.parse(raw);
-   if(typeof o.shopName==="string"&&o.shopName.trim())s.shopName=o.shopName.trim();
-   if(typeof o.whatsapp==="string")s.whatsapp=o.whatsapp.trim();
-   if(typeof o.address==="string")s.address=o.address.trim();
-   ["deliveryInside","deliveryOutside","lowStock"].forEach(k=>{
-    const n=Number(o[k]);
-    if(Number.isFinite(n)&&n>=0)s[k]=n;
-   });
+let products = [];
+let orders = [];
+let reviews = [];
+let coupons = [];
+let settings = {};
+let currentUser = null;
+
+function el(id){ return document.getElementById(id); }
+function money(n){ return "৳" + Number(n || 0).toLocaleString("en-BD"); }
+function safe(v){
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function showMessage(text){
+  el("message").textContent = text;
+  el("message").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function hideMessage(){el("message").classList.add("hidden");}
+function showTab(id,btn){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  el(id).classList.add("active");
+  if(btn) btn.classList.add("active");
+  if(id==="reviews") loadReviews();
+  if(id==="coupons") loadCoupons();
+  if(id==="settings") loadSettings();
+}
+async function checkSession(){
+  const {data,error}=await db.auth.getSession();
+  if(error){showMessage(error.message);return;}
+  if(data.session){
+    currentUser=data.session.user;
+    openAdmin();
   }
- }catch(e){}
- return s;
 }
-function persistSettings(){
- try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(S));return true}catch(e){return false}
-}
-let S=loadSettings();
-
-if(!window.supabase){
- document.getElementById("loginMessage").textContent="Supabase লাইব্রেরি লোড হয়নি। নেট চেক করো, VPN/ডেটা সেভার বন্ধ করো বা অন্য নেটওয়ার্কে চেষ্টা করো।";
- throw new Error("supabase library missing");
-}
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const $=id=>document.getElementById(id);
-let products=[];
-let statOrders=[];
-let orderCount=0;
-let shownFor=null;
-
-function money(v){return "৳"+(Number(v)||0).toLocaleString("en-US")}
-function showMessage(s){$("message").textContent=s}
-function errText(e){return (e&&e.message)||String(e)}
-function esc(v){
- return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-// বাংলাদেশি নম্বরকে WhatsApp/কলের জন্য 8801XXXXXXXXX আকারে আনে
-function bdPhone(p){
- const d=String(p||"").replace(/\D/g,"");
- if(!d)return "";
- if(d.startsWith("880"))return d;
- if(d.startsWith("0"))return "88"+d;
- if(d.length===10&&d.startsWith("1"))return "880"+d;
- return d;
-}
-
-function storagePath(url){
- const part=(url||"").split("/"+BUCKET+"/")[1];
- return part?decodeURIComponent(part.split("?")[0]):null;
-}
-async function removeImage(url){
- const path=storagePath(url);
- if(!path)return;
- const {error}=await db.storage.from(BUCKET).remove([path]);
- if(error)console.warn("পুরনো ছবি মোছা যায়নি:",error.message);
-}
-
-/* ---------- লগইন / সেশন ---------- */
-function applySession(session){
- const logged=!!session;
- $("login").classList.toggle("hidden",logged);
- $("dashboard").classList.toggle("hidden",!logged);
- $("logout").classList.toggle("hidden",!logged);
- const uid=logged?session.user.id:null;
- if(uid===shownFor)return;
- shownFor=uid;
- if(logged){
-  fillSettingsForm();
-  loadServerSettings();
-  loadCoupons();
-  loadProducts();
-  loadOrders(true);
-  loadStats();
-  loadReviews();
- }else{
-  products=[];
-  statOrders=[];
-  $("productList").replaceChildren();
-  $("orderList").replaceChildren();
-  $("reviewList").replaceChildren();
-  showMessage("");
- }
-}
-db.auth.onAuthStateChange((event,session)=>{
- setTimeout(()=>applySession(session),0);
-});
-
-$("loginForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const btn=$("loginForm").querySelector("button");
- btn.disabled=true;
- $("loginMessage").textContent="লগইন হচ্ছে...";
- const {error}=await db.auth.signInWithPassword({
-  email:$("email").value.trim(),
-  password:$("password").value
- });
- btn.disabled=false;
- if(error){$("loginMessage").textContent="লগইন হয়নি: "+error.message;return}
- $("loginMessage").textContent="";
- $("password").value="";
-});
-$("logout").onclick=async()=>{await db.auth.signOut()};
-
-/* ---------- সারসংক্ষেপ ---------- */
-async function loadStats(){
- // সর্বশেষ ১০০০টি অর্ডার থেকে হিসাব (ছোট দোকানের জন্য যথেষ্ট)
- const {data,error}=await db.from("orders").select("created_at,total,status")
-  .order("created_at",{ascending:false}).limit(1000);
- if(error){$("statsNote").textContent="সারসংক্ষেপ লোড হয়নি: "+error.message;return}
- statOrders=data||[];
- $("statsNote").textContent=statOrders.length>=1000?"সর্বশেষ ১০০০টি অর্ডার থেকে হিসাব করা হয়েছে। বিক্রির হিসাবে Cancelled অর্ডার বাদ।":"বিক্রির হিসাবে Cancelled অর্ডার বাদ।";
- renderStats();
-}
-function renderStats(){
- const now=new Date();
- const y=now.getFullYear(),m=now.getMonth(),d=now.getDate();
- let todayCount=0,todaySales=0,monthSales=0,pending=0;
- statOrders.forEach(o=>{
-  const dt=new Date(o.created_at);
-  const total=Number(o.total)||0;
-  const cancelled=o.status==="Cancelled";
-  if(!o.status||o.status==="Pending")pending++;
-  if(dt.getFullYear()===y&&dt.getMonth()===m){
-   if(!cancelled)monthSales+=total;
-   if(dt.getDate()===d){
-    todayCount++;
-    if(!cancelled)todaySales+=total;
-   }
-  }
- });
- const low=products.filter(p=>p.active&&Number(p.stock)<=S.lowStock);
- $("stToday").textContent=todayCount;
- $("stTodaySales").textContent=money(todaySales);
- $("stMonthSales").textContent=money(monthSales);
- $("stPending").textContent=pending;
- $("stLow").textContent=low.length;
- $("lowList").textContent=low.length
-  ? "⚠ কম স্টক: "+low.slice(0,6).map(p=>p.name+" ("+p.stock+")").join(", ")+(low.length>6?" ...":"")
-  : "";
-}
-
-/* ---------- প্রোডাক্ট ---------- */
-function resetForm(){
- $("productForm").reset();
- $("productId").value="";
- $("active").checked=true;
- $("image").value="";
-}
-
-async function loadProducts(){
- showMessage("প্রোডাক্ট লোড হচ্ছে...");
- const {data,error}=await db.from("products").select("*").order("id",{ascending:false});
- if(error){showMessage("প্রোডাক্ট লোড হয়নি: "+error.message);return}
- products=data||[];
- renderProducts();
- showMessage("মোট প্রোডাক্ট: "+products.length);
-}
-
-function effectivePrice(p){
- const d=Number(p.discount_percent)||0;
- const price=Number(p.price)||0;
- return d>0?Math.round(price*(100-d)/100):price;
-}
-
-function field(labelText,input){
- const wrap=document.createElement("div");
- const l=document.createElement("label");
- l.textContent=labelText;
- wrap.appendChild(l);
- wrap.appendChild(input);
- return wrap;
-}
-
-function renderProducts(){
- const list=$("productList");
- list.replaceChildren();
- if(!products.length)list.textContent="এখনো কোনো প্রোডাক্ট নেই।";
- products.forEach(p=>{
-  const box=document.createElement("div");
-  box.className="card product";
-  if(p.image_url){
-   const img=document.createElement("img");
-   img.src=p.image_url;
-   img.alt=p.name||"Product";
-   img.loading="lazy";
-   img.onerror=()=>{img.style.display="none"};
-   box.appendChild(img);
-  }
-  const title=document.createElement("h3");
-  title.textContent=p.name;
-  box.appendChild(title);
-  const price=document.createElement("p");
-  price.textContent=Number(p.discount_percent)>0?money(effectivePrice(p))+" (মূল "+money(p.price)+", −"+Number(p.discount_percent)+"%)":money(p.price);
-  box.appendChild(price);
-
-  const stock=document.createElement("p");
-  stock.textContent="স্টক: "+p.stock+" · ";
-  const badge=document.createElement("span");
-  badge.className="badge";
-  badge.textContent=p.active?"Active":"Hidden";
-  stock.appendChild(badge);
-  if(p.category){
-   const cb=document.createElement("span");
-   cb.className="badge";cb.textContent=p.category;
-   stock.appendChild(cb);
-  }
-  const n=Number(p.stock);
-  if(n<=0){
-   const w=document.createElement("span");
-   w.className="badge warn";w.textContent="স্টক শেষ";
-   stock.appendChild(w);
-  }else if(n<=S.lowStock){
-   const w=document.createElement("span");
-   w.className="badge warn";w.textContent="কম স্টক";
-   stock.appendChild(w);
-  }
-  box.appendChild(stock);
-
-  // দ্রুত দাম/স্টক/ছাড় বদল
-  const pi=document.createElement("input");
-  pi.type="number";pi.min="0";pi.step="0.01";pi.value=p.price;
-  const si=document.createElement("input");
-  si.type="number";si.min="0";si.step="1";si.value=p.stock;
-  const di=document.createElement("input");
-  di.type="number";di.min="0";di.max="99";di.step="0.5";di.value=p.discount_percent||0;
-  const quick=document.createElement("div");
-  quick.className="row";
-  quick.appendChild(field("দাম (৳)",pi));
-  quick.appendChild(field("স্টক",si));
-  quick.appendChild(field("ছাড় (%)",di));
-  box.appendChild(quick);
-  const qs=document.createElement("button");
-  qs.className="dark";qs.type="button";qs.textContent="দাম/স্টক সেভ";
-  qs.onclick=()=>quickSave(p,pi,si,di,qs);
-  box.appendChild(qs);
-
-  const edit=document.createElement("button");
-  edit.className="gold";edit.type="button";edit.textContent="Edit";
-  edit.onclick=()=>editProduct(p.id);
-  box.appendChild(edit);
-
-  const toggle=document.createElement("button");
-  toggle.className="dark";toggle.type="button";
-  toggle.textContent=p.active?"Hide":"Show";
-  toggle.onclick=()=>toggleProduct(p,toggle);
-  box.appendChild(toggle);
-
-  const del=document.createElement("button");
-  del.className="danger";del.type="button";del.textContent="Delete";
-  del.onclick=()=>deleteProduct(p,del);
-  box.appendChild(del);
-
-  list.appendChild(box);
- });
- renderStats();
-}
-
-async function quickSave(p,pi,si,di,btn){
- const price=Number(pi.value);
- const stock=Number(si.value);
- const disc=Number(di.value)||0;
- if(!Number.isFinite(price)||price<0){showMessage("দাম সঠিক নয়।");return}
- if(!Number.isInteger(stock)||stock<0){showMessage("স্টক অবশ্যই ০ বা তার বেশি পূর্ণ সংখ্যা হতে হবে।");return}
- if(disc<0||disc>=100){showMessage("ছাড় ০ থেকে ৯৯ এর মধ্যে হতে হবে।");return}
- btn.disabled=true;
- const {error}=await db.from("products").update({price:price,stock:stock,discount_percent:disc}).eq("id",p.id);
- if(error){showMessage("আপডেট হয়নি: "+error.message);btn.disabled=false;return}
- await loadProducts();
- showMessage("\""+p.name+"\" আপডেট হয়েছে।");
-}
-
-function editProduct(id){
- const p=products.find(x=>String(x.id)===String(id));
- if(!p)return;
- $("productId").value=p.id;
- $("name").value=p.name||"";
- $("description").value=p.description||"";
- $("price").value=p.price||0;
- $("stock").value=p.stock||0;
- $("discount").value=p.discount_percent||0;
- $("category").value=p.category||"";
- $("active").checked=!!p.active;
- $("image").value="";
- window.scrollTo({top:0,behavior:"smooth"});
-}
-
-async function toggleProduct(p,btn){
- btn.disabled=true;
- showMessage("আপডেট হচ্ছে...");
- const {error}=await db.from("products").update({active:!p.active}).eq("id",p.id);
- if(error){showMessage("আপডেট হয়নি: "+error.message);btn.disabled=false;return}
- await loadProducts();
-}
-
-async function deleteProduct(p,btn){
- if(!confirm("\""+p.name+"\" প্রোডাক্টটি স্থায়ীভাবে মুছে ফেলবে?"))return;
- btn.disabled=true;
- const {error}=await db.from("products").delete().eq("id",p.id);
- if(error){showMessage("মোছা যায়নি: "+error.message);btn.disabled=false;return}
- await removeImage(p.image_url);
- await loadProducts();
- showMessage("প্রোডাক্ট মোছা হয়েছে।");
-}
-
-$("productForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const button=$("productForm").querySelector('button[type="submit"]');
- button.disabled=true;
- let newPath=null;
- try{
-  const id=$("productId").value;
-  const old=products.find(p=>String(p.id)===String(id));
-  let imageUrl=old?.image_url||"";
-  const file=$("image").files[0];
-
-  if(file){
-   const ext=IMAGE_TYPES[file.type];
-   if(!ext)throw Error("শুধু JPG, PNG বা WEBP ছবি দেওয়া যাবে।");
-   if(file.size>MAX_IMAGE_BYTES)throw Error("ছবির সাইজ ৫ MB-এর কম রাখো।");
-   const path=Date.now()+"-"+Math.random().toString(36).slice(2)+"."+ext;
-   const {data:uploaded,error:uploadError}=await db.storage.from(BUCKET).upload(path,file,{
-    cacheControl:"3600",upsert:false,contentType:file.type
-   });
-   if(uploadError)throw uploadError;
-   newPath=uploaded.path;
-   imageUrl=db.storage.from(BUCKET).getPublicUrl(newPath).data.publicUrl;
-  }
-
-  const product={
-   name:$("name").value.trim(),
-   description:$("description").value.trim(),
-   price:Number($("price").value),
-   stock:Number($("stock").value),
-   image_url:imageUrl,
-   discount_percent:Number($("discount").value)||0,
-   category:$("category").value.trim(),
-   active:$("active").checked
-  };
-  if(!product.name)throw Error("প্রোডাক্টের নাম দাও।");
-  if(!Number.isFinite(product.price)||product.price<0)throw Error("দাম সঠিক নয়।");
-  if(!Number.isInteger(product.stock)||product.stock<0)throw Error("স্টক অবশ্যই ০ বা তার বেশি পূর্ণ সংখ্যা হতে হবে।");
-  if(product.discount_percent<0||product.discount_percent>=100)throw Error("ছাড় ০ থেকে ৯৯ এর মধ্যে হতে হবে।");
-
-  const result=id
-   ? await db.from("products").update(product).eq("id",id)
-   : await db.from("products").insert(product);
-  if(result.error)throw result.error;
-
-  if(file&&old?.image_url&&old.image_url!==imageUrl)await removeImage(old.image_url);
-  newPath=null;
-  resetForm();
-  await loadProducts();
-  showMessage("প্রোডাক্ট সেভ হয়েছে।");
- }catch(err){
-  if(newPath)await db.storage.from(BUCKET).remove([newPath]);
-  showMessage("সেভ হয়নি: "+errText(err));
- }finally{
-  button.disabled=false;
- }
-});
-
-$("cancelEdit").onclick=resetForm;
-$("reloadProducts").onclick=loadProducts;
-
-async function setAllDiscount(percent){
- if(!Number.isFinite(percent)||percent<0||percent>=100){$("bulkMessage").textContent="ছাড় ০ থেকে ৯৯ এর মধ্যে হতে হবে।";return}
- const text=percent>0?"সব প্রোডাক্টে "+percent+"% ছাড় দেবে?":"সব প্রোডাক্টের ছাড় তুলে নেবে?";
- if(!confirm(text))return;
- $("bulkMessage").textContent="আপডেট হচ্ছে...";
- const {error}=await db.from("products").update({discount_percent:percent}).not("id","is",null);
- if(error){$("bulkMessage").textContent="আপডেট হয়নি: "+error.message;return}
- await loadProducts();
- $("bulkMessage").textContent=percent>0?"সব প্রোডাক্টে "+percent+"% ছাড় বসেছে।":"সব ছাড় তুলে নেওয়া হয়েছে।";
-}
-$("applyBulk").onclick=()=>{
- const v=$("bulkDiscount").value.trim();
- if(v===""){$("bulkMessage").textContent="ছাড়ের হার লিখুন।";return}
- setAllDiscount(Number(v));
-};
-$("clearBulk").onclick=()=>setAllDiscount(0);
-
-/* ---------- অর্ডার: সার্চ, ফিল্টার, পেজিং ---------- */
-STATUSES.forEach(s=>{
- const opt=document.createElement("option");
- opt.value=s;opt.textContent=s;
- $("orderStatus").appendChild(opt);
-});
-
-function orderTerm(){
- return $("orderSearch").value.replace(/[,()%*\\"'`]/g," ").trim();
-}
-function ordersQuery(includeId){
- let q=db.from("orders").select("*",{count:"exact"});
- const st=$("orderStatus").value;
- const t=orderTerm();
- if(st)q=q.eq("status",st);
- if(t){
-  const f=["customer_name","phone","product"].map(c=>c+".ilike.%"+t+"%");
-  if(includeId&&/^\d+$/.test(t))f.push("id.eq."+t);
-  q=q.or(f.join(","));
- }
- return q.order("created_at",{ascending:false});
-}
-async function fetchOrdersRange(from,to){
- let r=await ordersQuery(true).range(from,to);
- // অর্ডার নম্বর কলামের ধরন না মিললে নম্বর ছাড়া আবার চেষ্টা
- if(r.error&&/^\d+$/.test(orderTerm()))r=await ordersQuery(false).range(from,to);
- return r;
-}
-
-function renderOrder(o){
- const box=document.createElement("div");
- box.className="card";
- const heading=document.createElement("h3");
- heading.textContent="Order #"+o.id+" — "+(o.customer_name||"");
- box.appendChild(heading);
- const info=document.createElement("p");
- info.textContent="ফোন: "+(o.phone||"")+" | পণ্য: "+(o.product||"")+" | পরিমাণ: "+(o.quantity||1)+" | মোট: "+money(o.total)+(Number(o.product_discount)>0?" | প্রোডাক্ট ছাড়: −"+money(o.product_discount):"")+(Number(o.discount)>0?" | কুপন "+(o.coupon_code||"")+": −"+money(o.discount):"");
- box.appendChild(info);
- const address=document.createElement("p");
- address.textContent="ঠিকানা: "+(o.address||"");
- box.appendChild(address);
-
- // যোগাযোগ: WhatsApp ও কল
- const phone=bdPhone(o.phone);
- if(phone){
-  const msg="আসসালামু আলাইকুম"+(o.customer_name?" "+o.customer_name:"")+", "+S.shopName+" থেকে আপনার অর্ডার #"+o.id+" সম্পর্কে জানাচ্ছি।";
-  const wa=document.createElement("a");
-  wa.className="btnlink gold";
-  wa.textContent="WhatsApp";
-  wa.href="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
-  wa.target="_blank";wa.rel="noopener noreferrer";
-  box.appendChild(wa);
-  const call=document.createElement("a");
-  call.className="btnlink dark";
-  call.textContent="কল করো";
-  call.href="tel:+"+phone;
-  box.appendChild(call);
- }
-
- const select=document.createElement("select");
- select.setAttribute("aria-label","অর্ডারের স্ট্যাটাস");
- STATUSES.forEach(s=>{
-  const opt=document.createElement("option");
-  opt.value=s;opt.textContent=s;
-  select.appendChild(opt);
- });
- select.value=STATUSES.includes(o.status)?o.status:"Pending";
- box.appendChild(select);
-
- // ইনভয়েসের ডেলিভারি চার্জ (পুরনো অর্ডারের জন্য; নতুন অর্ডারে সার্ভারের হিসাব ব্যবহার হয়)
- const zone=document.createElement("select");
- zone.setAttribute("aria-label","ইনভয়েসের ডেলিভারি চার্জ");
- [["inside","ঢাকার ভেতরে"],["outside","ঢাকার বাইরে"],["none","ডেলিভারি চার্জ যোগ করবে না (মোটে ধরা আছে)"]].forEach(z=>{
-  const opt=document.createElement("option");
-  opt.value=z[0];opt.textContent=z[1];
-  zone.appendChild(opt);
- });
- zone.value=/ঢাকা|dhaka/i.test(o.address||"")?"inside":"outside";
- const zoneWrap=field("ইনভয়েসে ডেলিভারি চার্জ",zone);
- zoneWrap.className="zone";
- if(!(o.subtotal!=null&&o.delivery_charge!=null))box.appendChild(zoneWrap);
-
- const save=document.createElement("button");
- save.className="gold";save.type="button";save.textContent="Save Status";
- save.onclick=async()=>{
-  save.disabled=true;
-  const {error}=await db.from("orders").update({status:select.value}).eq("id",o.id);
-  save.disabled=false;
-  if(error){
-   $("orderMessage").textContent="স্ট্যাটাস সেভ হয়নি: "+error.message;
-  }else{
-   $("orderMessage").textContent="Order #"+o.id+" আপডেট হয়েছে।";
-   loadStats();
-   loadProducts(); // Cancel করলে স্টক ফেরত আসে, তাই তালিকা নতুন করে আনা
-  }
- };
- box.appendChild(save);
-
- const invoice=document.createElement("button");
- invoice.className="dark";invoice.type="button";invoice.textContent="Invoice PDF";
- invoice.onclick=()=>printInvoice(o,select.value,(o.subtotal!=null&&o.delivery_charge!=null)?"stored":zone.value);
- box.appendChild(invoice);
- return box;
-}
-
-async function loadOrders(reset){
- const list=$("orderList");
- if(reset){orderCount=0;list.replaceChildren()}
- $("orderMessage").textContent="অর্ডার লোড হচ্ছে...";
- const from=orderCount;
- const {data,error,count}=await fetchOrdersRange(from,from+ORDERS_PER_PAGE-1);
- if(error){$("orderMessage").textContent="অর্ডার লোড হয়নি: "+error.message;return}
- (data||[]).forEach(o=>list.appendChild(renderOrder(o)));
- orderCount+=(data||[]).length;
- const total=count??orderCount;
- if(!total)list.textContent="কোনো অর্ডার পাওয়া যায়নি।";
- $("orderMessage").textContent="দেখানো হচ্ছে "+orderCount+" / মোট "+total+" অর্ডার";
- $("moreOrders").classList.toggle("hidden",orderCount>=total);
-}
-
-$("orderFilter").addEventListener("submit",e=>{e.preventDefault();loadOrders(true)});
-$("orderStatus").addEventListener("change",()=>loadOrders(true));
-$("clearFilter").onclick=()=>{
- $("orderSearch").value="";
- $("orderStatus").value="";
- loadOrders(true);
-};
-$("reloadOrders").onclick=()=>{loadOrders(true);loadStats()};
-$("moreOrders").onclick=()=>loadOrders(false);
-
-/* ---------- CSV ডাউনলোড ---------- */
-function csvCell(v){
- let s=String(v??"");
- if(/^[=+\-@\t\r]/.test(s))s="'"+s; // স্প্রেডশিট ফর্মুলা ইনজেকশন ঠেকাতে
- return '"'+s.replace(/"/g,'""')+'"';
-}
-$("exportOrders").onclick=async()=>{
- const btn=$("exportOrders");
- btn.disabled=true;
- $("orderMessage").textContent="CSV তৈরি হচ্ছে...";
- try{
-  const rows=[];
-  const step=1000;
-  for(let from=0;from<10000;from+=step){
-   const {data,error}=await fetchOrdersRange(from,from+step-1);
-   if(error)throw error;
-   rows.push(...(data||[]));
-   if(!data||data.length<step)break;
-  }
-  if(!rows.length){$("orderMessage").textContent="ডাউনলোড করার মতো অর্ডার নেই।";return}
-  const head=["অর্ডার নম্বর","তারিখ","গ্রাহকের নাম","ফোন","ঠিকানা","পণ্য","পরিমাণ","সাবটোটাল","ডেলিভারি এলাকা","ডেলিভারি চার্জ","কুপন","ছাড়","প্রোডাক্ট ছাড়","মোট","স্ট্যাটাস"];
-  const lines=[head.map(csvCell).join(",")];
-  rows.forEach(o=>{
-   lines.push([
-    o.id,
-    o.created_at?new Date(o.created_at).toLocaleString("sv-SE"):"",
-    o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.subtotal,o["delivery area"],o.delivery_charge,o.coupon_code,o.discount,o.product_discount,o.total,o.status
-   ].map(csvCell).join(","));
+el("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();hideMessage();
+  const {data,error}=await db.auth.signInWithPassword({
+    email:el("email").value.trim(),
+    password:el("password").value
   });
-  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="orders-"+new Date().toISOString().slice(0,10)+".csv";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-  $("orderMessage").textContent=rows.length+"টি অর্ডার ডাউনলোড হয়েছে।";
- }catch(err){
-  $("orderMessage").textContent="CSV হয়নি: "+errText(err);
- }finally{
-  btn.disabled=false;
- }
-};
-
-/* ---------- ইনভয়েস ---------- */
-function printInvoice(o,status,zone){
- const w=window.open("","_blank");
- if(!w){showMessage("পপ-আপ ব্লক করা আছে। পপ-আপ অনুমতি দিয়ে আবার চেষ্টা করো।");return}
- const date=o.created_at?new Date(o.created_at).toLocaleString("bn-BD"):"";
- const subtotal=zone==="stored"?(Number(o.subtotal)||0):(Number(o.total)||0);
- const delivery=zone==="stored"?(Number(o.delivery_charge)||0):(zone==="inside"?S.deliveryInside:(zone==="outside"?S.deliveryOutside:0));
- const zoneLabel=zone==="stored"?(/outside/i.test(o["delivery area"]||"")?"ঢাকার বাইরে":"ঢাকার ভেতরে"):(zone==="inside"?"ঢাকার ভেতরে":"ঢাকার বাইরে");
- const grand=zone==="stored"?(Number(o.total)||(subtotal+delivery)):(subtotal+delivery);
- const discountAmount=zone==="stored"?(Number(o.discount)||0):0;
- const discountRow=discountAmount>0?'<tr><th>কুপন ছাড় ('+esc(o.coupon_code||"")+')</th><td>−'+esc(money(discountAmount))+'</td></tr>':"";
- const productDiscount=zone==="stored"?(Number(o.product_discount)||0):0;
- const listRows=productDiscount>0?'<tr><th>পণ্যের মূল দাম</th><td>'+esc(money(subtotal+productDiscount))+'</td></tr><tr><th>প্রোডাক্ট ছাড়</th><td>−'+esc(money(productDiscount))+'</td></tr>':"";
- const contact=[S.whatsapp?"WhatsApp/ফোন: "+S.whatsapp:"",S.address].filter(Boolean).map(esc).join("<br>");
- const totalsHtml=zone==="none"
-  ? '<div class="total">মোট: '+esc(money(grand))+'</div>'
-  : '<table class="sum">'+listRows+'<tr><th>পণ্যের মোট</th><td>'+esc(money(subtotal))+'</td></tr>'
-   +discountRow+'<tr><th>ডেলিভারি চার্জ ('+esc(zoneLabel)+')</th><td>'+esc(money(delivery))+'</td></tr></table>'
-   +'<div class="total">সর্বমোট: '+esc(money(grand))+'</div>';
- const html=`<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Invoice-${esc(o.id)}</title>
-<style>
-*{box-sizing:border-box}
-body{font-family:"Noto Sans Bengali","Hind Siliguri",Arial,sans-serif;color:#111;margin:0;padding:32px;line-height:1.6}
-.wrap{max-width:720px;margin:auto}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #d4af37;padding-bottom:14px;margin-bottom:20px}
-.logo{font-size:28px;font-weight:bold;color:#b8921f}
-.contact{font-size:13px;color:#444}
-h2{margin:0;font-size:22px}
-.meta{text-align:right;font-size:14px;color:#444}
-table{width:100%;border-collapse:collapse;margin:18px 0}
-th,td{border:1px solid #ccc;padding:10px;text-align:left;font-size:14px}
-th{background:#f4f1e6;width:40%}
-.sum{margin-bottom:6px}
-.total{font-size:18px;font-weight:bold;text-align:right;margin-top:10px}
-.note{margin-top:30px;text-align:center;color:#666;font-size:13px}
-button{padding:10px 18px;margin-bottom:20px;border:0;border-radius:8px;background:#d4af37;font-weight:bold;cursor:pointer}
-@media print{button{display:none}body{padding:0}}
-</style></head><body><div class="wrap">
-<button onclick="window.print()">Print / Save as PDF</button>
-<div class="top">
- <div><div class="logo">${esc(S.shopName)}</div><div class="contact">${contact}</div></div>
- <div class="meta"><h2>রসিদ / INVOICE</h2>Order #${esc(o.id)}<br>${esc(date)}</div>
-</div>
-<table>
-<tr><th>গ্রাহকের নাম</th><td>${esc(o.customer_name)}</td></tr>
-<tr><th>ফোন</th><td>${esc(o.phone)}</td></tr>
-<tr><th>ঠিকানা</th><td>${esc(o.address)}</td></tr>
-<tr><th>পণ্য</th><td>${esc(o.product)}</td></tr>
-<tr><th>পরিমাণ</th><td>${esc(o.quantity||1)}</td></tr>
-<tr><th>স্ট্যাটাস</th><td>${esc(status)}</td></tr>
-</table>
-${totalsHtml}
-<p class="note">ধন্যবাদ, ${esc(S.shopName)} থেকে কেনাকাটার জন্য।</p>
-</div>
-<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},400)})<\/script>
-</body></html>`;
- w.document.open();
- w.document.write(html);
- w.document.close();
+  if(error){showMessage("Login হয়নি: "+error.message);return;}
+  currentUser=data.user;
+  openAdmin();
+});
+async function logout(){
+  await db.auth.signOut();
+  currentUser=null;
+  el("app").classList.add("hidden");
+  el("logoutBtn").classList.add("hidden");
+  el("loginBox").classList.remove("hidden");
 }
-
-/* ---------- রিভিউ ম্যানেজমেন্ট ---------- */
-function starsText(n){
- const r=Math.max(0,Math.min(5,Math.floor(Number(n)||0)));
- return "★".repeat(r)+"☆".repeat(5-r);
+async function openAdmin(){
+  el("loginBox").classList.add("hidden");
+  el("app").classList.remove("hidden");
+  el("logoutBtn").classList.remove("hidden");
+  await refreshAll();
 }
-
-async function loadReviewCount(){
- const {count,error}=await db.from("reviews")
-  .select("*",{count:"exact",head:true}).eq("status","Pending");
- if(!error)$("stReviews").textContent=count??0;
+async function refreshAll(){
+  hideMessage();
+  await Promise.allSettled([loadProducts(),loadOrders(),loadReviews(),loadSettings()]);
+  updateDashboard();
 }
-
+async function loadProducts(){
+  const {data,error}=await db.from("products").select("*").order("id",{ascending:false});
+  if(error){showMessage("Products লোড হয়নি: "+error.message);return;}
+  products=data||[];
+  renderProducts();
+}
+async function loadOrders(){
+  const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false}).limit(500);
+  if(error){showMessage("Orders লোড হয়নি: "+error.message);return;}
+  orders=data||[];
+  renderOrders();
+  renderRecentOrders();
+  updateDashboard();
+}
+function productName(p){
+  return p?.name ?? p?.product_name ?? p?.title ?? p?.product_title ?? "";
+}
+function renderProducts(){
+  const q=(el("productSearch")?.value||"").toLowerCase();
+  const list=products.filter(p=>productName(p).toLowerCase().includes(q));
+  if(!list.length){el("productsList").innerHTML="<p>কোনো পণ্য পাওয়া যায়নি।</p>";return;}
+  el("productsList").innerHTML=`<table><thead><tr>
+  <th>ছবি</th><th>পণ্য</th><th>দাম</th><th>স্টক</th><th>অবস্থা</th><th>কাজ</th>
+  </tr></thead><tbody>${list.map(p=>`<tr>
+  <td>${p.image_url?`<img class="product-img" src="${safe(p.image_url)}" alt="">`:"—"}</td>
+  <td><b>${safe(productName(p)||"নাম নেই")}</b><br><small>${safe(p.category||"")}</small></td>
+  <td>${money(p.price)}<br><small>Discount: ${safe(p.discount_percent||0)}%</small></td>
+  <td>${safe(p.stock??0)}</td>
+  <td><span class="pill">${p.active===false?"Hidden":"Active"}</span></td>
+  <td class="actions">
+  <button onclick="editProduct('${safe(p.id)}')">Edit</button>
+  <button class="secondary" onclick="toggleProduct('${safe(p.id)}',${p.active===false})">${p.active===false?"Show":"Hide"}</button>
+  <button class="danger" onclick="deleteProduct('${safe(p.id)}')">Delete</button>
+  </td></tr>`).join("")}</tbody></table>`;
+}
+function resetProductForm(){
+  el("productForm").reset();el("productId").value="";
+  el("pActive").checked=true;el("productFormTitle").textContent="পণ্য যোগ করো";
+}
+function editProduct(id){
+  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
+  el("productId").value=p.id;
+  el("pName").value=productName(p);
+  el("pPrice").value=p.price??0;
+  el("pStock").value=p.stock??0;
+  el("pDiscount").value=p.discount_percent??0;
+  el("pCategory").value=p.category??"";
+  el("pDescription").value=p.description??"";
+  el("pActive").checked=p.active!==false;
+  el("productFormTitle").textContent="পণ্য সম্পাদনা করো";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+el("productForm").addEventListener("submit",async e=>{
+  e.preventDefault();hideMessage();
+  const id=el("productId").value;
+  let imageUrl=products.find(p=>String(p.id)===String(id))?.image_url||null;
+  const file=el("pImage").files[0];
+  if(file){
+    const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"");
+    const path=Date.now()+"-"+Math.random().toString(36).slice(2)+"."+ext;
+    const {error:uploadError}=await db.storage.from("product-images").upload(path,file,{upsert:false});
+    if(uploadError){showMessage("ছবি আপলোড হয়নি: "+uploadError.message);return;}
+    const {data}=db.storage.from("product-images").getPublicUrl(path);
+    imageUrl=data.publicUrl;
+  }
+  const item={
+    name:el("pName").value.trim(),
+    price:Number(el("pPrice").value),
+    stock:Number(el("pStock").value||0),
+    discount_percent:Number(el("pDiscount").value||0),
+    category:el("pCategory").value.trim(),
+    description:el("pDescription").value.trim(),
+    active:el("pActive").checked,
+    image_url:imageUrl
+  };
+  const result=id
+    ?await db.from("products").update(item).eq("id",id)
+    :await db.from("products").insert(item);
+  if(result.error){showMessage("পণ্য সেভ হয়নি: "+result.error.message);return;}
+  showMessage("পণ্য সেভ হয়েছে।");
+  resetProductForm();await loadProducts();updateDashboard();
+});
+async function toggleProduct(id,active){
+  const {error}=await db.from("products").update({active}).eq("id",id);
+  if(error){showMessage(error.message);return;}
+  await loadProducts();
+}
+async function deleteProduct(id){
+  if(!confirm("এই পণ্যটি ডিলিট করতে চাও?"))return;
+  const {error}=await db.from("products").delete().eq("id",id);
+  if(error){showMessage("ডিলিট হয়নি: "+error.message);return;}
+  await loadProducts();showMessage("পণ্য ডিলিট হয়েছে।");
+}
+function orderStatus(o){return o.status||"Pending";}
+function orderCustomer(o){return o.customer_name||o.name||"—";}
+function orderPhone(o){return o.phone||o.customer_phone||"";}
+function renderOrders(){
+  const q=(el("orderSearch")?.value||"").toLowerCase();
+  const f=el("orderFilter")?.value||"";
+  const list=orders.filter(o=>
+    (!f||orderStatus(o)===f) &&
+    (orderCustomer(o).toLowerCase().includes(q)||orderPhone(o).includes(q))
+  );
+  if(!list.length){el("ordersList").innerHTML="<p>কোনো অর্ডার পাওয়া যায়নি।</p>";return;}
+  el("ordersList").innerHTML=`<table><thead><tr>
+  <th>অর্ডার</th><th>কাস্টমার</th><th>পণ্য</th><th>মোট</th><th>স্ট্যাটাস</th><th>কাজ</th>
+  </tr></thead><tbody>${list.map(o=>`<tr>
+  <td>#${safe(o.id)}<br><small>${safe(o.created_at||"")}</small></td>
+  <td>${safe(orderCustomer(o))}<br>${safe(orderPhone(o))}<br>${safe(o.address||"")}</td>
+  <td>${safe(o.product||o.product_name||"—")}<br>Qty: ${safe(o.quantity||1)}</td>
+  <td>${money(o.total??o.subtotal??0)}</td>
+  <td><select id="status-${safe(o.id)}">${["Pending","Confirmed","Shipped","Delivered","Cancelled"].map(s=>`<option ${orderStatus(o)===s?"selected":""}>${s}</option>`).join("")}</select>
+  <button onclick="updateOrder('${safe(o.id)}')">Update</button></td>
+  <td class="actions"><button onclick="whatsappOrder('${safe(o.id)}')">WhatsApp</button>
+  <button class="secondary" onclick="printOrder('${safe(o.id)}')">Invoice</button></td>
+  </tr>`).join("")}</tbody></table>`;
+}
+async function updateOrder(id){
+  const status=el("status-"+id).value;
+  const {error}=await db.from("orders").update({status}).eq("id",id);
+  if(error){showMessage("স্ট্যাটাস বদলানো যায়নি: "+error.message);return;}
+  await loadOrders();showMessage("অর্ডার স্ট্যাটাস আপডেট হয়েছে।");
+}
+function whatsappOrder(id){
+  const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
+  const phone=orderPhone(o).replace(/\D/g,"");
+  const msg=`SAREXBD Order #${o.id}\nCustomer: ${orderCustomer(o)}\nProduct: ${o.product||o.product_name||""}\nQuantity: ${o.quantity||1}\nTotal: ${money(o.total??o.subtotal??0)}\nStatus: ${orderStatus(o)}`;
+  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
+}
+function printOrder(id){
+  const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
+  const w=window.open("","_blank");
+  if(!w){showMessage("Invoice খুলতে browser popup অনুমতি দাও।");return;}
+  w.document.write(`<html><head><title>SAREXBD Invoice</title></head><body style="font-family:Arial;padding:25px">
+  <h1>SAREXBD</h1><h2>Order Invoice #${safe(o.id)}</h2>
+  <p>Customer: ${safe(orderCustomer(o))}</p><p>Phone: ${safe(orderPhone(o))}</p>
+  <p>Address: ${safe(o.address||"")}</p><p>Product: ${safe(o.product||o.product_name||"")}</p>
+  <p>Quantity: ${safe(o.quantity||1)}</p><p>Delivery: ${money(o.delivery_charge||0)}</p>
+  <h3>Total: ${money(o.total??o.subtotal??0)}</h3><p>Status: ${safe(orderStatus(o))}</p>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+function renderRecentOrders(){
+  const list=orders.slice(0,5);
+  el("recentOrders").innerHTML=list.length?`<table><tr><th>ID</th><th>কাস্টমার</th><th>মোট</th><th>স্ট্যাটাস</th></tr>${list.map(o=>`<tr><td>${safe(o.id)}</td><td>${safe(orderCustomer(o))}</td><td>${money(o.total??o.subtotal??0)}</td><td>${safe(orderStatus(o))}</td></tr>`).join("")}</table>`:"কোনো অর্ডার নেই।";
+}
+function updateDashboard(){
+  el("totalOrders").textContent=orders.length;
+  el("pendingOrders").textContent=orders.filter(o=>orderStatus(o)==="Pending").length;
+  el("salesTotal").textContent=money(orders.filter(o=>orderStatus(o)==="Delivered").reduce((sum,o)=>sum+Number(o.total??o.subtotal??0),0));
+  const threshold=Number(el("sLowStock")?.value||5);
+  el("lowStock").textContent=products.filter(p=>Number(p.stock||0)<=threshold).length;
+}
+function exportOrders(){
+  if(!orders.length){showMessage("Export করার মতো অর্ডার নেই।");return;}
+  const cols=["id","customer_name","phone","address","product","quantity","subtotal","delivery_charge","total","status","created_at"];
+  const csv=[cols.join(","),...orders.map(o=>cols.map(k=>`"${String(o[k]??"").replace(/"/g,'""')}"`).join(","))].join("\r\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");
+  a.href=url;a.download="sarexbd-orders.csv";a.click();URL.revokeObjectURL(url);
+}
 async function loadReviews(){
- $("reviewMessage").textContent="রিভিউ লোড হচ্ছে...";
- let q=db.from("reviews").select("*").order("created_at",{ascending:false}).limit(50);
- const f=$("reviewFilter").value;
- if(f)q=q.eq("status",f);
- const {data,error}=await q;
- if(error){$("reviewMessage").textContent="রিভিউ লোড হয়নি: "+error.message;return}
- const list=$("reviewList");
- list.replaceChildren();
- const rows=data||[];
- rows.forEach(r=>list.appendChild(renderReview(r)));
- $("reviewMessage").textContent=rows.length?"দেখানো হচ্ছে "+rows.length+"টি রিভিউ":"এই তালিকায় কোনো রিভিউ নেই।";
- loadReviewCount();
+  const box=el("reviewsList");if(!box)return;
+  box.innerHTML="রিভিউ লোড হচ্ছে…";
+  let query=db.from("reviews").select("*").order("created_at",{ascending:false}).limit(200);
+  const filter=el("reviewFilter")?.value;
+  if(filter)query=query.eq("status",filter);
+  const {data,error}=await query;
+  if(error){box.innerHTML="রিভিউ লোড হয়নি: "+safe(error.message);return;}
+  reviews=data||[];
+  box.innerHTML=reviews.length?`<table><thead><tr><th>কাস্টমার / পণ্য</th><th>রিভিউ</th><th>স্ট্যাটাস</th><th>কাজ</th></tr></thead><tbody>
+  ${reviews.map(r=>{
+    const p=products.find(p=>String(p.id)===String(r.product_id));
+    const pname=p?productName(p):((r.product_name||r.product_title)||"পণ্যের নাম পাওয়া যায়নি");
+    return `<tr><td><b>${safe(r.reviewer_name||r.customer_name||"কাস্টমার")}</b>
+    <br><span class="pill">পণ্য: ${safe(pname)}</span>
+    <br><small>${safe(r.created_at||"")}</small></td>
+    <td>${"★".repeat(Math.min(5,Math.max(0,Number(r.rating)||0)))}<br>${safe(r.review_text||r.comment||"")}</td>
+    <td>${safe(r.status||(r.approved?"Approved":"Pending"))}</td>
+    <td class="actions">
+    <button onclick="setReviewStatus('${safe(r.id)}','Approved')">Approve</button>
+    <button class="secondary" onclick="setReviewStatus('${safe(r.id)}','Hidden')">Hide</button>
+    <button class="danger" onclick="deleteReview('${safe(r.id)}')">Delete</button>
+    </td></tr>`;
+  }).join("")}</tbody></table>`:"কোনো রিভিউ পাওয়া যায়নি।";
 }
-
-function renderReview(r){
- const box=document.createElement("div");
- box.className="card";
- const h=document.createElement("h3");
- h.textContent=(r.reviewer_name||"")+" — "+starsText(r.rating);
- box.appendChild(h);
- const t=document.createElement("p");
- t.textContent=r.review_text||"";
- box.appendChild(t);
- const meta=document.createElement("p");
- meta.className="muted";
- meta.textContent=(r.created_at?new Date(r.created_at).toLocaleString("bn-BD"):"")+" · ";
- const b=document.createElement("span");
- b.className="badge"+(r.status==="Approved"?"":" warn");
- b.textContent=r.status||"Pending";
- meta.appendChild(b);
- box.appendChild(meta);
-
- if(r.status!=="Approved"){
-  const ok=document.createElement("button");
-  ok.className="gold";ok.type="button";ok.textContent="অনুমোদন করো";
-  ok.onclick=()=>setReviewStatus(r,"Approved",ok);
-  box.appendChild(ok);
- }else{
-  const hide=document.createElement("button");
-  hide.className="dark";hide.type="button";hide.textContent="লুকাও (Pending)";
-  hide.onclick=()=>setReviewStatus(r,"Pending",hide);
-  box.appendChild(hide);
- }
- const del=document.createElement("button");
- del.className="danger";del.type="button";del.textContent="Delete";
- del.onclick=()=>deleteReview(r,del);
- box.appendChild(del);
- return box;
+async function setReviewStatus(id,status){
+  const {error}=await db.from("reviews").update({status}).eq("id",id);
+  if(error){showMessage("রিভিউ আপডেট হয়নি: "+error.message);return;}
+  await loadReviews();showMessage("রিভিউ স্ট্যাটাস আপডেট হয়েছে।");
 }
-
-async function setReviewStatus(r,status,btn){
- btn.disabled=true;
- const {error}=await db.from("reviews").update({status:status}).eq("id",r.id);
- if(error){$("reviewMessage").textContent="আপডেট হয়নি: "+error.message;btn.disabled=false;return}
- await loadReviews();
- $("reviewMessage").textContent=status==="Approved"?"রিভিউ অনুমোদিত হয়েছে, এখন সাইটে দেখা যাবে।":"রিভিউ সাইট থেকে সরানো হয়েছে।";
+async function deleteReview(id){
+  if(!confirm("রিভিউটি স্থায়ীভাবে ডিলিট করবে?"))return;
+  const {error}=await db.from("reviews").delete().eq("id",id);
+  if(error){showMessage("রিভিউ ডিলিট হয়নি: "+error.message);return;}
+  await loadReviews();
 }
-
-async function deleteReview(r,btn){
- if(!confirm("রিভিউটি স্থায়ীভাবে মুছে ফেলবে?"))return;
- btn.disabled=true;
- const {error}=await db.from("reviews").delete().eq("id",r.id);
- if(error){$("reviewMessage").textContent="মোছা যায়নি: "+error.message;btn.disabled=false;return}
- await loadReviews();
- $("reviewMessage").textContent="রিভিউ মোছা হয়েছে।";
-}
-
-$("reviewFilter").addEventListener("change",loadReviews);
-$("reloadReviews").onclick=loadReviews;
-
-/* ---------- কুপন ---------- */
 async function loadCoupons(){
- $("couponMessage").textContent="কুপন লোড হচ্ছে...";
- const {data,error}=await db.from("coupons").select("*").order("created_at",{ascending:false});
- if(error){$("couponMessage").textContent="কুপন লোড হয়নি: "+error.message;return}
- const list=$("couponList");
- list.replaceChildren();
- const rows=data||[];
- rows.forEach(c=>list.appendChild(renderCoupon(c)));
- $("couponMessage").textContent=rows.length?"মোট "+rows.length+"টি কুপন":"এখনো কোনো কুপন নেই।";
+  const box=el("couponsList");box.innerHTML="লোড হচ্ছে…";
+  const {data,error}=await db.from("coupons").select("*").order("id",{ascending:false});
+  if(error){box.innerHTML="Coupons টেবিল পাওয়া যায়নি বা অনুমতি নেই।";return;}
+  coupons=data||[];
+  box.innerHTML=coupons.length?`<table><tr><th>Code</th><th>Discount</th><th>Expiry</th><th>Active</th><th>কাজ</th></tr>${coupons.map(c=>`<tr>
+  <td>${safe(c.code||c.coupon_code)}</td><td>${safe(c.discount_percent??c.discount??0)}%</td>
+  <td>${safe(c.expires_at||c.expiry_date||"—")}</td><td>${safe(c.active??c.is_active??true)}</td>
+  <td><button class="danger" onclick="deleteCoupon('${safe(c.id)}')">Delete</button></td>
+  </tr>`).join("")}</table>`:"এখনও কোনো কুপন নেই।";
 }
-
-function renderCoupon(c){
- const box=document.createElement("div");
- box.className="card";
- const h=document.createElement("h3");
- h.textContent=c.code+" — "+Number(c.percent)+"% ছাড়";
- box.appendChild(h);
- const info=document.createElement("p");
- info.textContent="ব্যবহার: "+(c.used_count||0)+(c.max_uses?" / "+c.max_uses:" (সীমাহীন)")+" · মেয়াদ: "+(c.expires_at?new Date(c.expires_at).toLocaleDateString("bn-BD"):"নেই")+" · ";
- const b=document.createElement("span");
- b.className="badge"+(c.active?"":" warn");
- b.textContent=c.active?"চালু":"বন্ধ";
- info.appendChild(b);
- if(c.expires_at&&new Date(c.expires_at)<new Date()){
-  const x=document.createElement("span");
-  x.className="badge warn";x.textContent="মেয়াদ শেষ";
-  info.appendChild(x);
- }
- box.appendChild(info);
-
- const toggle=document.createElement("button");
- toggle.className="dark";toggle.type="button";
- toggle.textContent=c.active?"বন্ধ করো":"চালু করো";
- toggle.onclick=()=>toggleCoupon(c,toggle);
- box.appendChild(toggle);
-
- const del=document.createElement("button");
- del.className="danger";del.type="button";del.textContent="Delete";
- del.onclick=()=>deleteCoupon(c,del);
- box.appendChild(del);
- return box;
-}
-
-async function toggleCoupon(c,btn){
- btn.disabled=true;
- const {error}=await db.from("coupons").update({active:!c.active}).eq("code",c.code);
- if(error){$("couponMessage").textContent="আপডেট হয়নি: "+error.message;btn.disabled=false;return}
- await loadCoupons();
-}
-
-async function deleteCoupon(c,btn){
- if(!confirm("\""+c.code+"\" কুপনটি মুছে ফেলবে? (আগের অর্ডারের হিসাব বদলাবে না)"))return;
- btn.disabled=true;
- const {error}=await db.from("coupons").delete().eq("code",c.code);
- if(error){$("couponMessage").textContent="মোছা যায়নি: "+error.message;btn.disabled=false;return}
- await loadCoupons();
- $("couponMessage").textContent="কুপন মোছা হয়েছে।";
-}
-
-$("couponForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const code=$("cpCode").value.trim().toUpperCase().replace(/[\s%]/g,"");
- const percent=Number($("cpPercent").value);
- const maxRaw=$("cpMax").value.trim();
- const maxUses=maxRaw===""?null:Number(maxRaw);
- const expiry=$("cpExpiry").value;
- const msg=$("couponMessage");
- if(!/^[A-Z0-9_-]{2,30}$/.test(code)){msg.textContent="কোডে শুধু ইংরেজি অক্ষর, সংখ্যা, - বা _ থাকবে (২-৩০ অক্ষর)।";return}
- if(!Number.isFinite(percent)||percent<=0||percent>100){msg.textContent="ছাড়ের হার ০ থেকে ১০০ এর মধ্যে হতে হবে।";return}
- if(maxUses!==null&&(!Number.isInteger(maxUses)||maxUses<1)){msg.textContent="সর্বোচ্চ ব্যবহার ১ বা তার বেশি পূর্ণ সংখ্যা হতে হবে।";return}
- const btn=$("couponForm").querySelector('button[type="submit"]');
- btn.disabled=true;
- const {error}=await db.from("coupons").insert({
-  code:code,
-  percent:percent,
-  max_uses:maxUses,
-  expires_at:expiry?new Date(expiry+"T23:59:59").toISOString():null
- });
- btn.disabled=false;
- if(error){
-  msg.textContent=/duplicate|unique/i.test(error.message)?"এই কোড আগেই আছে।":"কুপন যোগ হয়নি: "+error.message;
-  return;
- }
- $("couponForm").reset();
- await loadCoupons();
- msg.textContent="কুপন যোগ হয়েছে: "+code;
+el("couponForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const row={code:el("cCode").value.trim().toUpperCase(),discount_percent:Number(el("cDiscount").value),active:el("cActive").checked};
+  if(el("cExpiry").value)row.expires_at=el("cExpiry").value;
+  const {error}=await db.from("coupons").insert(row);
+  if(error){showMessage("কুপন সেভ হয়নি। coupons টেবিলের কলাম মিলিয়ে দেখতে হবে: "+error.message);return;}
+  el("couponForm").reset();await loadCoupons();showMessage("কুপন যোগ হয়েছে।");
 });
-
-/* ---------- সেটিংস ফর্ম ---------- */
-function fillSettingsForm(){
- $("setShop").value=S.shopName;
- $("setWa").value=S.whatsapp;
- $("setAddr").value=S.address;
- $("setIn").value=S.deliveryInside;
- $("setOut").value=S.deliveryOutside;
- $("setLow").value=S.lowStock;
+async function deleteCoupon(id){
+  if(!confirm("কুপন ডিলিট করবে?"))return;
+  const {error}=await db.from("coupons").delete().eq("id",id);
+  if(error){showMessage(error.message);return;}
+  await loadCoupons();
 }
-
-// ডেলিভারি চার্জ সার্ভার (shop_settings) থেকে আনে
-async function loadServerSettings(){
- const {data,error}=await db.from("shop_settings").select("key,value");
- if(error){
-  $("settingsMessage").textContent="ডেলিভারি চার্জ সার্ভার থেকে আনা যায়নি: "+error.message;
-  return;
- }
- const map={};
- (data||[]).forEach(r=>{map[r.key]=Number(r.value)});
- if(Number.isFinite(map.delivery_dhaka)&&map.delivery_dhaka>=0)S.deliveryInside=map.delivery_dhaka;
- if(Number.isFinite(map.delivery_outside)&&map.delivery_outside>=0)S.deliveryOutside=map.delivery_outside;
- fillSettingsForm();
+async function loadSettings(){
+  const {data,error}=await db.from("shop_settings").select("*").limit(1).maybeSingle();
+  if(error){console.warn("Settings table:",error.message);return;}
+  if(!data)return;
+  settings=data;
+  el("sName").value=data.shop_name||"SAREXBD";
+  el("sWhatsApp").value=data.whatsapp||"";
+  el("sAddress").value=data.address||"";
+  el("sDhaka").value=data.dhaka_delivery_charge??80;
+  el("sOutside").value=data.outside_delivery_charge??130;
+  el("sLowStock").value=localStorage.getItem("sarexbd_low_stock")||5;
+  updateDashboard();
 }
-
-$("settingsForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const next={
-  shopName:$("setShop").value.trim()||DEFAULTS.shopName,
-  whatsapp:$("setWa").value.trim(),
-  address:$("setAddr").value.trim(),
-  deliveryInside:Number($("setIn").value),
-  deliveryOutside:Number($("setOut").value),
-  lowStock:Number($("setLow").value)
- };
- const bad=["deliveryInside","deliveryOutside","lowStock"].some(k=>!Number.isFinite(next[k])||next[k]<0);
- if(bad){$("settingsMessage").textContent="চার্জ ও স্টকের সংখ্যা ০ বা তার বেশি হতে হবে।";return}
- const btn=$("settingsForm").querySelector('button[type="submit"]');
- btn.disabled=true;
- S=next;
- const saved=persistSettings();
- const {error}=await db.from("shop_settings").upsert([
-  {key:"delivery_dhaka",value:next.deliveryInside},
-  {key:"delivery_outside",value:next.deliveryOutside}
- ],{onConflict:"key"});
- btn.disabled=false;
- if(error){
-  $("settingsMessage").textContent="ডেলিভারি চার্জ সার্ভারে সেভ হয়নি: "+error.message;
- }else{
-  $("settingsMessage").textContent=saved
-   ? "সেটিংস সেভ হয়েছে। ডেলিভারি চার্জ কাস্টমারের সাইটেও বদলেছে।"
-   : "ডেলিভারি চার্জ সেভ হয়েছে। বাকি সেটিংস এই ব্রাউজারে সেভ করা যায়নি।";
- }
- renderProducts();
+el("settingsForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const row={
+    shop_name:el("sName").value.trim(),
+    whatsapp:el("sWhatsApp").value.trim(),
+    address:el("sAddress").value.trim(),
+    dhaka_delivery_charge:Number(el("sDhaka").value||0),
+    outside_delivery_charge:Number(el("sOutside").value||0)
+  };
+  let result;
+  if(settings.id)result=await db.from("shop_settings").update(row).eq("id",settings.id);
+  else result=await db.from("shop_settings").insert(row);
+  if(result.error){showMessage("Settings সেভ হয়নি। shop_settings টেবিলের কলাম পরীক্ষা করতে হবে: "+result.error.message);return;}
+  localStorage.setItem("sarexbd_low_stock",el("sLowStock").value||5);
+  await loadSettings();updateDashboard();showMessage("Settings সেভ হয়েছে।");
 });
-
-$("resetSettings").onclick=async()=>{
- S=Object.assign({},DEFAULTS);
- try{localStorage.removeItem(SETTINGS_KEY)}catch(e){}
- fillSettingsForm();
- await loadServerSettings(); // ডেলিভারি চার্জ সার্ভারের মান থেকে ফিরে আসবে
- $("settingsMessage").textContent="ডিফল্ট সেটিংস ফিরেছে (ডেলিভারি চার্জ সার্ভারের মানই থাকবে)।";
- renderProducts();
-};
+checkSession();
 </script>
 </body>
 </html>
