@@ -1,128 +1,633 @@
 <!DOCTYPE html>
-<html lang="bn"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SAREXBD Admin Panel</title>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SAREXBD | Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#0b0907;--panel:#15110c;--line:#3a2d17;--gold:#d4a73c;--gold2:#f0cf7a;--tx:#f3ead7;--mu:#a1927a;--ok:#5fbf6a;--warn:#e0a526;--info:#d98a3d;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{--bg:#0b0907;--panel:#15110c;--line:#3a2d17;--gold:#d4a73c;--gold2:#f0cf7a;--tx:#f3ead7;--muted:#a1927a;--bad:#e57a6a}
 *{box-sizing:border-box;margin:0}
 body{background:var(--bg);color:var(--tx);font-family:'Hind Siliguri',system-ui,sans-serif;min-height:100vh}
-.top{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);background:#0e0b08;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+small,.muted{color:var(--muted)}
+button,input,select,textarea{font:inherit}
+button{background:linear-gradient(#e6bc55,#c99a2e);color:#1a1206;border:0;border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;margin:3px}
+button.secondary{background:#21190e;color:var(--gold2);border:1px solid var(--line)}
+button.danger{background:#7d2b22;color:#fff}
+button:disabled{opacity:.5}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,nav a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+input,select,textarea{width:100%;padding:10px;background:#0e0b08;color:var(--tx);border:1px solid var(--line);border-radius:8px;margin:5px 0 12px;font-size:14px}
+label{font-size:13px;color:var(--muted)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);background:#0e0b08;position:sticky;top:0;z-index:6}
 .brand b{font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.14em;color:var(--gold2);display:block;line-height:1}
-.brand small{color:var(--mu);font-size:11px}
-.menu{display:none;background:none;border:1px solid var(--line);color:var(--gold);border-radius:8px;padding:6px 10px;font-size:18px}
-.adm{margin-left:auto;color:var(--gold2);font-size:14px}
-.wrap{display:flex}
+.brand small{font-size:11px}
+.menu{display:none;background:none;border:1px solid var(--line);color:var(--gold);padding:6px 10px;font-size:18px}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.layout{display:flex}
 nav{width:210px;flex:none;border-right:1px solid var(--line);padding:14px 10px;background:var(--panel);min-height:calc(100vh - 59px)}
-nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--tx);text-decoration:none;font-size:14px;cursor:pointer;margin-bottom:4px}
-nav a small{display:block;color:var(--mu);font-size:11px}
-nav a.on{background:#2a2012;color:var(--gold2);border:1px solid var(--line)}
+nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--tx);font-size:14px;cursor:pointer;margin-bottom:4px}
+nav a small{display:block;font-size:11px}
+nav a.active{background:#2a2012;color:var(--gold2);border:1px solid var(--line)}
 nav a:hover{background:#21190e}
-nav a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-main{flex:1;padding:18px;min-width:0}
-h1{font-size:22px;margin-bottom:14px;font-weight:500}
-h1 span{color:var(--mu);font-size:14px;margin-left:6px}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-.card small{color:var(--mu);font-size:12px;display:block}
-.card b{font-size:28px;color:var(--gold2);font-weight:600;display:block;margin-top:6px}
-h2{font-size:16px;color:var(--gold);margin:22px 0 10px;font-weight:600}
-.tw{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px}
-table{width:100%;border-collapse:collapse;min-width:520px;font-size:14px}
-th{color:var(--mu);font-weight:500;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
-td{padding:12px 14px;border-bottom:1px solid #261d10}
-tr:last-child td{border:0}
-.tag{padding:3px 10px;border-radius:99px;font-size:12px;color:#17110a;font-weight:600}
-.t-ok{background:var(--ok)}.t-w{background:var(--warn)}.t-i{background:var(--info)}
-.empty{padding:40px 16px;text-align:center;color:var(--mu)}
-.btn{background:linear-gradient(#e6bc55,#c99a2e);color:#1a1206;border:0;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer;font-family:inherit}
-.f{display:block;font-size:12px;color:var(--mu);margin-bottom:10px}
-.f input,select{width:100%;margin-top:4px;background:#0e0b08;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit;font-size:14px}
-select{width:auto;margin:0;padding:5px 8px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
-.gh{background:none;border:1px solid var(--line);color:var(--gold2);border-radius:8px;padding:5px 10px;cursor:pointer;font:inherit;font-size:13px;margin-right:4px}
-.gh.d{color:#e57a6a}
+.wrap{flex:1;padding:18px;min-width:0;max-width:1200px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+h2{font-size:18px;color:var(--gold);margin-bottom:12px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);padding:14px;border-radius:12px;font-size:13px;color:var(--muted)}
+.stat strong{display:block;font-size:26px;color:var(--gold2);margin-top:6px;font-weight:600}
+.section{display:none}.section.active{display:block}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:11px;border-bottom:1px solid #261d10;vertical-align:top;font-size:13px}
+th{color:var(--muted);font-weight:500;background:#110d08}
+img.product-img{width:60px;height:60px;object-fit:cover;border-radius:8px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;background:#30291b;color:var(--gold2);font-size:12px}
+.msg{padding:10px 14px;margin-bottom:12px;border-radius:8px;background:#21190e;border:1px solid var(--line);color:var(--gold2);white-space:pre-wrap}
+.hidden{display:none!important}
+.actions{min-width:190px}
+.low{color:var(--bad);font-weight:600}
 .bar{height:10px;border-radius:6px;background:linear-gradient(90deg,#c99a2e,#f0cf7a);margin-top:5px}
-.low{color:#e57a6a;font-weight:600}
 .bar-r{margin-bottom:14px;font-size:14px}
-.bar-r span{color:var(--mu);float:right}
-.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
-.hd h1{margin:0}
-.msg{color:var(--ok);font-size:13px;margin-left:10px}
+.bar-r span{float:right;color:var(--muted)}
+#loginBox{max-width:400px;margin:8vh auto}
+#loginBox svg{display:block;margin:0 auto 8px}
+#loginBox h2{text-align:center}
 @media(max-width:820px){
 .menu{display:block}
-nav{position:fixed;left:0;top:calc(59px + env(safe-area-inset-top,0px));bottom:0;z-index:4;transform:translateX(-100%);transition:transform .2s;min-height:0}
+nav{position:fixed;left:0;top:59px;bottom:0;z-index:5;transform:translateX(-100%);transition:transform .2s;min-height:0}
 nav.open{transform:none}
-.cards{grid-template-columns:1fr 1fr}
-.g2{grid-template-columns:1fr}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.wrap{padding:12px}
 }
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){nav{transition:none}}
-</style></head>
+</style>
+</head>
 <body>
 <header class="top">
-<button class="menu" id="mb" aria-label="Menu">☰</button>
-<svg width="46" height="42" viewBox="0 0 60 54" role="img" aria-label="SR"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0cf7a"/><stop offset="1" stop-color="#b8861f"/></linearGradient></defs><text x="2" y="34" font-family="Cormorant Garamond,Georgia,serif" font-size="42" font-weight="700" fill="url(#g)">S</text><text x="20" y="49" font-family="Cormorant Garamond,Georgia,serif" font-size="42" font-weight="700" fill="url(#g)">R</text></svg>
-<div class="brand"><b>SAREXBD</b><small>Admin Panel</small></div>
-<div class="adm">👤 Admin</div>
+  <button id="menuBtn" class="menu hidden" aria-label="Menu" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+  <svg width="46" height="42" viewBox="0 0 60 54" role="img" aria-label="SR"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0cf7a"/><stop offset="1" stop-color="#b8861f"/></linearGradient></defs><text x="2" y="34" font-family="Cormorant Garamond,Georgia,serif" font-size="42" font-weight="700" fill="url(#g)">S</text><text x="20" y="49" font-family="Cormorant Garamond,Georgia,serif" font-size="42" font-weight="700" fill="url(#g)">R</text></svg>
+  <div class="brand"><b>SAREXBD</b><small>Admin Panel</small></div>
+  <div class="right"><button id="logoutBtn" class="secondary hidden" onclick="logout()">Logout</button></div>
 </header>
-<div class="wrap">
-<nav id="nav"></nav>
-<main id="main"></main>
+
+<div class="layout">
+<nav id="nav" class="hidden">
+  <a class="active" tabindex="0" role="button" onclick="showTab('dashboard',this)"><span>▦</span><span>ড্যাশবোর্ড<small>Dashboard</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('products',this)"><span>👜</span><span>পণ্য<small>Products</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('orders',this)"><span>🧾</span><span>অর্ডার<small>Orders</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('customers',this)"><span>👥</span><span>কাস্টমার<small>Customers</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('stock',this)"><span>📦</span><span>স্টক<small>Stock</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('reviews',this)"><span>★</span><span>রিভিউ<small>Reviews</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('coupons',this)"><span>🏷</span><span>কুপন<small>Coupons</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('reports',this)"><span>📈</span><span>রিপোর্ট<small>Reports</small></span></a>
+  <a tabindex="0" role="button" onclick="showTab('settings',this)"><span>⚙</span><span>সেটিংস<small>Settings</small></span></a>
+  <a tabindex="0" role="button" onclick="logout()"><span>⎋</span><span>লগআউট<small>Logout</small></span></a>
+</nav>
+
+<main class="wrap">
+  <div id="message" class="msg hidden"></div>
+
+  <section id="loginBox" class="panel">
+    <svg width="64" height="58" viewBox="0 0 60 54" aria-hidden="true"><text x="2" y="34" font-family="Cormorant Garamond,Georgia,serif" font-size="42" font-weight="700" fill="url(#g)">S</text><text x="20" y="49" font-family="Cormorant Garamond,Georgia,serif" font-size="42" font-weight="700" fill="url(#g)">R</text></svg>
+    <h2>Admin Login</h2>
+    <p class="muted" style="margin-bottom:12px">শুধু অনুমোদিত অ্যাডমিন অ্যাকাউন্ট দিয়ে প্রবেশ করো।</p>
+    <form id="loginForm">
+      <label>Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Login</button>
+    </form>
+  </section>
+
+  <div id="app" class="hidden">
+
+    <section id="dashboard" class="section active">
+      <div class="grid">
+        <div class="stat">মোট অর্ডার<strong id="totalOrders">0</strong></div>
+        <div class="stat">পেন্ডিং অর্ডার<strong id="pendingOrders">0</strong></div>
+        <div class="stat">ডেলিভারড বিক্রি<strong id="salesTotal">৳0</strong></div>
+        <div class="stat">কম স্টক<strong id="lowStock">0</strong></div>
+      </div>
+      <div class="panel">
+        <h2>Dashboard</h2>
+        <p>স্বাগতম, SAREXBD Admin.</p>
+        <button onclick="refreshAll()">Refresh Data</button>
+        <button class="secondary" onclick="exportOrders()">Export Orders CSV</button>
+        <p class="muted" style="margin-top:8px">বিক্রির হিসাব শুধু Delivered অর্ডার থেকে গণনা করা হয়।</p>
+      </div>
+      <div class="panel">
+        <h2>সাম্প্রতিক অর্ডার</h2>
+        <div id="recentOrders" class="table-wrap">লোড হচ্ছে…</div>
+      </div>
+    </section>
+
+    <section id="products" class="section">
+      <div class="panel">
+        <h2 id="productFormTitle">পণ্য যোগ করো</h2>
+        <form id="productForm">
+          <input id="productId" type="hidden">
+          <div class="row">
+            <div><label>পণ্যের নাম</label><input id="pName" required></div>
+            <div><label>দাম (৳)</label><input id="pPrice" type="number" min="0" required></div>
+          </div>
+          <div class="row">
+            <div><label>স্টক</label><input id="pStock" type="number" min="0" value="0"></div>
+            <div><label>Discount (%)</label><input id="pDiscount" type="number" min="0" max="100" value="0"></div>
+          </div>
+          <div class="row">
+            <div><label>Category</label><input id="pCategory" placeholder="Wallet / Belt / Bag"></div>
+            <div><label>পণ্যের ছবি</label><input id="pImage" type="file" accept="image/*"></div>
+          </div>
+          <label>Description</label><textarea id="pDescription" rows="3"></textarea>
+          <label><input id="pActive" type="checkbox" checked style="width:auto"> ওয়েবসাইটে পণ্য দেখাবে</label>
+          <div>
+            <button type="submit">Save Product</button>
+            <button type="button" class="secondary" onclick="resetProductForm()">Clear</button>
+          </div>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>পণ্যের তালিকা</h2>
+        <input id="productSearch" placeholder="পণ্যের নাম দিয়ে খুঁজো…" oninput="renderProducts()">
+        <div id="productsList" class="table-wrap">লোড হচ্ছে…</div>
+      </div>
+    </section>
+
+    <section id="orders" class="section">
+      <div class="panel">
+        <h2>Orders Management</h2>
+        <div class="row">
+          <input id="orderSearch" placeholder="নাম / ফোন দিয়ে খুঁজো" oninput="renderOrders()">
+          <select id="orderFilter" onchange="renderOrders()">
+            <option value="">সব অর্ডার</option>
+            <option>Pending</option><option>Confirmed</option>
+            <option>Shipped</option><option>Delivered</option><option>Cancelled</option>
+          </select>
+        </div>
+        <button class="secondary" onclick="exportOrders()">Export CSV</button>
+        <div id="ordersList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="customers" class="section">
+      <div class="panel">
+        <h2>Customers</h2>
+        <p class="muted">অর্ডার থেকে ফোন নম্বর মিলিয়ে তৈরি হয় (বাতিল অর্ডার বাদে)।</p>
+        <div id="customersList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="stock" class="section">
+      <div class="panel">
+        <h2>Stock</h2>
+        <p class="muted">+ / − বাটনে সরাসরি স্টক বদলানো যায়।</p>
+        <div id="stockList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="reviews" class="section">
+      <div class="panel">
+        <h2>Customer Reviews</h2>
+        <p class="muted" style="margin-bottom:8px">রিভিউ অনুমোদন করলে তবেই তা কাস্টমারদের দেখানোর জন্য রাখা হবে।</p>
+        <select id="reviewFilter" onchange="loadReviews()">
+          <option value="Pending">Pending Reviews</option>
+          <option value="Approved">Approved Reviews</option>
+          <option value="Hidden">Hidden Reviews</option>
+          <option value="">সব রিভিউ</option>
+        </select>
+        <div id="reviewsList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="coupons" class="section">
+      <div class="panel">
+        <h2>Coupon Management</h2>
+        <form id="couponForm">
+          <div class="row">
+            <div><label>Coupon Code</label><input id="cCode" required placeholder="SAREX10"></div>
+            <div><label>Discount (%)</label><input id="cDiscount" type="number" min="1" max="100" required></div>
+          </div>
+          <div class="row">
+            <div><label>Expiry date (ঐচ্ছিক)</label><input id="cExpiry" type="date"></div>
+            <div><label><input id="cActive" type="checkbox" checked style="width:auto"> Active</label></div>
+          </div>
+          <button type="submit">Save Coupon</button>
+        </form>
+        <div id="couponsList" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="reports" class="section">
+      <div class="panel">
+        <h2>Reports</h2>
+        <div id="reportBox"></div>
+      </div>
+    </section>
+
+    <section id="settings" class="section">
+      <div class="panel">
+        <h2>Shop Settings</h2>
+        <form id="settingsForm">
+          <label>Shop Name</label><input id="sName" value="SAREXBD">
+          <label>WhatsApp number (country code সহ)</label><input id="sWhatsApp" placeholder="8801XXXXXXXXX">
+          <label>Shop Address</label><textarea id="sAddress" rows="2"></textarea>
+          <div class="row">
+            <div><label>ঢাকার ডেলিভারি চার্জ (৳)</label><input id="sDhaka" type="number" min="0" value="80"></div>
+            <div><label>ঢাকার বাইরে (৳)</label><input id="sOutside" type="number" min="0" value="130"></div>
+          </div>
+          <label>Low stock alert threshold</label><input id="sLowStock" type="number" min="0" value="5">
+          <button type="submit">Save Settings</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</main>
 </div>
+
 <script>
-const MENU=[["dash","ড্যাশবোর্ড","Dashboard","▦"],["prod","পণ্য","Products","👜"],["ord","অর্ডার","Orders","🧾"],["cust","কাস্টমার","Customers","👥"],["stock","স্টক","Stock","📦"],["coup","কুপন","Coupons","🏷"],["rep","রিপোর্ট","Reports","📈"],["set","সেটিংস","Settings","⚙"],["out","লগআউট","Logout","⎋"]];
-const ST={p:["পেন্ডিং","t-w"],r:["প্রসেসিং","t-i"],d:["ডেলিভার্ড","t-ok"]};
-const KEY="sarexbd_admin_v1";
-let D=null;try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!D)D={prods:[{id:1,n:"Leather Wallet",c:"Wallet",p:1200,s:14},{id:2,n:"Leather Belt",c:"Belt",p:1000,s:8},{id:3,n:"Leather Bag",c:"Bag",p:3500,s:3},{id:4,n:"Leather Jacket",c:"Jacket",p:6500,s:5}],
-ords:[{id:"#ORD-001",cu:"Rahim Ahmed",ph:"01711000001",pr:"Leather Wallet",a:1200,d:"12 Oct",st:"p"},{id:"#ORD-002",cu:"Karim Uddin",ph:"01811000002",pr:"Leather Bag",a:2500,d:"10 Oct",st:"d"},{id:"#ORD-003",cu:"Nusrat Jahan",ph:"01911000003",pr:"Leather Belt",a:1000,d:"08 Oct",st:"r"},{id:"#ORD-004",cu:"Rahim Ahmed",ph:"01711000001",pr:"Leather Belt",a:1000,d:"05 Oct",st:"d"}],
-coups:[{c:"WELCOME10",o:10,on:true},{c:"EID25",o:25,on:false}],
-set:{name:"SAREXBD",ph:"+880 17XX-XXXXXX",em:"support@sarexbd.com",dh:80,out:130}};
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}};
-const $=id=>document.getElementById(id),v=id=>$(id).value.trim(),nav=$("nav"),main=$("main");
-const tk=n=>"৳"+Number(n).toLocaleString();
-let cur="dash",edit=null,note="";
-const inp=(l,id,val,t="text")=>`<label class="f">${l}<input id="${id}" type="${t}" value="${val??""}"></label>`;
-const tbl=(h,r,e)=>r.length?`<div class="tw"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.join("")}</table></div>`:`<div class="card empty">${e}</div>`;
-const tag=s=>`<span class="tag ${ST[s][1]}">${ST[s][0]}</span>`;
-const sales=()=>D.ords.reduce((a,o)=>a+o.a,0);
-function drawNav(){nav.innerHTML=MENU.map(m=>`<a tabindex="0" role="button" data-k="${m[0]}" class="${m[0]==cur?"on":""}"><span>${m[3]}</span><span>${m[1]}<small>${m[2]}</small></span></a>`).join("")}
-const orow=o=>`<tr><td>${o.id}</td><td>${o.pr}</td><td>${tk(o.a)}</td><td>${o.d}</td><td>${tag(o.st)}</td></tr>`;
-const P={
-dash(){const pend=D.ords.filter(o=>o.st=="p").length,low=D.prods.filter(p=>p.s<5).length;
-const S=[["মোট পণ্য","Total Products",D.prods.length],["মোট অর্ডার","Total Orders",D.ords.length],["মোট বিক্রি","Total Sales",tk(sales())],["পেন্ডিং অর্ডার","Pending Orders",pend]];
-return `<div class="cards">${S.map(s=>`<div class="card"><small>${s[0]} / ${s[1]}</small><b>${s[2]}</b></div>`).join("")}</div>${low?`<p class="low" style="margin-top:14px">⚠ ${low}টি পণ্যের স্টক কম আছে</p>`:""}<h2>সাম্প্রতিক অর্ডার / Recent Orders</h2>`+tbl(["#","পণ্য","মূল্য","তারিখ","অবস্থা"],D.ords.slice(0,5).map(orow),"কোনো অর্ডার নেই।")},
-prod(){let f="";if(edit){const p=edit=="new"?{}:D.prods.find(x=>x.id==edit);
-f=`<div class="card" style="margin-bottom:14px"><div class="g2">${inp("পণ্যের নাম / Name","pn",p.n)}${inp("ক্যাটাগরি / Category","pc",p.c)}${inp("মূল্য / Price (৳)","pp",p.p,"number")}${inp("স্টক / Stock","ps",p.s,"number")}</div><button class="btn" data-a="saveP">সংরক্ষণ করুন</button> <button class="gh" data-a="cancel">বাতিল</button></div>`}
-return `<div class="hd"><span></span><button class="btn" data-a="new">+ নতুন পণ্য</button></div>${f}`+tbl(["নাম","ক্যাটাগরি","মূল্য","স্টক",""],D.prods.map(p=>`<tr><td>${p.n}</td><td>${p.c}</td><td>${tk(p.p)}</td><td>${p.s}</td><td><button class="gh" data-a="ed" data-i="${p.id}">এডিট</button><button class="gh d" data-a="delP" data-i="${p.id}">মুছুন</button></td></tr>`),"কোনো পণ্য নেই। নতুন পণ্য যোগ করুন।")},
-ord(){return tbl(["#","গ্রাহক","পণ্য","মূল্য","তারিখ","অবস্থা"],D.ords.map(o=>`<tr><td>${o.id}</td><td>${o.cu}<br><small style="color:var(--mu)">${o.ph}</small></td><td>${o.pr}</td><td>${tk(o.a)}</td><td>${o.d}</td><td><select data-o="${o.id}">${Object.keys(ST).map(k=>`<option value="${k}" ${k==o.st?"selected":""}>${ST[k][0]}</option>`).join("")}</select></td></tr>`),"কোনো অর্ডার নেই।")},
-cust(){const m={};D.ords.forEach(o=>{const c=m[o.ph]||(m[o.ph]={n:o.cu,ph:o.ph,k:0,t:0});c.k++;c.t+=o.a});
-return tbl(["নাম","ফোন","অর্ডার","মোট খরচ"],Object.values(m).map(c=>`<tr><td>${c.n}</td><td>${c.ph}</td><td>${c.k}</td><td>${tk(c.t)}</td></tr>`),"কোনো কাস্টমার নেই।")},
-stock(){return tbl(["পণ্য","স্টক",""],D.prods.map(p=>`<tr><td>${p.n}</td><td class="${p.s<5?"low":""}">${p.s}${p.s<5?" (কম)":""}</td><td><button class="gh" data-a="stk" data-i="${p.id}" data-d="-1">−</button><button class="gh" data-a="stk" data-i="${p.id}" data-d="1">+</button></td></tr>`),"কোনো পণ্য নেই।")},
-coup(){return `<div class="card" style="margin-bottom:14px"><div class="g2">${inp("কুপন কোড / Code","cc","")}${inp("ছাড় / Discount (%)","co","","number")}</div><button class="btn" data-a="saveC">কুপন যোগ করুন</button><span class="msg">${note}</span></div>`+tbl(["কোড","ছাড়","অবস্থা",""],D.coups.map((c,i)=>`<tr><td>${c.c}</td><td>${c.o}%</td><td><span class="tag ${c.on?"t-ok":"t-w"}">${c.on?"চালু":"বন্ধ"}</span></td><td><button class="gh" data-a="togC" data-i="${i}">${c.on?"বন্ধ করুন":"চালু করুন"}</button><button class="gh d" data-a="delC" data-i="${i}">মুছুন</button></td></tr>`),"কোনো কুপন নেই।")},
-rep(){const m={};D.ords.forEach(o=>m[o.pr]=(m[o.pr]||0)+o.a);const mx=Math.max(1,...Object.values(m));
-const cnt=k=>D.ords.filter(o=>o.st==k).length;
-return `<div class="cards" style="grid-template-columns:repeat(3,1fr)">${Object.keys(ST).map(k=>`<div class="card"><small>${ST[k][0]}</small><b>${cnt(k)}</b></div>`).join("")}</div><h2>পণ্য অনুযায়ী বিক্রি / Sales by Product</h2><div class="card">${Object.keys(m).length?Object.keys(m).map(k=>`<div class="bar-r">${k}<span>${tk(m[k])}</span><div class="bar" style="width:${m[k]/mx*100}%"></div></div>`).join(""):"কোনো ডেটা নেই।"}</div><p style="margin-top:12px;color:var(--mu)">মোট বিক্রি: ${tk(sales())}</p>`},
-set(){const s=D.set;return `<div class="card"><div class="g2">${inp("স্টোরের নাম","sn",s.name)}${inp("ফোন / WhatsApp","sp",s.ph)}${inp("ইমেইল","se",s.em)}<span></span>${inp("ঢাকায় ডেলিভারি চার্জ (৳)","sd",s.dh,"number")}${inp("ঢাকার বাইরে ডেলিভারি চার্জ (৳)","so",s.out,"number")}</div><button class="btn" data-a="saveS">সেটিংস সংরক্ষণ করুন</button><span class="msg">${note}</span></div>`},
-out(){return `<div class="card empty">আপনি লগআউট হয়েছেন।<br><br><button class="btn" data-k="dash">আবার লগইন করুন</button></div>`}};
-function draw(){const m=MENU.find(x=>x[0]==cur);drawNav();main.innerHTML=`<h1>${m[1]}<span>${m[2]}</span></h1>`+P[cur]();note=""}
-function go(k){cur=k;edit=null;note="";nav.classList.remove("open");draw()}
-const A={
-new(){edit="new"},cancel(){edit=null},ed(i){edit=+i},
-saveP(){const n=v("pn"),p=+v("pp");if(!n||!(p>0)){alert("নাম ও সঠিক মূল্য দিন");return}
-const o={n,c:v("pc")||"Other",p,s:+v("ps")||0};if(edit=="new")D.prods.push({id:Date.now(),...o});else Object.assign(D.prods.find(x=>x.id==edit),o);edit=null;save()},
-delP(i){if(confirm("পণ্যটি মুছবেন?")){D.prods=D.prods.filter(p=>p.id!=i);save()}},
-stk(i,d){const p=D.prods.find(x=>x.id==i);p.s=Math.max(0,p.s+ +d);save()},
-saveC(){const c=v("cc").toUpperCase(),o=+v("co");if(!c||!(o>0&&o<=100)){alert("কোড ও ১-১০০ এর মধ্যে ছাড় দিন");return}D.coups.push({c,o,on:true});save()},
-togC(i){D.coups[i].on=!D.coups[i].on;save()},delC(i){D.coups.splice(i,1);save()},
-saveS(){D.set={name:v("sn"),ph:v("sp"),em:v("se"),dh:+v("sd")||0,out:+v("so")||0};save();note="সংরক্ষিত হয়েছে"}};
-document.addEventListener("click",e=>{const t=e.target.closest("[data-k],[data-a]");if(!t)return;
-if(t.dataset.k)return go(t.dataset.k);A[t.dataset.a](t.dataset.i,t.dataset.d);draw()});
-document.addEventListener("change",e=>{const s=e.target.closest("[data-o]");if(s){D.ords.find(o=>o.id==s.dataset.o).st=s.value;save();draw()}});
-document.addEventListener("keydown",e=>{if(e.key=="Enter"){const t=e.target.closest("nav [data-k]");if(t)go(t.dataset.k)}});
-$("mb").onclick=()=>nav.classList.toggle("open");
-draw();
+/* Supabase project configuration */
+const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let products = [];
+let orders = [];
+let reviews = [];
+let coupons = [];
+let settings = {};
+let currentUser = null;
+
+function el(id){ return document.getElementById(id); }
+function money(n){ return "৳" + Number(n || 0).toLocaleString("en-BD"); }
+function safe(v){
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function showMessage(text){
+  el("message").textContent = text;
+  el("message").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function hideMessage(){el("message").classList.add("hidden");}
+function showTab(id,btn){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll("nav a").forEach(b=>b.classList.remove("active"));
+  el(id).classList.add("active");
+  if(btn) btn.classList.add("active");
+  el("nav").classList.remove("open");
+  if(id==="reviews") loadReviews();
+  if(id==="coupons") loadCoupons();
+  if(id==="settings") loadSettings();
+  if(id==="customers") renderCustomers();
+  if(id==="stock") renderStock();
+  if(id==="reports") renderReports();
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){const a=e.target.closest("nav a");if(a)a.click();}
+});
+async function checkSession(){
+  const {data,error}=await db.auth.getSession();
+  if(error){showMessage(error.message);return;}
+  if(data.session){
+    currentUser=data.session.user;
+    openAdmin();
+  }
+}
+el("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();hideMessage();
+  const {data,error}=await db.auth.signInWithPassword({
+    email:el("email").value.trim(),
+    password:el("password").value
+  });
+  if(error){showMessage("Login হয়নি: "+error.message);return;}
+  currentUser=data.user;
+  openAdmin();
+});
+async function logout(){
+  await db.auth.signOut();
+  currentUser=null;
+  el("app").classList.add("hidden");
+  el("nav").classList.add("hidden");
+  el("menuBtn").classList.add("hidden");
+  el("logoutBtn").classList.add("hidden");
+  el("loginBox").classList.remove("hidden");
+}
+async function openAdmin(){
+  el("loginBox").classList.add("hidden");
+  el("app").classList.remove("hidden");
+  el("nav").classList.remove("hidden");
+  el("menuBtn").classList.remove("hidden");
+  el("logoutBtn").classList.remove("hidden");
+  await refreshAll();
+}
+async function refreshAll(){
+  hideMessage();
+  await Promise.allSettled([loadProducts(),loadOrders(),loadReviews(),loadSettings()]);
+  updateDashboard();
+}
+async function loadProducts(){
+  const {data,error}=await db.from("products").select("*").order("id",{ascending:false});
+  if(error){showMessage("Products লোড হয়নি: "+error.message);return;}
+  products=data||[];
+  renderProducts();renderStock();
+}
+async function loadOrders(){
+  const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false}).limit(500);
+  if(error){showMessage("Orders লোড হয়নি: "+error.message);return;}
+  orders=data||[];
+  renderOrders();
+  renderRecentOrders();
+  renderCustomers();
+  renderReports();
+  updateDashboard();
+}
+function productName(p){
+  return p?.name ?? p?.product_name ?? p?.title ?? p?.product_title ?? "";
+}
+function renderProducts(){
+  const q=(el("productSearch")?.value||"").toLowerCase();
+  const list=products.filter(p=>productName(p).toLowerCase().includes(q));
+  if(!list.length){el("productsList").innerHTML="<p>কোনো পণ্য পাওয়া যায়নি।</p>";return;}
+  el("productsList").innerHTML=`<table><thead><tr>
+  <th>ছবি</th><th>পণ্য</th><th>দাম</th><th>স্টক</th><th>অবস্থা</th><th>কাজ</th>
+  </tr></thead><tbody>${list.map(p=>`<tr>
+  <td>${p.image_url?`<img class="product-img" src="${safe(p.image_url)}" alt="">`:"—"}</td>
+  <td><b>${safe(productName(p)||"নাম নেই")}</b><br><small>${safe(p.category||"")}</small></td>
+  <td>${money(p.price)}<br><small>Discount: ${safe(p.discount_percent||0)}%</small></td>
+  <td>${safe(p.stock??0)}</td>
+  <td><span class="pill">${p.active===false?"Hidden":"Active"}</span></td>
+  <td class="actions">
+  <button onclick="editProduct('${safe(p.id)}')">Edit</button>
+  <button class="secondary" onclick="toggleProduct('${safe(p.id)}',${p.active===false})">${p.active===false?"Show":"Hide"}</button>
+  <button class="danger" onclick="deleteProduct('${safe(p.id)}')">Delete</button>
+  </td></tr>`).join("")}</tbody></table>`;
+}
+function resetProductForm(){
+  el("productForm").reset();el("productId").value="";
+  el("pActive").checked=true;el("productFormTitle").textContent="পণ্য যোগ করো";
+}
+function editProduct(id){
+  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
+  el("productId").value=p.id;
+  el("pName").value=productName(p);
+  el("pPrice").value=p.price??0;
+  el("pStock").value=p.stock??0;
+  el("pDiscount").value=p.discount_percent??0;
+  el("pCategory").value=p.category??"";
+  el("pDescription").value=p.description??"";
+  el("pActive").checked=p.active!==false;
+  el("productFormTitle").textContent="পণ্য সম্পাদনা করো";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+el("productForm").addEventListener("submit",async e=>{
+  e.preventDefault();hideMessage();
+  const id=el("productId").value;
+  let imageUrl=products.find(p=>String(p.id)===String(id))?.image_url||null;
+  const file=el("pImage").files[0];
+  if(file){
+    const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"");
+    const path=Date.now()+"-"+Math.random().toString(36).slice(2)+"."+ext;
+    const {error:uploadError}=await db.storage.from("product-images").upload(path,file,{upsert:false});
+    if(uploadError){showMessage("ছবি আপলোড হয়নি: "+uploadError.message);return;}
+    const {data}=db.storage.from("product-images").getPublicUrl(path);
+    imageUrl=data.publicUrl;
+  }
+  const item={
+    name:el("pName").value.trim(),
+    price:Number(el("pPrice").value),
+    stock:Number(el("pStock").value||0),
+    discount_percent:Number(el("pDiscount").value||0),
+    category:el("pCategory").value.trim(),
+    description:el("pDescription").value.trim(),
+    active:el("pActive").checked,
+    image_url:imageUrl
+  };
+  const result=id
+    ?await db.from("products").update(item).eq("id",id)
+    :await db.from("products").insert(item);
+  if(result.error){showMessage("পণ্য সেভ হয়নি: "+result.error.message);return;}
+  showMessage("পণ্য সেভ হয়েছে।");
+  resetProductForm();await loadProducts();updateDashboard();
+});
+async function toggleProduct(id,active){
+  const {error}=await db.from("products").update({active}).eq("id",id);
+  if(error){showMessage(error.message);return;}
+  await loadProducts();
+}
+async function deleteProduct(id){
+  if(!confirm("এই পণ্যটি ডিলিট করতে চাও?"))return;
+  const {error}=await db.from("products").delete().eq("id",id);
+  if(error){showMessage("ডিলিট হয়নি: "+error.message);return;}
+  await loadProducts();showMessage("পণ্য ডিলিট হয়েছে।");
+}
+function orderStatus(o){return o.status||"Pending";}
+function orderCustomer(o){return o.customer_name||o.name||"—";}
+function orderPhone(o){return o.phone||o.customer_phone||"";}
+function orderProduct(o){return o.product||o.product_name||"—";}
+function renderOrders(){
+  const q=(el("orderSearch")?.value||"").toLowerCase();
+  const f=el("orderFilter")?.value||"";
+  const list=orders.filter(o=>
+    (!f||orderStatus(o)===f) &&
+    (orderCustomer(o).toLowerCase().includes(q)||orderPhone(o).includes(q))
+  );
+  if(!list.length){el("ordersList").innerHTML="<p>কোনো অর্ডার পাওয়া যায়নি।</p>";return;}
+  el("ordersList").innerHTML=`<table><thead><tr>
+  <th>অর্ডার</th><th>কাস্টমার</th><th>পণ্য</th><th>মোট</th><th>স্ট্যাটাস</th><th>কাজ</th>
+  </tr></thead><tbody>${list.map(o=>`<tr>
+  <td>#${safe(o.id)}<br><small>${safe(o.created_at||"")}</small></td>
+  <td>${safe(orderCustomer(o))}<br>${safe(orderPhone(o))}<br>${safe(o.address||"")}</td>
+  <td>${safe(orderProduct(o))}<br>Qty: ${safe(o.quantity||1)}</td>
+  <td>${money(o.total??o.subtotal??0)}</td>
+  <td><select id="status-${safe(o.id)}">${["Pending","Confirmed","Shipped","Delivered","Cancelled"].map(s=>`<option ${orderStatus(o)===s?"selected":""}>${s}</option>`).join("")}</select>
+  <button onclick="updateOrder('${safe(o.id)}')">Update</button></td>
+  <td class="actions"><button onclick="whatsappOrder('${safe(o.id)}')">WhatsApp</button>
+  <button class="secondary" onclick="printOrder('${safe(o.id)}')">Invoice</button></td>
+  </tr>`).join("")}</tbody></table>`;
+}
+async function updateOrder(id){
+  const status=el("status-"+id).value;
+  const {error}=await db.from("orders").update({status}).eq("id",id);
+  if(error){showMessage("স্ট্যাটাস বদলানো যায়নি: "+error.message);return;}
+  await loadOrders();showMessage("অর্ডার স্ট্যাটাস আপডেট হয়েছে।");
+}
+function whatsappOrder(id){
+  const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
+  const phone=orderPhone(o).replace(/\D/g,"");
+  const msg=`SAREXBD Order #${o.id}\nCustomer: ${orderCustomer(o)}\nProduct: ${o.product||o.product_name||""}\nQuantity: ${o.quantity||1}\nTotal: ${money(o.total??o.subtotal??0)}\nStatus: ${orderStatus(o)}`;
+  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
+}
+function printOrder(id){
+  const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
+  const w=window.open("","_blank");
+  if(!w){showMessage("Invoice খুলতে browser popup অনুমতি দাও।");return;}
+  w.document.write(`<html><head><title>SAREXBD Invoice</title></head><body style="font-family:Arial;padding:25px">
+  <h1>SAREXBD</h1><h2>Order Invoice #${safe(o.id)}</h2>
+  <p>Customer: ${safe(orderCustomer(o))}</p><p>Phone: ${safe(orderPhone(o))}</p>
+  <p>Address: ${safe(o.address||"")}</p><p>Product: ${safe(o.product||o.product_name||"")}</p>
+  <p>Quantity: ${safe(o.quantity||1)}</p><p>Delivery: ${money(o.delivery_charge||0)}</p>
+  <h3>Total: ${money(o.total??o.subtotal??0)}</h3><p>Status: ${safe(orderStatus(o))}</p>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+function renderRecentOrders(){
+  const list=orders.slice(0,5);
+  el("recentOrders").innerHTML=list.length?`<table><tr><th>ID</th><th>কাস্টমার</th><th>মোট</th><th>স্ট্যাটাস</th></tr>${list.map(o=>`<tr><td>${safe(o.id)}</td><td>${safe(orderCustomer(o))}</td><td>${money(o.total??o.subtotal??0)}</td><td>${safe(orderStatus(o))}</td></tr>`).join("")}</table>`:"কোনো অর্ডার নেই।";
+}
+function updateDashboard(){
+  el("totalOrders").textContent=orders.length;
+  el("pendingOrders").textContent=orders.filter(o=>orderStatus(o)==="Pending").length;
+  el("salesTotal").textContent=money(orders.filter(o=>orderStatus(o)==="Delivered").reduce((sum,o)=>sum+Number(o.total??o.subtotal??0),0));
+  const threshold=Number(el("sLowStock")?.value||5);
+  el("lowStock").textContent=products.filter(p=>Number(p.stock||0)<=threshold).length;
+}
+function exportOrders(){
+  if(!orders.length){showMessage("Export করার মতো অর্ডার নেই।");return;}
+  const cols=["id","customer_name","phone","address","product","quantity","subtotal","delivery_charge","total","status","created_at"];
+  const csv=[cols.join(","),...orders.map(o=>cols.map(k=>`"${String(o[k]??"").replace(/"/g,'""')}"`).join(","))].join("\r\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");
+  a.href=url;a.download="sarexbd-orders.csv";a.click();URL.revokeObjectURL(url);
+}
+
+/* Customers / Stock / Reports (orders ও products থেকে হিসাব) */
+function renderCustomers(){
+  const box=el("customersList");if(!box)return;
+  const m={};
+  orders.filter(o=>orderStatus(o)!=="Cancelled").forEach(o=>{
+    const k=orderPhone(o)||orderCustomer(o);
+    const c=m[k]||(m[k]={n:orderCustomer(o),ph:orderPhone(o),k:0,t:0});
+    c.k++;c.t+=Number(o.total??o.subtotal??0);
+  });
+  const list=Object.values(m).sort((a,b)=>b.t-a.t);
+  box.innerHTML=list.length?`<table><tr><th>নাম</th><th>ফোন</th><th>অর্ডার</th><th>মোট খরচ</th></tr>${list.map(c=>`<tr><td>${safe(c.n)}</td><td>${safe(c.ph)}</td><td>${c.k}</td><td>${money(c.t)}</td></tr>`).join("")}</table>`:"কোনো কাস্টমার নেই।";
+}
+function renderStock(){
+  const box=el("stockList");if(!box)return;
+  const threshold=Number(el("sLowStock")?.value||5);
+  box.innerHTML=products.length?`<table><tr><th>পণ্য</th><th>স্টক</th><th>কাজ</th></tr>${products.map(p=>{
+    const low=Number(p.stock||0)<=threshold;
+    return `<tr><td>${safe(productName(p))}</td><td class="${low?"low":""}">${safe(p.stock??0)}${low?" (কম)":""}</td>
+    <td><button class="secondary" onclick="changeStock('${safe(p.id)}',-1)">−</button><button class="secondary" onclick="changeStock('${safe(p.id)}',1)">+</button></td></tr>`;
+  }).join("")}</table>`:"কোনো পণ্য নেই।";
+}
+async function changeStock(id,d){
+  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
+  const stock=Math.max(0,Number(p.stock||0)+d);
+  const {error}=await db.from("products").update({stock}).eq("id",id);
+  if(error){showMessage("স্টক বদলানো যায়নি: "+error.message);return;}
+  await loadProducts();updateDashboard();
+}
+function renderReports(){
+  const box=el("reportBox");if(!box)return;
+  const statuses=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
+  const m={};
+  orders.filter(o=>orderStatus(o)!=="Cancelled").forEach(o=>{
+    const k=orderProduct(o);m[k]=(m[k]||0)+Number(o.total??o.subtotal??0);
+  });
+  const mx=Math.max(1,...Object.values(m));
+  box.innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${statuses.map(s=>`<div class="stat">${s}<strong>${orders.filter(o=>orderStatus(o)===s).length}</strong></div>`).join("")}</div>
+  <h2 style="margin-top:10px">পণ্য অনুযায়ী বিক্রি (বাতিল বাদে)</h2>
+  ${Object.keys(m).length?Object.keys(m).map(k=>`<div class="bar-r">${safe(k)}<span>${money(m[k])}</span><div class="bar" style="width:${m[k]/mx*100}%"></div></div>`).join(""):"কোনো ডেটা নেই।"}`;
+}
+
+async function loadReviews(){
+  const box=el("reviewsList");if(!box)return;
+  box.innerHTML="রিভিউ লোড হচ্ছে…";
+  let query=db.from("reviews").select("*").order("created_at",{ascending:false}).limit(200);
+  const filter=el("reviewFilter")?.value;
+  if(filter)query=query.eq("status",filter);
+  const {data,error}=await query;
+  if(error){box.innerHTML="রিভিউ লোড হয়নি: "+safe(error.message);return;}
+  reviews=data||[];
+  box.innerHTML=reviews.length?`<table><thead><tr><th>কাস্টমার / পণ্য</th><th>রিভিউ</th><th>স্ট্যাটাস</th><th>কাজ</th></tr></thead><tbody>
+  ${reviews.map(r=>{
+    const p=products.find(p=>String(p.id)===String(r.product_id));
+    const pname=p?productName(p):((r.product_name||r.product_title)||"পণ্যের নাম পাওয়া যায়নি");
+    return `<tr><td><b>${safe(r.reviewer_name||r.customer_name||"কাস্টমার")}</b>
+    <br><span class="pill">পণ্য: ${safe(pname)}</span>
+    <br><small>${safe(r.created_at||"")}</small></td>
+    <td>${"★".repeat(Math.min(5,Math.max(0,Number(r.rating)||0)))}<br>${safe(r.review_text||r.comment||"")}</td>
+    <td>${safe(r.status||(r.approved?"Approved":"Pending"))}</td>
+    <td class="actions">
+    <button onclick="setReviewStatus('${safe(r.id)}','Approved')">Approve</button>
+    <button class="secondary" onclick="setReviewStatus('${safe(r.id)}','Hidden')">Hide</button>
+    <button class="danger" onclick="deleteReview('${safe(r.id)}')">Delete</button>
+    </td></tr>`;
+  }).join("")}</tbody></table>`:"কোনো রিভিউ পাওয়া যায়নি।";
+}
+async function setReviewStatus(id,status){
+  const {error}=await db.from("reviews").update({status}).eq("id",id);
+  if(error){showMessage("রিভিউ আপডেট হয়নি: "+error.message);return;}
+  await loadReviews();showMessage("রিভিউ স্ট্যাটাস আপডেট হয়েছে।");
+}
+async function deleteReview(id){
+  if(!confirm("রিভিউটি স্থায়ীভাবে ডিলিট করবে?"))return;
+  const {error}=await db.from("reviews").delete().eq("id",id);
+  if(error){showMessage("রিভিউ ডিলিট হয়নি: "+error.message);return;}
+  await loadReviews();
+}
+async function loadCoupons(){
+  const box=el("couponsList");box.innerHTML="লোড হচ্ছে…";
+  const {data,error}=await db.from("coupons").select("*").order("id",{ascending:false});
+  if(error){box.innerHTML="Coupons টেবিল পাওয়া যায়নি বা অনুমতি নেই।";return;}
+  coupons=data||[];
+  box.innerHTML=coupons.length?`<table><tr><th>Code</th><th>Discount</th><th>Expiry</th><th>Active</th><th>কাজ</th></tr>${coupons.map(c=>`<tr>
+  <td>${safe(c.code||c.coupon_code)}</td><td>${safe(c.discount_percent??c.discount??0)}%</td>
+  <td>${safe(c.expires_at||c.expiry_date||"—")}</td><td>${safe(c.active??c.is_active??true)}</td>
+  <td><button class="danger" onclick="deleteCoupon('${safe(c.id)}')">Delete</button></td>
+  </tr>`).join("")}</table>`:"এখনও কোনো কুপন নেই।";
+}
+el("couponForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const row={code:el("cCode").value.trim().toUpperCase(),discount_percent:Number(el("cDiscount").value),active:el("cActive").checked};
+  if(el("cExpiry").value)row.expires_at=el("cExpiry").value;
+  const {error}=await db.from("coupons").insert(row);
+  if(error){showMessage("কুপন সেভ হয়নি। coupons টেবিলের কলাম মিলিয়ে দেখতে হবে: "+error.message);return;}
+  el("couponForm").reset();await loadCoupons();showMessage("কুপন যোগ হয়েছে।");
+});
+async function deleteCoupon(id){
+  if(!confirm("কুপন ডিলিট করবে?"))return;
+  const {error}=await db.from("coupons").delete().eq("id",id);
+  if(error){showMessage(error.message);return;}
+  await loadCoupons();
+}
+async function loadSettings(){
+  const {data,error}=await db.from("shop_settings").select("*").limit(1).maybeSingle();
+  if(error){console.warn("Settings table:",error.message);return;}
+  if(!data)return;
+  settings=data;
+  el("sName").value=data.shop_name||"SAREXBD";
+  el("sWhatsApp").value=data.whatsapp||"";
+  el("sAddress").value=data.address||"";
+  el("sDhaka").value=data.dhaka_delivery_charge??80;
+  el("sOutside").value=data.outside_delivery_charge??130;
+  el("sLowStock").value=localStorage.getItem("sarexbd_low_stock")||5;
+  updateDashboard();
+}
+el("settingsForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const row={
+    shop_name:el("sName").value.trim(),
+    whatsapp:el("sWhatsApp").value.trim(),
+    address:el("sAddress").value.trim(),
+    dhaka_delivery_charge:Number(el("sDhaka").value||0),
+    outside_delivery_charge:Number(el("sOutside").value||0)
+  };
+  let result;
+  if(settings.id)result=await db.from("shop_settings").update(row).eq("id",settings.id);
+  else result=await db.from("shop_settings").insert(row);
+  if(result.error){showMessage("Settings সেভ হয়নি। shop_settings টেবিলের কলাম পরীক্ষা করতে হবে: "+result.error.message);return;}
+  localStorage.setItem("sarexbd_low_stock",el("sLowStock").value||5);
+  await loadSettings();updateDashboard();renderStock();showMessage("Settings সেভ হয়েছে।");
+});
+checkSession();
 </script>
-</body></html>
+</body>
+</html>
