@@ -926,7 +926,7 @@ function renderReviews(){
   const id=esc(r.id),ok=r.status==="Approved";
   return '<div class="card"><div class="title">'+esc(r.reviewer_name||"")+' · <span class="price">'+starsText(r.rating)+'</span></div><div class="sub">পণ্য: '+esc((products.find(x=>String(x.id)===String(r.product_id))||{}).name||"সাধারণ রিভিউ")+'</div><p>'+esc(r.review_text||"")+'</p><div class="sub">'+esc(fmtDate(r.created_at))+' · <span class="badge '+(ok?"ok":"warn")+'">'+esc(r.status||"Pending")+'</span></div><div class="btnrow">'+
    (ok?'<button class="btn dark" type="button" data-act="reviewHide" data-id="'+id+'">লুকান</button>':'<button class="btn" type="button" data-act="reviewApprove" data-id="'+id+'">অনুমোদন করুন</button>')+
-   '<button class="btn danger" type="button" data-act="reviewDelete" data-id="'+id+'">মুছুন</button></div></div>';
+   '<button class="btn dark" type="button" data-act="reviewEdit" data-id="'+id+'">✏️ বদলান</button><button class="btn danger" type="button" data-act="reviewDelete" data-id="'+id+'">মুছুন</button></div></div>';
  }).join("");
 }
 async function setReviewStatus(id,status){
@@ -934,6 +934,21 @@ async function setReviewStatus(id,status){
  if(error){toast("আপডেট হয়নি: "+error.message,"err");return}
  await loadReviews();
  toast(status==="Approved"?"রিভিউ সাইটে দেখা যাবে":"রিভিউ সাইট থেকে সরানো হয়েছে","ok");
+}
+async function editReview(id){
+ const r=reviewsData.find(x=>String(x.id)===String(id));
+ if(!r)return;
+ const name=prompt("কাস্টমারের নাম:",r.reviewer_name||"");
+ if(name===null)return;
+ const text=prompt("রিভিউর লেখা:",r.review_text||"");
+ if(text===null)return;
+ const n=name.trim(),t=text.trim();
+ if(!n||n.length>60){toast("নাম ১ থেকে ৬০ অক্ষরের মধ্যে হতে হবে","err");return}
+ if(!t||t.length>1000){toast("লেখা ১ থেকে ১০০০ অক্ষরের মধ্যে হতে হবে","err");return}
+ const {error}=await db.from("reviews").update({reviewer_name:n,review_text:t}).eq("id",id);
+ if(error){toast("বদলানো যায়নি: "+error.message,"err");return}
+ await loadReviews();
+ toast("রিভিউ বদলানো হয়েছে","ok");
 }
 async function deleteReview(id){
  if(!confirm("রিভিউটি স্থায়ীভাবে মুছে ফেলবে?"))return;
@@ -1144,6 +1159,7 @@ const actions={
  reviewFilter:id=>{reviewFilter=id;loadReviews()},
  reviewApprove:id=>setReviewStatus(id,"Approved"),
  reviewHide:id=>setReviewStatus(id,"Hidden"),
+ reviewEdit:id=>editReview(id),
  reviewDelete:id=>deleteReview(id),
  couponToggle:async id=>{
   const c=couponsData.find(x=>x.code===id);
