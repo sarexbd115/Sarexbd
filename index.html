@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>SAREXBD | Premium Leather</title>
+  <meta name="description" content="SAREXBD — প্রিমিয়াম জেনুইন লেদার পণ্য। অনলাইনে অর্ডার করুন, ঢাকার ভেতরে ও বাইরে ডেলিভারি।">
+  <meta name="theme-color" content="#090909">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SAREXBD | Premium Leather">
+  <meta property="og:description" content="প্রিমিয়াম জেনুইন লেদার পণ্য। অনলাইনে অর্ডার করুন।">
+
+  <style>
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap");
+
+:root {
+  --gold: #d4af37;
+  --gold-2: #f0d56a;
+  --bg: #0a0a0a;
+  --bg-2: #0d0d0d;
+  --card: #111113;
+  --panel: #121212;
+  --line: #2a2415;
+  --field: #080808;
+  --field-line: #3a321d;
+  --blue: #5aa9ff;
+  --text: #f5f5f5;
+  --muted: #a9a9a9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  font-family: "Hind Siliguri", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ---------- Header ---------- */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 6%;
+  background: rgba(10, 10, 10, 0.96);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #fff;
+}
+
+.brand span {
+  color: var(--gold);
+}
+
+nav {
+  display: flex;
+  gap: 26px;
+}
+
+nav a {
+  color: #ddd;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+nav a:hover {
+  color: var(--gold);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  min-height: 78vh;
+  display: flex;
+  align-items: center;
+  padding: 80px 6%;
+  background:
+    radial-gradient(circle at 78% 35%, rgba(212, 175, 55, 0.22) 0%, rgba(17, 17, 17, 0.9) 28%, #0a0a0a 65%);
+  border-bottom: 1px solid var(--line);
+}
+
+.hero-content {
+  max-width: 700px;
+}
+
+.eyebrow {
+  color: var(--gold);
+  letter-spacing: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  font-size: clamp(40px, 7vw, 76px);
+  font-weight: 800;
+  line-height: 1.05;
+  margin-bottom: 22px;
+}
+
+.hero h1 span {
+  color: var(--gold);
+}
+
+.hero p:not(.eyebrow) {
+  color: #bdbdbd;
+  font-size: 18px;
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  border: none;
+  background: linear-gradient(180deg, var(--gold-2), #c99a2e);
+  color: #111;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.btn:hover {
+  filter: brightness(1.06);
+}
+
+.btn:disabled,
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Sections ---------- */
+section {
+  padding: 64px 6%;
+}
+
+section h2 {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 34px;
+}
+
+#shop {
+  background: var(--bg-2);
+}
+
+/* ---------- Product grid (app.js-এর স্টাইল ছাড়িয়ে যায়) ---------- */
+body #products.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+body #products .product-card {
+  background: var(--card);
+  border: 1px solid #1d3450;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s, border-color 0.25s;
+}
+
+body #products .product-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+}
+
+body #products .product-image {
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  background: #1a120a;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+body #products .product-card h3 {
+  color: var(--blue);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 2px 0 6px;
+}
+
+body #products .product-card h3 + p {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+body #products .product-card h3 + p ~ p {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  margin: 0 0 12px;
+}
+
+body #products .product-card .btn {
+  margin-top: auto;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  body #products.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+/* ---------- Order form ---------- */
+form {
+  max-width: 650px;
+  margin: 0 auto;
+  background: var(--panel);
+  padding: 30px;
+  border: 1px solid #3a2f15;
+  border-radius: 14px;
+}
+
+label {
+  font-size: 14px;
+  color: #d6d6d6;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 13px 14px;
+  margin: 6px 0 16px;
+  background: var(--field);
+  color: #fff;
+  border: 1px solid var(--field-line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+#cart {
+  margin: 10px 0 14px;
+  color: #bbb;
+}
+
+.cart-item {
+  background: #181818;
+  border: 1px solid var(--field-line);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.cart-item strong {
+  color: var(--gold);
+  font-size: 18px;
+}
+
+.cart-item p {
+  color: #bbb;
+  margin: 6px 0;
+}
+
+#msg {
+  margin-top: 14px;
+  color: var(--gold);
+}
+
+/* ---------- About ---------- */
+#about {
+  background: var(--bg-2);
+  text-align: center;
+}
+
+#about p {
+  max-width: 700px;
+  margin: 0 auto;
+  color: #aaa;
+  font-size: 17px;
+}
+
+/* ---------- Reviews ---------- */
+#reviewsList article {
+  background: var(--card);
+  border: 1px solid #332a14;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+#reviewsList article h4 {
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+#reviewsList article p {
+  color: #bbb;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  text-align: center;
+  padding: 30px 15px;
+  background: #050505;
+  border-top: 1px solid var(--line);
+  color: #888;
+}
+
+footer a {
+  color: var(--gold);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 750px) {
+  header {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 14px 5%;
+  }
+
+  nav {
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  nav a {
+    font-size: 13px;
+  }
+
+  .hero {
+    min-height: 70vh;
+    padding: 60px 6%;
+  }
+
+  section {
+    padding: 48px 5%;
+  }
+
+  section h2 {
+    font-size: 26px;
+  }
+
+  form {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+  <header>
+
+    <div class="brand">
+      SAREX<span>BD</span>
+    </div>
+
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#shop">Shop</a>
+      <a href="#about">About</a>
+      <a href="#order">Order</a>
+    </nav>
+
+  </header>
+
+
+  <main>
+
+    <!-- HOME -->
+
+    <section id="home" class="hero">
+
+      <div class="hero-content">
+
+        <p class="eyebrow">
+          PREMIUM LEATHER GOODS
+        </p>
+
+        <h1>
+          Crafted for a <span>premium</span> life.
+        </h1>
+
+        <p>
+          Genuine leather products with a clean,
+          timeless SAREXBD finish.
+        </p>
+
+        <a class="btn" href="#shop">
+          Shop Now
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <!-- SHOP -->
+
+    <section id="shop">
+
+      <h2>
+        Featured Products
+      </h2>
+
+      <noscript>
+        <p>প্রোডাক্ট দেখতে ব্রাউজারে JavaScript চালু করুন।</p>
+      </noscript>
+
+      <div id="products" class="grid"></div>
+
+    </section>
+
+
+    <!-- CUSTOMER REVIEWS -->
+
+    <section id="reviews" class="reviews">
+
+      <h2>Customer Reviews</h2>
+
+      <p>Share your experience with SAREXBD.</p>
+
+      <div id="reviewsList">
+        <p>Customer reviews will appear here.</p>
+      </div>
+
+      <h3>Write a Review</h3>
+
+      <form id="reviewForm">
+
+        <label for="reviewName">Your name</label>
+        <input
+          id="reviewName"
+          type="text"
+          name="reviewer_name"
+          placeholder="Your name"
+          maxlength="60"
+          autocomplete="name"
+          required
+        >
+
+        <label for="reviewRating">Your rating</label>
+
+        <select id="reviewRating" name="rating" required>
+          <option value="5">★★★★★ — Excellent</option>
+          <option value="4">★★★★ — Very good</option>
+          <option value="3">★★★ — Good</option>
+          <option value="2">★★ — Fair</option>
+          <option value="1">★ — Poor</option>
+        </select>
+
+        <label for="reviewText">Your review</label>
+        <textarea
+          id="reviewText"
+          name="review_text"
+          placeholder="Write your review..."
+          maxlength="1000"
+          required
+        ></textarea>
+
+        <button class="btn" type="submit">
+          Submit Review
+        </button>
+
+        <p id="reviewMsg" role="status"></p>
+
+      </form>
+
+    </section>
+
+    <!-- ORDER -->
+
+    <section id="order" class="order">
+
+      <h2>
+        Place Your Order
+      </h2>
+
+      <form id="orderForm">
+
+        <label for="orderName">Full name</label>
+        <input
+          id="orderName"
+          type="text"
+          name="customer_name"
+          placeholder="Full name"
+          maxlength="80"
+          autocomplete="name"
+          required
+        >
+
+        <label for="orderPhone">Phone number</label>
+        <input
+          id="orderPhone"
+          type="tel"
+          inputmode="tel"
+          name="phone"
+          placeholder="01XXXXXXXXX"
+          maxlength="20"
+          autocomplete="tel"
+          required
+        >
+
+        <label for="orderAddress">Delivery address</label>
+        <textarea
+          id="orderAddress"
+          name="address"
+          placeholder="Full delivery address (area, thana, district)"
+          maxlength="300"
+          autocomplete="street-address"
+          required
+        ></textarea>
+
+        <label for="deliveryArea">Delivery area</label>
+        <select id="deliveryArea" name="delivery_area">
+
+          <option value="dhaka">
+            Dhaka — ৳80
+          </option>
+
+          <option value="outside">
+            Outside Dhaka — ৳120
+          </option>
+
+        </select>
+
+        <div id="cart"></div>
+
+        <button
+          class="btn"
+          type="submit"
+        >
+          Confirm Order
+        </button>
+
+        <p id="msg" role="status"></p>
+
+      </form>
+
+    </section>
+
+
+    <!-- ABOUT -->
+
+    <section id="about">
+
+      <h2>
+        About SAREXBD
+      </h2>
+
+      <p>
+        Premium leather goods designed for customers
+        who value quality, durability and a refined look.
+      </p>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    SAREXBD • Premium Leather Goods<br>
+    <a href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">WhatsApp: 01610244533</a>
+  </footer>
+
+
+  <!-- Supabase -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+
+  <!-- Website JavaScript -->
+
+  <script src="app.js"></script>
+
+</body>
+
+</html>
