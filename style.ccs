@@ -1,290 +1,378 @@
-‎* {
-‎  margin: 0;
-‎  padding: 0;
-‎  box-sizing: border-box;
-‎}
-‎
-‎html {
-‎  scroll-behavior: smooth;
-‎}
-‎
-‎body {
-‎  font-family: Arial, sans-serif;
-‎  background: #080808;
-‎  color: #f5f5f5;
-‎  line-height: 1.6;
-‎}
-‎
-‎header {
-‎  position: sticky;
-‎  top: 0;
-‎  z-index: 1000;
-‎  display: flex;
-‎  justify-content: space-between;
-‎  align-items: center;
-‎  padding: 18px 7%;
-‎  background: rgba(8, 8, 8, 0.96);
-‎  border-bottom: 1px solid #2a2414;
-‎}
-‎
-‎.brand {
-‎  font-size: 25px;
-‎  font-weight: 800;
-‎  letter-spacing: 3px;
-‎  color: #ffffff;
-‎}
-‎
-‎.brand span {
-‎  color: #d4af37;
-‎}
-‎
-‎nav {
-‎  display: flex;
-‎  gap: 25px;
-‎}
-‎
-‎nav a {
-‎  color: #ddd;
-‎  text-decoration: none;
-‎  font-size: 14px;
-‎}
-‎
-‎nav a:hover {
-‎  color: #d4af37;
-‎}
-‎
-‎.hero {
-‎  min-height: 82vh;
-‎  display: flex;
-‎  align-items: center;
-‎  padding: 80px 7%;
-‎  background:
-‎    radial-gradient(circle at 75% 35%, #3b2d0d 0%, #111 25%, #080808 65%);
-‎}
-‎
-‎.hero-content {
-‎  max-width: 700px;
-‎}
-‎
-‎.eyebrow {
-‎  color: #d4af37;
-‎  letter-spacing: 4px;
-‎  font-size: 13px;
-‎  font-weight: bold;
-‎  margin-bottom: 18px;
-‎}
-‎
-‎.hero h1 {
-‎  font-size: clamp(42px, 7vw, 78px);
-‎  line-height: 1.05;
-‎  margin-bottom: 25px;
-‎}
-‎
-‎.hero h1 span {
-‎  color: #d4af37;
-‎}
-‎
-‎.hero p:not(.eyebrow) {
-‎  color: #bdbdbd;
-‎  font-size: 18px;
-‎  max-width: 600px;
-‎  margin-bottom: 30px;
-‎}
-‎
-‎.btn {
-‎  display: inline-block;
-‎  border: none;
-‎  background: #d4af37;
-‎  color: #080808;
-‎  padding: 13px 25px;
-‎  border-radius: 5px;
-‎  font-weight: bold;
-‎  text-decoration: none;
-‎  cursor: pointer;
-‎}
-‎
-‎.btn:hover {
-‎  background: #f0d56a;
-‎}
-‎
-‎section {
-‎  padding: 80px 7%;
-‎}
-‎
-‎section h2 {
-‎  text-align: center;
-‎  font-size: 35px;
-‎  margin-bottom: 45px;
-‎}
-‎
-‎#shop {
-‎  background: #0d0d0d;
-‎}
-‎
-‎.grid {
-‎  display: grid;
-‎  grid-template-columns: repeat(3, 1fr);
-‎  gap: 25px;
-‎  max-width: 1100px;
-‎  margin: auto;
-‎}
-‎
-‎.product-card {
-‎  background: #151515;
-‎  border: 1px solid #332a14;
-‎  border-radius: 12px;
-‎  padding: 30px 22px;
-‎  text-align: center;
-‎  transition: 0.3s;
-‎}
-‎
-‎.product-card:hover {
-‎  transform: translateY(-6px);
-‎  border-color: #d4af37;
-‎}
-‎
-‎.product-card h3 {
-‎  color: #fff;
-‎  margin-bottom: 12px;
-‎}
-‎
-‎.product-card p {
-‎  color: #d4af37;
-‎  font-size: 22px;
-‎  font-weight: bold;
-‎  margin-bottom: 20px;
-‎}
-‎
-‎.order {
-‎  background: #080808;
-‎}
-‎
-‎form {
-‎  max-width: 650px;
-‎  margin: auto;
-‎  background: #121212;
-‎  padding: 30px;
-‎  border: 1px solid #332a14;
-‎  border-radius: 12px;
-‎}
-‎
-‎input,
-‎textarea,
-‎select {
-‎  width: 100%;
-‎  padding: 14px;
-‎  margin-bottom: 15px;
-‎  background: #080808;
-‎  color: #fff;
-‎  border: 1px solid #3a321d;
-‎  border-radius: 6px;
-‎  font-size: 15px;
-‎}
-‎
-‎textarea {
-‎  min-height: 110px;
-‎  resize: vertical;
-‎}
-‎
-‎input:focus,
-‎textarea:focus,
-‎select:focus {
-‎  outline: none;
-‎  border-color: #d4af37;
-‎}
-‎
-‎.cart-item {
-‎  background: #181818;
-‎  border: 1px solid #3a321d;
-‎  border-radius: 8px;
-‎  padding: 20px;
-‎  margin-bottom: 20px;
-‎}
-‎
-‎.cart-item strong {
-‎  color: #d4af37;
-‎  font-size: 19px;
-‎}
-‎
-‎.cart-item p {
-‎  color: #bbb;
-‎  margin: 7px 0;
-‎}
-‎
-‎.cart-item h3 {
-‎  color: #d4af37;
-‎  margin-top: 12px;
-‎}
-‎
-‎.cart-item label {
-‎  display: block;
-‎  margin-top: 15px;
-‎  margin-bottom: 5px;
-‎  color: #ddd;
-‎}
-‎
-‎.cart-item input {
-‎  margin-bottom: 5px;
-‎}
-‎
-‎#msg {
-‎  margin-top: 15px;
-‎  color: #d4af37;
-‎}
-‎
-‎#about {
-‎  background: #0d0d0d;
-‎  text-align: center;
-‎}
-‎
-‎#about p {
-‎  max-width: 700px;
-‎  margin: auto;
-‎  color: #aaa;
-‎  font-size: 17px;
-‎}
-‎
-‎footer {
-‎  text-align: center;
-‎  padding: 30px 15px;
-‎  background: #050505;
-‎  border-top: 1px solid #29220f;
-‎  color: #888;
-‎}
-‎
-‎@media (max-width: 750px) {
-‎
-‎  header {
-‎    padding: 16px 5%;
-‎  }
-‎
-‎  nav {
-‎    gap: 12px;
-‎  }
-‎
-‎  nav a {
-‎    font-size: 12px;
-‎  }
-‎
-‎  .hero {
-‎    min-height: 75vh;
-‎    padding: 60px 6%;
-‎  }
-‎
-‎  .grid {
-‎    grid-template-columns: 1fr;
-‎  }
-‎
-‎  section {
-‎    padding: 60px 6%;
-‎  }
-‎
-‎  section h2 {
-‎    font-size: 29px;
-‎  }
-‎
-‎  form {
-‎    padding: 20px;
-‎  }
-‎}
-‎
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap");
+
+:root {
+  --gold: #d4af37;
+  --gold-2: #f0d56a;
+  --bg: #0a0a0a;
+  --bg-2: #0d0d0d;
+  --card: #111113;
+  --panel: #121212;
+  --line: #2a2415;
+  --field: #080808;
+  --field-line: #3a321d;
+  --blue: #5aa9ff;
+  --text: #f5f5f5;
+  --muted: #a9a9a9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  font-family: "Hind Siliguri", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ---------- Header ---------- */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 6%;
+  background: rgba(10, 10, 10, 0.96);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #fff;
+}
+
+.brand span {
+  color: var(--gold);
+}
+
+nav {
+  display: flex;
+  gap: 26px;
+}
+
+nav a {
+  color: #ddd;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+nav a:hover {
+  color: var(--gold);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  min-height: 78vh;
+  display: flex;
+  align-items: center;
+  padding: 80px 6%;
+  background:
+    radial-gradient(circle at 78% 35%, rgba(212, 175, 55, 0.22) 0%, rgba(17, 17, 17, 0.9) 28%, #0a0a0a 65%);
+  border-bottom: 1px solid var(--line);
+}
+
+.hero-content {
+  max-width: 700px;
+}
+
+.eyebrow {
+  color: var(--gold);
+  letter-spacing: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  font-size: clamp(40px, 7vw, 76px);
+  font-weight: 800;
+  line-height: 1.05;
+  margin-bottom: 22px;
+}
+
+.hero h1 span {
+  color: var(--gold);
+}
+
+.hero p:not(.eyebrow) {
+  color: #bdbdbd;
+  font-size: 18px;
+  max-width: 600px;
+  margin-bottom: 30px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  border: none;
+  background: linear-gradient(180deg, var(--gold-2), #c99a2e);
+  color: #111;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.btn:hover {
+  filter: brightness(1.06);
+}
+
+.btn:disabled,
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Sections ---------- */
+section {
+  padding: 64px 6%;
+}
+
+section h2 {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 34px;
+}
+
+#shop {
+  background: var(--bg-2);
+}
+
+/* ---------- Product grid (app.js-এর স্টাইল ছাড়িয়ে যায়) ---------- */
+body #products.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+body #products .product-card {
+  background: var(--card);
+  border: 1px solid #1d3450;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s, border-color 0.25s;
+}
+
+body #products .product-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+}
+
+body #products .product-image {
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  background: #1a120a;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+body #products .product-card h3 {
+  color: var(--blue);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 2px 0 6px;
+}
+
+body #products .product-card h3 + p {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+body #products .product-card h3 + p ~ p {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  margin: 0 0 12px;
+}
+
+body #products .product-card .btn {
+  margin-top: auto;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  body #products.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+/* ---------- Order form ---------- */
+form {
+  max-width: 650px;
+  margin: 0 auto;
+  background: var(--panel);
+  padding: 30px;
+  border: 1px solid #3a2f15;
+  border-radius: 14px;
+}
+
+label {
+  font-size: 14px;
+  color: #d6d6d6;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 13px 14px;
+  margin: 6px 0 16px;
+  background: var(--field);
+  color: #fff;
+  border: 1px solid var(--field-line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+#cart {
+  margin: 10px 0 14px;
+  color: #bbb;
+}
+
+.cart-item {
+  background: #181818;
+  border: 1px solid var(--field-line);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.cart-item strong {
+  color: var(--gold);
+  font-size: 18px;
+}
+
+.cart-item p {
+  color: #bbb;
+  margin: 6px 0;
+}
+
+#msg {
+  margin-top: 14px;
+  color: var(--gold);
+}
+
+/* ---------- About ---------- */
+#about {
+  background: var(--bg-2);
+  text-align: center;
+}
+
+#about p {
+  max-width: 700px;
+  margin: 0 auto;
+  color: #aaa;
+  font-size: 17px;
+}
+
+/* ---------- Reviews ---------- */
+#reviewsList article {
+  background: var(--card);
+  border: 1px solid #332a14;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+#reviewsList article h4 {
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+#reviewsList article p {
+  color: #bbb;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  text-align: center;
+  padding: 30px 15px;
+  background: #050505;
+  border-top: 1px solid var(--line);
+  color: #888;
+}
+
+footer a {
+  color: var(--gold);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 750px) {
+  header {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 14px 5%;
+  }
+
+  nav {
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  nav a {
+    font-size: 13px;
+  }
+
+  .hero {
+    min-height: 70vh;
+    padding: 60px 6%;
+  }
+
+  section {
+    padding: 48px 5%;
+  }
+
+  section h2 {
+    font-size: 26px;
+  }
+
+  form {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
