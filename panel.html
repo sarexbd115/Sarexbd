@@ -746,7 +746,15 @@ function renderOrders(){
 }
 $("orderSearch").addEventListener("input",e=>{orderState.q=e.target.value;orderState.page=1;renderOrders()});
 
+async function loadOrderItems(id){
+ const box=$("orderDetailBox");
+ const {data,error}=await db.from("order_items").select("product_name,quantity,line_total").eq("order_id",id);
+ if(error||!data||!data.length)return;
+ box.insertAdjacentHTML("beforeend",'<div class="card"><h3 style="margin-top:0">পণ্যের তালিকা</h3>'+
+  data.map(x=>'<div class="kv"><span>'+esc(x.product_name)+' × '+x.quantity+'</span><b>'+money(x.line_total)+'</b></div>').join("")+'</div>');
+}
 function renderOrderDetail(id){
+ setTimeout(()=>loadOrderItems(id),0);
  const o=ordersAll.find(x=>String(x.id)===String(id));
  const box=$("orderDetailBox");
  if(!o){box.innerHTML='<div class="card">অর্ডারটি পাওয়া যায়নি। Orders পেজে গিয়ে Refresh করুন।</div>';return}
