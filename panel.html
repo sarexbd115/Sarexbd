@@ -214,6 +214,8 @@ summary{list-style:none}
      <div><label for="pfPrice">দাম (৳) *</label><input id="pfPrice" type="number" min="0" step="0.01" required></div>
      <div><label for="pfStock">স্টক *</label><input id="pfStock" type="number" min="0" step="1" required></div>
     </div>
+    <label for="pfBadge">ব্যাজ (ছবির ওপরে দেখাবে)</label>
+    <select id="pfBadge"><option value="">কোনো ব্যাজ নেই</option><option>Best Seller</option><option>Hot</option><option>New</option><option>Premium</option><option>Combo Offer</option></select>
     <label for="pfDiscount">প্রোডাক্ট ছাড় (%) — ০ মানে ছাড় নেই</label>
     <input id="pfDiscount" type="number" min="0" max="99" step="0.5" value="0">
     <label for="pfDesc">বিবরণ</label>
@@ -619,6 +621,7 @@ function renderProductForm(arg){
  $("pfPrice").value=p?p.price:"";
  $("pfStock").value=p?p.stock:"";
  $("pfDiscount").value=p?(p.discount_percent||0):0;
+ $("pfBadge").value=p?.badge||"";
  $("pfDesc").value=p?.description||"";
  $("pfActive").checked=p?!!p.active:true;
  $("pfSpecs").value=specsText(p?.specs);
@@ -674,6 +677,7 @@ $("productForm").addEventListener("submit",async e=>{
    discount_percent:Number($("pfDiscount").value)||0,
    category:$("pfCategory").value.trim(),
    active:$("pfActive").checked,
+   badge:$("pfBadge").value,
    specs:parseSpecs($("pfSpecs").value),
    gallery:galleryList
   };
