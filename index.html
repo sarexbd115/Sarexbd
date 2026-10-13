@@ -121,6 +121,8 @@
     .pm-gallery { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; }
     .pm-gallery img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; cursor: pointer; flex: none; }
 
+    .lang-btn { border: 1px solid var(--gold); background: transparent; color: var(--gold); border-radius: 8px; padding: 6px 12px; font: inherit; font-weight: 700; cursor: pointer; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -232,24 +234,25 @@
 <body>
 
   <div class="topbar">
-    📢 <span data-cms="announce_text">ফ্রি ডেলিভারি অফার — আপনার দরজায় পৌঁছে যাবে আমাদের প্রিমিয়াম লেদার পণ্য।</span>
+    📢 <span data-cms="announce_text" data-en="Free delivery offer — premium leather products delivered to your door.">ফ্রি ডেলিভারি অফার — আপনার দরজায় পৌঁছে যাবে আমাদের প্রিমিয়াম লেদার পণ্য।</span>
   </div>
 
   <header class="site-header">
     <a href="#home" aria-label="SAREXBD হোম"><img class="logo" data-cms-img="logo_url" src="logo.png" alt="SAREXBD Premium Leather Goods"></a>
     <form class="search" id="searchForm" role="search">
-      <input id="searchInput" type="search" placeholder="পণ্য খুঁজুন... (Search for products...)" aria-label="পণ্য খুঁজুন" autocomplete="off">
+      <input id="searchInput" type="search" placeholder="পণ্য খুঁজুন... (Search for products...)" data-en-ph="Search products..." aria-label="পণ্য খুঁজুন" autocomplete="off">
       <button type="submit" aria-label="খুঁজুন">🔍</button>
     </form>
     <a class="cart-link" href="#order" aria-label="কার্ট ও অর্ডার">🛒<span class="cbadge" id="cartBadge">0</span></a>
+    <button type="button" id="langBtn" class="lang-btn">EN</button>
   </header>
 
   <nav class="site-nav">
-    <a href="#home" data-cms="nav_home">🏠 Home (হোম)</a>
-    <a href="#shop" data-cms="nav_shop">🛍️ Shop (সমস্ত পণ্য)</a>
-    <a href="#about" data-cms="nav_about">ⓘ About Us (আমাদের সম্পর্কে)</a>
-    <a href="#contact" data-cms="nav_contact">📞 Contact (যোগাযোগ)</a>
-    <a href="#order" data-cms="nav_order">🛒 Order (অর্ডার করুন)</a>
+    <a href="#home" data-cms="nav_home" data-en="🏠 Home">🏠 Home (হোম)</a>
+    <a href="#shop" data-cms="nav_shop" data-en="🛍️ Shop">🛍️ Shop (সমস্ত পণ্য)</a>
+    <a href="#about" data-cms="nav_about" data-en="ⓘ About Us">ⓘ About Us (আমাদের সম্পর্কে)</a>
+    <a href="#contact" data-cms="nav_contact" data-en="📞 Contact">📞 Contact (যোগাযোগ)</a>
+    <a href="#order" data-cms="nav_order" data-en="🛒 Order">🛒 Order (অর্ডার করুন)</a>
   </nav>
 
   <main>
@@ -257,18 +260,18 @@
     <!-- HOME (app.js এখানে অফার বার ও ভরসার কার্ড যোগ করে) -->
     <section id="home" class="hero">
       <div class="hero-content">
-        <p class="eyebrow" data-cms="hero_eyebrow">PREMIUM LEATHER GOODS</p>
+        <p class="eyebrow" data-cms="hero_eyebrow" data-en="PREMIUM LEATHER GOODS">PREMIUM LEATHER GOODS</p>
         <h1><span data-cms="hero_title_1">Crafted for a</span> <span class="gold" data-cms="hero_title_2">Premium Life</span></h1>
-        <p class="sub" data-cms="hero_sub">প্রিমিয়াম লেদার পণ্য, আপনার স্টাইলের প্রতিচ্ছবি।</p>
-        <a class="btn" href="#shop" data-cms="hero_button">Shop Now (এখনই কিনুন) →</a>
+        <p class="sub" data-cms="hero_sub" data-en="Premium leather goods for your style.">প্রিমিয়াম লেদার পণ্য, আপনার স্টাইলের প্রতিচ্ছবি।</p>
+        <a class="btn" href="#shop" data-cms="hero_button" data-en="Shop Now →">Shop Now (এখনই কিনুন) →</a>
       </div>
     </section>
 
     <!-- CATEGORIES -->
     <section class="block alt">
       <div class="title">
-        <h2 data-cms="cat_title">Shop by Category</h2>
-        <p data-cms="cat_sub">ক্যাটাগরি অনুযায়ী কিনুন</p>
+        <h2 data-cms="cat_title" data-en="Shop by Category">Shop by Category</h2>
+        <p data-cms="cat_sub" data-en="Shop by category">ক্যাটাগরি অনুযায়ী কিনুন</p>
       </div>
       <div class="cats">
         <a class="cat" href="#shop"><span class="ic" data-cms="cat1_icon">▦</span><b data-cms="cat1_title">All Products</b><small data-cms="cat1_sub">(সব পণ্য)</small></a>
@@ -283,8 +286,8 @@
     <!-- SHOP (app.js এখানে পণ্য ও ক্যাটাগরি ফিল্টার বসায়) -->
     <section id="shop" class="block">
       <div class="title">
-        <h2 data-cms="shop_title">Popular Products</h2>
-        <p data-cms="shop_sub">জনপ্রিয় পণ্য — ছবিতে ক্লিক করলে বিস্তারিত দেখবেন</p>
+        <h2 data-cms="shop_title" data-en="Popular Products">Popular Products</h2>
+        <p data-cms="shop_sub" data-en="Tap a product to see details">জনপ্রিয় পণ্য — ছবিতে ক্লিক করলে বিস্তারিত দেখবেন</p>
       </div>
       <noscript><p>প্রোডাক্ট দেখতে ব্রাউজারে JavaScript চালু করুন।</p></noscript>
       <div class="wish-bar"><button type="button" id="wishOnly">♡ শুধু পছন্দের পণ্য (<span id="wishCount">0</span>)</button></div>
@@ -294,8 +297,8 @@
     <!-- ORDER -->
     <section id="order" class="block alt">
       <div class="title">
-        <h2 data-cms="order_title">Place Your Order</h2>
-        <p data-cms="order_sub">অর্ডার ফর্ম (অর্ডার করুন)</p>
+        <h2 data-cms="order_title" data-en="Place Your Order">Place Your Order</h2>
+        <p data-cms="order_sub" data-en="Order form">অর্ডার ফর্ম (অর্ডার করুন)</p>
       </div>
       <div class="order-wrap">
         <div class="order-box">
@@ -315,7 +318,7 @@
               <option value="outside">Outside Dhaka — ৳120</option>
             </select>
 
-            <button class="btn" type="submit">Confirm Order (অর্ডার নিশ্চিত করুন) →</button>
+            <button class="btn" type="submit" data-en="Confirm Order →">Confirm Order (অর্ডার নিশ্চিত করুন) →</button>
             <p id="msg" role="status"></p>
           </form>
         </div>
@@ -331,8 +334,8 @@
     <!-- REVIEWS -->
     <section id="reviews" class="block">
       <div class="title">
-        <h2 data-cms="reviews_title">Customer Reviews</h2>
-        <p data-cms="reviews_sub">কাস্টমার রিভিউ — আপনার মতামত শেয়ার করুন</p>
+        <h2 data-cms="reviews_title" data-en="Customer Reviews">Customer Reviews</h2>
+        <p data-cms="reviews_sub" data-en="Share your experience">কাস্টমার রিভিউ — আপনার মতামত শেয়ার করুন</p>
       </div>
       <div id="revSummary"></div>
       <div id="generalReviews"></div>
@@ -347,7 +350,7 @@
     <!-- ABOUT (app.js এখানে WhatsApp ও Facebook বাটন যোগ করে) -->
     <section id="about" class="block alt">
       <div class="title">
-        <h2 data-cms="about_title">About Us</h2>
+        <h2 data-cms="about_title" data-en="About Us">About Us</h2>
       </div>
       <p class="about-text" data-cms="about_text">SAREXBD একটি প্রিমিয়াম লেদার ব্র্যান্ড। আমরা এমন মানুষদের জন্য পণ্য বানাই যারা মান, স্টাইল ও টেকসইতাকে গুরুত্ব দেন।</p>
     </section>
@@ -355,7 +358,7 @@
     <!-- CONTACT -->
     <section id="contact" class="block">
       <div class="title">
-        <h2 data-cms="contact_title">Contact Us</h2>
+        <h2 data-cms="contact_title" data-en="Contact Us">Contact Us</h2>
       </div>
       <div class="contact-grid">
         <div class="contact-card"><span class="ic">📞</span><b>ফোন (Call)</b><p data-cms="contact_phone">01610244533</p></div>
@@ -432,7 +435,7 @@
         <label for="reviewText">Your review (আপনার মতামত) *</label>
         <textarea id="reviewText" name="review_text" placeholder="Write your review..." maxlength="1000" required></textarea>
 
-        <button class="btn" type="submit">Submit Review (রিভিউ জমা দিন)</button>
+        <button class="btn" type="submit" data-en="Submit Review">Submit Review (রিভিউ জমা দিন)</button>
         <p id="reviewMsg" role="status"></p>
         <p style="color:var(--muted);font-size:13px;margin-top:10px;text-align:center">রিভিউ অনুমোদনের পর ওয়েবসাইটে দেখা যাবে।</p>
       </form>
@@ -453,7 +456,7 @@
         // লেখা
         document.querySelectorAll("[data-cms]").forEach(function (el) {
           const v = map[el.dataset.cms];
-          if (v !== undefined && v !== "") el.textContent = v;
+          if (v !== undefined && v !== "") { el.textContent = v; el.dataset.bn = v; }
         });
         // ছবি
         document.querySelectorAll("[data-cms-img]").forEach(function (img) {
@@ -494,6 +497,7 @@
               if (txt[0]) txt[0].textContent = su;
             }
           });
+          if (window.reapplyLang) window.reapplyLang();
         }, 800);
       }
 
@@ -1056,23 +1060,55 @@
         box.innerHTML = "";
         const p = products.find(function (x) { return x.name === name; });
         if (!p) return;
-        const res = await supabaseClient.from("products").select("specs,gallery").eq("id", p.id).single();
+        const res = await supabaseClient.from("products").select("image_url,specs,gallery").eq("id", p.id).single();
         if (res.error || !res.data) return;
         const specs = Array.isArray(res.data.specs) ? res.data.specs : [];
         const gal = Array.isArray(res.data.gallery) ? res.data.gallery : [];
+        const mainUrl = res.data.image_url || p.image_url || "";
+        document.getElementById("pmImg").innerHTML = mainUrl
+          ? '<img id="pmMainImg" src="' + esc(mainUrl) + '" alt="">'
+          : '<span style="color:#7a6040;font-size:44px">👜</span>';
+        const all = [mainUrl].concat(gal).filter(Boolean);
         let html = "";
         if (specs.length) {
           html += '<div class="pm-specs">' + specs.map(function (s) {
             return "<div><span>" + esc(s.k) + "</span><b>" + esc(s.v) + "</b></div>";
           }).join("") + "</div>";
         }
-        if (gal.length) {
-          html += '<div class="pm-gallery">' + gal.map(function (u) {
-            return '<img src="' + esc(u) + '" alt="" onclick="document.querySelector(\'#pmImg img\').src=this.src">';
+        if (all.length > 1) {
+          html += '<div class="pm-gallery">' + all.map(function (u) {
+            return '<img src="' + esc(u) + '" alt="" onclick="document.getElementById(\'pmMainImg\').src=this.src">';
           }).join("") + "</div>";
         }
         box.innerHTML = html;
       });
+    })();
+  </script>
+
+  <!-- বাংলা / ইংরেজি -->
+  <script>
+    (function () {
+      const btn = document.getElementById("langBtn");
+      function apply(lang) {
+        document.documentElement.lang = lang === "en" ? "en" : "bn";
+        document.querySelectorAll("[data-en]").forEach(function (el) {
+          if (el.dataset.bn === undefined) el.dataset.bn = el.textContent;
+          el.textContent = lang === "en" ? el.dataset.en : el.dataset.bn;
+        });
+        document.querySelectorAll("[data-en-ph]").forEach(function (el) {
+          if (el.dataset.bnPh === undefined) el.dataset.bnPh = el.placeholder;
+          el.placeholder = lang === "en" ? el.dataset.enPh : el.dataset.bnPh;
+        });
+        btn.textContent = lang === "en" ? "বাংলা" : "EN";
+        try { localStorage.setItem("sarexbd_lang", lang); } catch (e) {}
+      }
+      window.reapplyLang = function () { apply(document.documentElement.lang === "en" ? "en" : "bn"); };
+      btn.addEventListener("click", function () {
+        apply(document.documentElement.lang === "en" ? "bn" : "en");
+      });
+      let saved = "bn";
+      try { saved = localStorage.getItem("sarexbd_lang") || "bn"; } catch (e) {}
+      if (saved === "en") apply("en");
     })();
   </script>
 </body>
