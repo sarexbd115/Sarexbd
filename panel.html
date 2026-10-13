@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#0b0b0d">
 <title>SAREXBD Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
 window.addEventListener("error",function(e){
  var m=document.getElementById("loginMsg");
@@ -30,7 +30,6 @@ a{color:inherit}
 .login-box{width:100%;max-width:380px}
 .login-logo{text-align:center;margin-bottom:24px}
 .crown{color:var(--gold);font-size:34px;line-height:1}
-.slogo{font-size:78px;font-family:Georgia,serif;font-weight:700;color:var(--gold);line-height:1}
 .lname{font-size:28px;letter-spacing:3px;font-weight:800}
 .lname span{color:var(--gold)}
 .lsub{color:var(--muted);letter-spacing:4px;font-size:12px;margin-top:4px}
@@ -72,6 +71,7 @@ a.sc{display:block;border-radius:16px;padding:14px;color:#fff;text-decoration:no
 label{display:block;font-size:13px;color:#d6d6da;margin:10px 0 4px}
 input,select,textarea{width:100%;padding:12px;background:#0f0f11;color:var(--text);border:1px solid #34343a;border-radius:12px;font-family:inherit;font-size:15px}
 textarea{min-height:90px;resize:vertical}
+input[type="color"]{height:44px;padding:4px}
 input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .check{display:flex;gap:10px;align-items:center}
@@ -110,6 +110,11 @@ details summary{cursor:pointer;font-weight:700}
 .toast.show{opacity:1;transform:none}
 .toast.err{background:#3a1717;border-color:#6b2a2a;color:#ffb4b4}
 .toast.ok{background:#12301f;border-color:#1f6a40;color:#bff3d6}
+.sitegroup{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.sitegroup h3{margin:0 0 6px;color:var(--gold);font-size:16px}
+.imgrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.imgrow img{width:70px;height:70px;object-fit:cover;border-radius:10px;background:#111}
+.imgrow input[type="file"]{width:auto;flex:1;font-size:13px}
 summary{list-style:none}
 @media(min-width:700px){.statgrid{grid-template-columns:repeat(4,1fr)}}
 </style>
@@ -155,6 +160,7 @@ summary{list-style:none}
   <a href="#reports">📊 রিপোর্ট</a>
   <a href="#reviews">⭐ রিভিউ <span class="badge warn" id="revBadge" hidden></span></a>
   <a href="#coupons">🏷️ কুপন</a>
+  <a href="#content">🌐 সাইটের লেখা ও রং</a>
   <a href="#settings">⚙️ সেটিংস</a>
   <button class="btn dark block" data-act="logout" type="button" style="margin-top:14px">⎋ লগআউট</button>
  </aside>
@@ -171,7 +177,7 @@ summary{list-style:none}
     <a class="btn" href="#productForm/new">＋ প্রোডাক্ট যোগ</a>
     <a class="btn dark" href="#orders">অর্ডার দেখুন</a>
     <a class="btn dark" href="#products">প্রোডাক্ট তালিকা</a>
-    <a class="btn dark" href="#reports">রিপোর্ট</a>
+    <a class="btn dark" href="#content">সাইটের লেখা</a>
    </div>
    <h3>সাম্প্রতিক অর্ডার</h3>
    <div id="homeOrders"></div>
@@ -283,6 +289,14 @@ summary{list-style:none}
    <div id="couponList"></div>
   </section>
 
+  <!-- সাইটের লেখা ও রং -->
+  <section id="view-content" class="view hidden">
+   <div class="pagehead"><h2>🌐 সাইটের লেখা ও রং</h2></div>
+   <p class="sub" style="margin-bottom:8px">এখানে বদলালে ওয়েবসাইটের লেখা, ছবি, রং ও যোগাযোগের তথ্য বদলে যাবে। বদল দেখতে সাইট রিফ্রেশ করুন।</p>
+   <div id="siteFields"></div>
+   <button class="btn block" type="button" id="siteSave" data-act="saveSite" style="margin-top:12px">সব সেভ করুন</button>
+  </section>
+
   <!-- সেটিংস -->
   <section id="view-settings" class="view hidden">
    <div class="pagehead"><h2>⚙️ সেটিংস</h2></div>
@@ -328,7 +342,7 @@ const IMAGE_TYPES={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
 const STATUSES=["Pending","Confirmed","Shipped","Delivered","Cancelled"];
 const STATUS_CLASS={Pending:"warn",Confirmed:"blue",Shipped:"purple",Delivered:"ok",Cancelled:"err"};
 const PAGE_SIZE=20;
-const VIEWS=["home","products","productForm","orders","orderDetail","customers","reports","reviews","coupons","settings"];
+const VIEWS=["home","products","productForm","orders","orderDetail","customers","reports","reviews","coupons","content","settings"];
 
 /* ---------- সেটিংস ---------- */
 const DEFAULTS={shopName:"SAREXBD",whatsapp:"01610244533",address:"",deliveryInside:80,deliveryOutside:120,lowStock:5};
@@ -504,6 +518,7 @@ function route(){
  else if(view==="reports")renderReports();
  else if(view==="reviews")loadReviews();
  else if(view==="coupons")loadCoupons();
+ else if(view==="content")renderContent();
  else if(view==="settings")fillSettingsForm();
 }
 window.addEventListener("hashchange",route);
@@ -697,7 +712,7 @@ function renderOrderDetail(id){
   }
   rows+='<div class="kv"><span>পণ্যের মোট</span><b>'+money(o.subtotal)+'</b></div>';
   if(Number(o.discount)>0)rows+='<div class="kv"><span>কুপন ছাড় ('+esc(o.coupon_code||"")+')</span><b>−'+money(o.discount)+'</b></div>';
-  rows+='<div class="kv"><span>ডেলিভারি ('+esc(o["delivery area"]||"")+')</span><b>'+money(o.delivery_charge)+'</b></div>';
+  rows+='<div class="kv"><span>ডেলিভারি ('+esc(o["delivery area"]||o.delivery_area||"")+')</span><b>'+money(o.delivery_charge)+'</b></div>';
  }
  rows+='<div class="kv"><span>সর্বমোট</span><b class="price">'+money(o.total)+'</b></div>';
  box.innerHTML=
@@ -719,7 +734,7 @@ async function setOrderStatus(id,status,btn){
  if(error){toast("স্ট্যাটাস সেভ হয়নি: "+error.message,"err",5000);return}
  if(!data||!data.length){toast("স্ট্যাটাস বদলায়নি। Supabase-এ orders টেবিলে UPDATE অনুমতি নেই।","err",6000);return}
  o.status=status;
- await loadProducts(); // Cancel করলে স্টক ফেরত আসে
+ await loadProducts();
  toast("Order #"+o.id+" → "+status,"ok");
  renderOrderDetail(String(o.id));
 }
@@ -735,7 +750,7 @@ function exportCsv(){
  const head=["অর্ডার নম্বর","তারিখ","গ্রাহকের নাম","ফোন","ঠিকানা","পণ্য","পরিমাণ","সাবটোটাল","ডেলিভারি এলাকা","ডেলিভারি চার্জ","কুপন","ছাড়","প্রোডাক্ট ছাড়","মোট","স্ট্যাটাস"];
  const lines=[head.map(csvCell).join(",")];
  rows.forEach(o=>{
-  lines.push([o.id,o.created_at?new Date(o.created_at).toLocaleString("sv-SE"):"",o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.subtotal,o["delivery area"],o.delivery_charge,o.coupon_code,o.discount,o.product_discount,o.total,o.status].map(csvCell).join(","));
+  lines.push([o.id,o.created_at?new Date(o.created_at).toLocaleString("sv-SE"):"",o.customer_name,o.phone,o.address,o.product,o.quantity||1,o.subtotal,o["delivery area"]||o.delivery_area,o.delivery_charge,o.coupon_code,o.discount,o.product_discount,o.total,o.status].map(csvCell).join(","));
  });
  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
  const a=document.createElement("a");
@@ -755,7 +770,7 @@ function printInvoice(o){
  const date=o.created_at?new Date(o.created_at).toLocaleString("bn-BD"):"";
  const subtotal=zone==="stored"?(Number(o.subtotal)||0):(Number(o.total)||0);
  const delivery=zone==="stored"?(Number(o.delivery_charge)||0):(zone==="inside"?S.deliveryInside:S.deliveryOutside);
- const zoneLabel=zone==="stored"?(/outside/i.test(o["delivery area"]||"")?"ঢাকার বাইরে":"ঢাকার ভেতরে"):(zone==="inside"?"ঢাকার ভেতরে":"ঢাকার বাইরে");
+ const zoneLabel=zone==="stored"?(/outside/i.test(o["delivery area"]||o.delivery_area||"")?"ঢাকার বাইরে":"ঢাকার ভেতরে"):(zone==="inside"?"ঢাকার ভেতরে":"ঢাকার বাইরে");
  const grand=zone==="stored"?(Number(o.total)||(subtotal+delivery)):(subtotal+delivery);
  const discountAmount=zone==="stored"?(Number(o.discount)||0):0;
  const discountRow=discountAmount>0?'<tr><th>কুপন ছাড় ('+esc(o.coupon_code||"")+')</th><td>−'+esc(money(discountAmount))+'</td></tr>':"";
@@ -964,6 +979,94 @@ $("couponForm").addEventListener("submit",async e=>{
  toast("কুপন যোগ হয়েছে: "+code,"ok");
 });
 
+/* ---------- সাইটের লেখা ও রং ---------- */
+const SITE_GROUPS=[
+ ["ওপরের ঘোষণা",[["announce_text","ঘোষণার লেখা","area"]]],
+ ["মেনুর লেখা",[["nav_home","Home"],["nav_shop","Shop"],["nav_about","About"],["nav_contact","Contact"],["nav_order","Order"]]],
+ ["লোগো ও প্রথম অংশ (হিরো)",[
+   ["logo_url","লোগোর ছবি","image"],
+   ["hero_eyebrow","ছোট লেখা (উপরে)"],
+   ["hero_title_1","বড় শিরোনাম — প্রথম লাইন"],
+   ["hero_title_2","বড় শিরোনাম — দ্বিতীয় লাইন (সোনালি)"],
+   ["hero_sub","উপ-শিরোনাম","area"],
+   ["hero_button","বাটনের লেখা"],
+   ["hero_image","হিরোর পেছনের ছবি (ঐচ্ছিক, খালি রাখলে লোগো)","image"]
+ ]],
+ ["সেকশনের শিরোনাম",[
+   ["cat_title","ক্যাটাগরি — শিরোনাম"],["cat_sub","ক্যাটাগরি — ছোট লেখা"],
+   ["shop_title","পণ্য — শিরোনাম"],["shop_sub","পণ্য — ছোট লেখা"],
+   ["order_title","অর্ডার — শিরোনাম"],["order_sub","অর্ডার — ছোট লেখা"],
+   ["reviews_title","রিভিউ — শিরোনাম"],["reviews_sub","রিভিউ — ছোট লেখা"]
+ ]],
+ ["আমাদের সম্পর্কে",[["about_title","শিরোনাম"],["about_text","বিবরণ","area"]]],
+ ["যোগাযোগ",[
+   ["contact_title","শিরোনাম"],
+   ["contact_phone","ফোন নম্বর"],
+   ["whatsapp_number","WhatsApp নম্বর (দেশের কোডসহ, যেমন 8801XXXXXXXXX)"],
+   ["facebook_url","Facebook পেজের লিংক","url"],
+   ["contact_email","ইমেইল (খালি রাখলে দেখাবে না)"],
+   ["contact_address","ঠিকানা"]
+ ]],
+ ["ফুটার ও ডেলিভারি",[
+   ["footer_name","ফুটারের নাম"],
+   ["footer_tagline","ফুটারের ট্যাগলাইন"],
+   ["delivery_note","পণ্য ভেদে ডেলিভারির সময়ের নোট","area"]
+ ]],
+ ["রং",[["theme_gold","সোনালি রং","color"],["theme_bg","ব্যাকগ্রাউন্ডের রং","color"]]]
+];
+const SITE_FIELDS=SITE_GROUPS.flatMap(g=>g[1]);
+
+function siteFieldHtml(key,label,type,v){
+ if(type==="area")return '<label for="s_'+key+'">'+esc(label)+'</label><textarea id="s_'+key+'" data-key="'+key+'">'+esc(v)+'</textarea>';
+ if(type==="color")return '<label for="s_'+key+'">'+esc(label)+'</label><input type="color" id="s_'+key+'" data-key="'+key+'" value="'+(/^#[0-9a-f]{6}$/i.test(v)?v:"#000000")+'">';
+ if(type==="url")return '<label for="s_'+key+'">'+esc(label)+'</label><input type="url" id="s_'+key+'" data-key="'+key+'" value="'+esc(v)+'">';
+ if(type==="image")return '<label for="s_'+key+'">'+esc(label)+'</label><div class="imgrow">'+(v?'<img src="'+esc(v)+'" alt="">':'')+'<input type="file" accept="image/*" data-upload="'+key+'"></div><input type="text" id="s_'+key+'" data-key="'+key+'" value="'+esc(v)+'" placeholder="ছবির লিংক (আপলোড করলে নিজে বসবে)" style="margin-top:6px">';
+ return '<label for="s_'+key+'">'+esc(label)+'</label><input type="text" id="s_'+key+'" data-key="'+key+'" value="'+esc(v)+'">';
+}
+
+async function renderContent(){
+ const box=$("siteFields");
+ box.innerHTML="লোড হচ্ছে…";
+ const {data,error}=await db.from("site_content").select("key,value");
+ if(error){
+  box.innerHTML='<div class="card sub">লেখা আনা যায়নি: '+esc(error.message)+'<br>Supabase-এ site_content টেবিল তৈরি হয়েছে কি না দেখুন।</div>';
+  return;
+ }
+ const v=Object.fromEntries((data||[]).map(r=>[r.key,r.value]));
+ box.innerHTML=SITE_GROUPS.map(([title,items])=>
+  '<div class="sitegroup"><h3>'+esc(title)+'</h3>'+items.map(([key,label,type])=>siteFieldHtml(key,label,type||"text",v[key]??"")).join("")+'</div>'
+ ).join("");
+ box.querySelectorAll("[data-upload]").forEach(input=>{
+  input.addEventListener("change",async()=>{
+   const file=input.files[0];
+   if(!file)return;
+   if(file.size>MAX_IMAGE_BYTES){toast("ছবির সাইজ ৫ MB-এর কম রাখো।","err");return}
+   const key=input.dataset.upload;
+   const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"").toLowerCase();
+   const path="site/"+key+"-"+Date.now()+"."+ext;
+   toast("ছবি আপলোড হচ্ছে...");
+   const {error:upErr}=await db.storage.from(BUCKET).upload(path,file,{upsert:false,contentType:file.type});
+   if(upErr){toast("ছবি আপলোড হয়নি: "+upErr.message,"err",5000);return}
+   $("s_"+key).value=db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+   toast("ছবি আপলোড হয়েছে। 'সব সেভ করুন' চাপুন।","ok");
+  });
+ });
+}
+
+async function saveSite(){
+ const btn=$("siteSave");
+ btn.disabled=true;
+ const now=new Date().toISOString();
+ const rows=SITE_FIELDS.map(([key])=>{
+  const el=document.querySelector('#siteFields [data-key="'+key+'"]');
+  return {key:key,value:el?el.value.trim():"",updated_at:now};
+ });
+ const {error}=await db.from("site_content").upsert(rows,{onConflict:"key"});
+ btn.disabled=false;
+ if(error){toast("সেভ হয়নি: "+error.message,"err",5000);return}
+ toast("সাইটের লেখা সেভ হয়েছে। সাইট রিফ্রেশ করে দেখুন।","ok",4000);
+}
+
 /* ---------- সেটিংস ---------- */
 function fillSettingsForm(){
  $("setShop").value=S.shopName;
@@ -991,7 +1094,7 @@ $("settingsForm").addEventListener("submit",async e=>{
  toast(saved?"সেটিংস সেভ হয়েছে। ডেলিভারি চার্জ সাইটেও বদলেছে।":"ডেলিভারি চার্জ সেভ হয়েছে; বাকি সেটিংস এই ব্রাউজারে সেভ করা যায়নি।","ok");
 });
 
-/* ---------- নতুন অর্ডারের নোটিফিকেশন (প্যানেল খোলা থাকলে) ---------- */
+/* ---------- নতুন অর্ডারের নোটিফিকেশন ---------- */
 function updateBadge(){
  $("ordersBadge").hidden=!unseen;
  $("ordersBadge").textContent=unseen;
@@ -1057,6 +1160,7 @@ const actions={
   toast("কুপন মোছা হয়েছে","ok");
  },
  randomCode:()=>{$("cpCode").value=randomCode()},
+ saveSite:saveSite,
  resetSettings:async()=>{
   S=Object.assign({},DEFAULTS);
   try{localStorage.removeItem(SETTINGS_KEY)}catch(e){}
@@ -1075,6 +1179,13 @@ document.addEventListener("click",e=>{
  const g=e.target.closest("[data-go]");
  if(g)go(g.dataset.go);
 });
+
+/* ---------- শুরু ---------- */
+checkSession();
+async function checkSession(){
+ const {data}=await db.auth.getSession();
+ if(data&&data.session)applySession(data.session);
+}
 </script>
 </body>
 </html>
