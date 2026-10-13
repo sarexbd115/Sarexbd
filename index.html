@@ -819,7 +819,7 @@
             p_coupon: coupon || null, p_items: items
           });
           if (error) {
-            setMsg(orderErrorMessage(error));
+            setMsg(orderErrorMessage(error) + " [" + (error.message || "") + "]");
             await loadCatalog();
             loadProducts(true);
             return;
