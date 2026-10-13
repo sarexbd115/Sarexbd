@@ -920,11 +920,11 @@ async function loadReviews(){
 }
 function starsText(n){const r=Math.max(0,Math.min(5,Math.floor(Number(n)||0)));return "★".repeat(r)+"☆".repeat(5-r)}
 function renderReviews(){
- $("revChips").innerHTML=[["Pending","অপেক্ষমাণ"],["Approved","অনুমোদিত"],["","সব"]].map(p=>chip("reviewFilter",p[0],p[1],reviewFilter===p[0])).join("");
+ $("revChips").innerHTML=[["Pending","অপেক্ষমাণ"],["Approved","অনুমোদিত"],["Hidden","লুকানো"],["","সব"]].map(p=>chip("reviewFilter",p[0],p[1],reviewFilter===p[0])).join("");
  $("revMsg").textContent=reviewsData.length?"দেখানো হচ্ছে "+reviewsData.length+"টি রিভিউ":"এই তালিকায় কোনো রিভিউ নেই।";
  $("revList").innerHTML=reviewsData.map(r=>{
   const id=esc(r.id),ok=r.status==="Approved";
-  return '<div class="card"><div class="title">'+esc(r.reviewer_name||"")+' · <span class="price">'+starsText(r.rating)+'</span></div><p>'+esc(r.review_text||"")+'</p><div class="sub">'+esc(fmtDate(r.created_at))+' · <span class="badge '+(ok?"ok":"warn")+'">'+esc(r.status||"Pending")+'</span></div><div class="btnrow">'+
+  return '<div class="card"><div class="title">'+esc(r.reviewer_name||"")+' · <span class="price">'+starsText(r.rating)+'</span></div><div class="sub">পণ্য: '+esc((products.find(x=>String(x.id)===String(r.product_id))||{}).name||"সাধারণ রিভিউ")+'</div><p>'+esc(r.review_text||"")+'</p><div class="sub">'+esc(fmtDate(r.created_at))+' · <span class="badge '+(ok?"ok":"warn")+'">'+esc(r.status||"Pending")+'</span></div><div class="btnrow">'+
    (ok?'<button class="btn dark" type="button" data-act="reviewHide" data-id="'+id+'">লুকান</button>':'<button class="btn" type="button" data-act="reviewApprove" data-id="'+id+'">অনুমোদন করুন</button>')+
    '<button class="btn danger" type="button" data-act="reviewDelete" data-id="'+id+'">মুছুন</button></div></div>';
  }).join("");
@@ -1012,7 +1012,7 @@ const SITE_GROUPS=[
    ["footer_tagline","ফুটারের ট্যাগলাইন"],
    ["delivery_note","পণ্য ভেদে ডেলিভারির সময়ের নোট","area"]
  ]],
- ["রং",[["theme_gold","সোনালি রং","color"],["theme_bg","ব্যাকগ্রাউন্ডের রং","color"]]]
+ ["ক্যাটাগরি (সাইটের বাটন)",[["cat1_icon","ক্যাটাগরি 1 — আইকন"],["cat1_title","ক্যাটাগরি 1 — নাম"],["cat1_sub","ক্যাটাগরি 1 — বাংলা নাম"],["cat2_icon","ক্যাটাগরি 2 — আইকন"],["cat2_title","ক্যাটাগরি 2 — নাম"],["cat2_sub","ক্যাটাগরি 2 — বাংলা নাম"],["cat3_icon","ক্যাটাগরি 3 — আইকন"],["cat3_title","ক্যাটাগরি 3 — নাম"],["cat3_sub","ক্যাটাগরি 3 — বাংলা নাম"],["cat4_icon","ক্যাটাগরি 4 — আইকন"],["cat4_title","ক্যাটাগরি 4 — নাম"],["cat4_sub","ক্যাটাগরি 4 — বাংলা নাম"],["cat5_icon","ক্যাটাগরি 5 — আইকন"],["cat5_title","ক্যাটাগরি 5 — নাম"],["cat5_sub","ক্যাটাগরি 5 — বাংলা নাম"],["cat6_icon","ক্যাটাগরি 6 — আইকন"],["cat6_title","ক্যাটাগরি 6 — নাম"],["cat6_sub","ক্যাটাগরি 6 — বাংলা নাম"]]],["ভরসার কার্ড (ওপরের তিনটি)",[["trust1_icon","কার্ড 1 — আইকন"],["trust1_title","কার্ড 1 — শিরোনাম"],["trust1_sub","কার্ড 1 — ছোট লেখা"],["trust2_icon","কার্ড 2 — আইকন"],["trust2_title","কার্ড 2 — শিরোনাম"],["trust2_sub","কার্ড 2 — ছোট লেখা"],["trust3_icon","কার্ড 3 — আইকন"],["trust3_title","কার্ড 3 — শিরোনাম"],["trust3_sub","কার্ড 3 — ছোট লেখা"]]],["রং",[["theme_gold","সোনালি রং","color"],["theme_bg","ব্যাকগ্রাউন্ডের রং","color"]]]
 ];
 const SITE_FIELDS=SITE_GROUPS.flatMap(g=>g[1]);
 
@@ -1143,7 +1143,7 @@ const actions={
  reportPeriod:id=>{reportPeriod=id;renderReports()},
  reviewFilter:id=>{reviewFilter=id;loadReviews()},
  reviewApprove:id=>setReviewStatus(id,"Approved"),
- reviewHide:id=>setReviewStatus(id,"Pending"),
+ reviewHide:id=>setReviewStatus(id,"Hidden"),
  reviewDelete:id=>deleteReview(id),
  couponToggle:async id=>{
   const c=couponsData.find(x=>x.code===id);
