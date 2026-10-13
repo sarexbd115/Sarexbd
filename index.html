@@ -95,6 +95,15 @@
       body #products.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     }
 
+    .cbadge { position: absolute; top: -6px; right: -8px; background: var(--gold); color: #111; font-size: 11px; font-weight: 700; border-radius: 99px; padding: 1px 6px; min-width: 18px; text-align: center; }
+    .cart-link { position: relative; }
+    .cart-total { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--field-line); font-size: 15px; color: #ddd; }
+    .cart-total b { color: var(--gold); font-size: 18px; }
+
+    .prod-rating { color: #f3d77a; font-size: 13px; margin: -4px 0 10px; }
+    .pm-rev { margin-top: 16px; border-top: 1px solid var(--field-line); padding-top: 14px; }
+    .pm-rev-item { background: #161616; border: 1px solid var(--field-line); border-radius: 10px; padding: 12px; margin: 8px 0; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -215,7 +224,7 @@
       <input id="searchInput" type="search" placeholder="পণ্য খুঁজুন... (Search for products...)" aria-label="পণ্য খুঁজুন" autocomplete="off">
       <button type="submit" aria-label="খুঁজুন">🔍</button>
     </form>
-    <a class="cart-link" href="#order" aria-label="কার্ট ও অর্ডার">🛒</a>
+    <a class="cart-link" href="#order" aria-label="কার্ট ও অর্ডার">🛒<span class="cbadge" id="cartBadge">0</span></a>
   </header>
 
   <nav class="site-nav">
@@ -371,6 +380,7 @@
             <div><span>💵</span>ক্যাশ অন ডেলিভারি</div>
             <div><span>🧵</span>আসল চামড়া</div>
           </div>
+          <div id="pmReviews" class="pm-rev"></div>
         </div>
       </div>
     </div>
@@ -382,6 +392,11 @@
       <button class="modal-close" type="button" data-close="reviewModal" aria-label="বন্ধ করুন">×</button>
       <form id="reviewForm">
         <h3 class="form-title">Write a Review (রিভিউ লিখুন)</h3>
+
+        <label for="reviewProduct">কোন পণ্যের রিভিউ? (ঐচ্ছিক)</label>
+        <select id="reviewProduct" name="product_id">
+          <option value="">সাধারণ রিভিউ (কোনো নির্দিষ্ট পণ্য নয়)</option>
+        </select>
 
         <label for="reviewName">Your name (আপনার নাম) *</label>
         <input id="reviewName" type="text" name="reviewer_name" placeholder="Your name" maxlength="60" autocomplete="name" required>
@@ -578,9 +593,7 @@
       document.getElementById("pmPlus").addEventListener("click", function () { setQty(pmQty + 1); });
       document.getElementById("pmOrder").addEventListener("click", function () {
         if (!pmProduct) return;
-        selectProduct(pmProduct.id);   // app.js: পণ্য নির্বাচন
-        selectedQuantity = pmQty;      // পরিমাণ
-        updateCart();
+        addToCart(pmProduct.id, pmQty); // কার্টে যোগ
         closeModal("productModal");
         document.getElementById("order").scrollIntoView({ behavior: "smooth" });
       });
@@ -621,6 +634,339 @@
 
   <!-- Website JavaScript -->
   <script src="app.js"></script>
+
+  <!-- কার্ট (একাধিক পণ্য) — app.js-এর পরে লোড হয় -->
+  <script>
+    (function () {
+      const CART_KEY = "sarexbd_cart";
+      let cart = [];
+      let catalog = [];
+      try { cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch (e) { cart = []; }
+
+      const esc = function (v) {
+        return String(v ?? "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      };
+      const unitOf = function (p) { return Math.round(Number(p.price) * (100 - (Number(p.discount_percent) || 0)) / 100); };
+      const maxQty = function (p) { return Math.max(1, Math.min(Number(p.stock) || 1, 50)); };
+      const findP = function (id) { return catalog.find(function (p) { return String(p.id) === String(id); }); };
+      const countItems = function () { return cart.reduce(function (s, i) { return s + i.qty; }, 0); };
+      const deliveryFee = function () {
+        return document.getElementById("deliveryArea").value === "outside" ? DELIVERY.outside : DELIVERY.dhaka;
+      };
+      const saveCart = function () { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {} };
+      const setMsg = function (t) { document.getElementById("msg").textContent = t; };
+
+      function renderCart() {
+        document.getElementById("cartBadge").textContent = countItems();
+        const box = document.getElementById("cart");
+        const lines = cart.map(function (i) { return { i: i, p: findP(i.id) }; }).filter(function (x) { return x.p; });
+        if (!lines.length) {
+          box.innerHTML = '<p>কার্ট খালি। পণ্যের কার্ডে "অর্ডার করুন" চাপুন।</p>';
+          return;
+        }
+        let subtotal = 0;
+        const rows = lines.map(function (x) {
+          const price = unitOf(x.p);
+          const line = price * x.i.qty;
+          subtotal += line;
+          return '<div class="cart-item"><strong>' + esc(x.p.name) + '</strong>' +
+            '<p>' + taka(price) + ' × ' + x.i.qty + ' = ' + taka(line) + '</p>' +
+            '<div class="qty"><button type="button" data-dec="' + esc(x.p.id) + '">−</button><span>' + x.i.qty + '</span><button type="button" data-inc="' + esc(x.p.id) + '">+</button></div>' +
+            '<button type="button" data-rm="' + esc(x.p.id) + '" style="margin-top:8px;background:none;border:0;color:#ff8a80;cursor:pointer">মুছুন</button></div>';
+        }).join("");
+        const discount = appliedCoupon ? Math.round(subtotal * appliedCoupon.percent / 100) : 0;
+        const delivery = deliveryFee();
+        const total = subtotal - discount + delivery;
+        box.innerHTML = rows +
+          '<div class="cart-total"><div>পণ্যের মোট: ' + taka(subtotal) + '</div>' +
+          (discount ? '<div>কুপন ছাড় (' + esc(appliedCoupon.code) + '): −' + taka(discount) + '</div>' : '') +
+          '<div>ডেলিভারি: ' + taka(delivery) + '</div>' +
+          '<div style="margin-top:6px">সর্বমোট: <b>' + taka(total) + '</b></div></div>';
+      }
+
+      function addToCart(id, qty) {
+        const p = findP(id);
+        if (!p) { setMsg("পণ্যটি এখন পাওয়া যাচ্ছে না। পেজ রিফ্রেশ করুন।"); return; }
+        if (Number(p.stock) <= 0) { setMsg("এই পণ্যটি এখন স্টকে নেই।"); return; }
+        const it = cart.find(function (i) { return String(i.id) === String(id); });
+        const want = (it ? it.qty : 0) + (qty || 1);
+        const q = Math.min(want, maxQty(p));
+        if (it) it.qty = q; else cart.push({ id: p.id, qty: q });
+        setMsg("");
+        saveCart();
+        renderCart();
+      }
+      window.addToCart = addToCart;
+      window.updateCart = renderCart; // app.js-এর পুরনো কার্ট ফাংশনের জায়গায়
+
+      // কার্টের +, − ও মুছুন বাটন
+      document.getElementById("cart").addEventListener("click", function (e) {
+        const t = e.target;
+        const inc = t.dataset.inc, dec = t.dataset.dec, rm = t.dataset.rm;
+        if (inc) {
+          const it = cart.find(function (i) { return String(i.id) === inc; });
+          const p = findP(inc);
+          if (it && p && it.qty < maxQty(p)) it.qty++;
+        }
+        if (dec) {
+          const it = cart.find(function (i) { return String(i.id) === dec; });
+          if (it) it.qty--;
+          cart = cart.filter(function (i) { return i.qty > 0; });
+        }
+        if (rm) cart = cart.filter(function (i) { return String(i.id) !== rm; });
+        if (inc || dec || rm) { saveCart(); renderCart(); }
+      });
+
+      // ডেলিভারি এলাকা বদলালে সর্বমোট আপডেট
+      document.getElementById("deliveryArea").addEventListener("change", renderCart);
+
+      // পণ্যের কার্ডের "অর্ডার করুন" এখন কার্টে যোগ করবে
+      document.getElementById("products").addEventListener("click", function (e) {
+        const btn = e.target.closest(".btn");
+        if (!btn) return;
+        const card = btn.closest(".product-card");
+        if (!card) return;
+        e.stopPropagation();
+        e.preventDefault();
+        const h3 = card.querySelector("h3");
+        const name = h3 ? h3.textContent.trim() : "";
+        const p = catalog.find(function (x) { return x.name === name; });
+        if (p) {
+          addToCart(p.id, 1);
+          document.getElementById("order").scrollIntoView({ behavior: "smooth" });
+        }
+      }, true);
+
+      // অর্ডার জমা: একাধিক পণ্য একসাথে সার্ভারে যাবে
+      const form = document.getElementById("orderForm");
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setMsg("");
+        const lines = cart.filter(function (i) { return findP(i.id); });
+        if (!lines.length) { setMsg("আগে কার্টে পণ্য যোগ করুন।"); return; }
+
+        const fd = new FormData(form);
+        const name = String(fd.get("customer_name") || "").trim();
+        const phone = cleanPhone(fd.get("phone"));
+        const address = String(fd.get("address") || "").trim();
+        if (!name || !phone || !address) { setMsg("নাম, ফোন ও ঠিকানা পূরণ করুন।"); return; }
+        if (!BD_PHONE.test(phone)) { setMsg("সঠিক মোবাইল নম্বর দিন (যেমন 01712345678)।"); return; }
+        if (address.length < 8) { setMsg("পুরো ঠিকানা লিখুন (এলাকা, থানা, জেলা)।"); return; }
+
+        const area = document.getElementById("deliveryArea").value === "outside" ? "outside" : "dhaka";
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        setMsg("অর্ডার জমা হচ্ছে...");
+        try {
+          const items = lines.map(function (i) { return { product_id: Number(i.id), quantity: i.qty }; });
+          const coupon = couponInput ? couponInput.value.trim() : "";
+          const { data, error } = await supabaseClient.rpc("place_order_multi", {
+            p_name: name, p_phone: phone, p_address: address, p_area: area,
+            p_coupon: coupon || null, p_items: items
+          });
+          if (error) {
+            setMsg(orderErrorMessage(error));
+            await loadCatalog();
+            loadProducts(true);
+            return;
+          }
+          const r = data || {};
+          const summary = {
+            name: name,
+            phone: phone,
+            product: lines.map(function (i) { return findP(i.id).name + " × " + i.qty; }).join(", "),
+            quantity: lines.reduce(function (s, i) { return s + i.qty; }, 0),
+            total: Number(r.total) || 0,
+            discount: Number(r.discount) || 0,
+            coupon: r.coupon || "",
+            orderId: r.order_id || ""
+          };
+          cart = [];
+          saveCart();
+          form.reset();
+          appliedCoupon = null;
+          if (couponInput) couponInput.value = "";
+          if (couponMsg) couponMsg.textContent = "";
+          renderCart();
+          showOrderSuccess(summary);
+          await loadCatalog();
+          loadProducts(true);
+        } catch (err) {
+          setMsg("অর্ডার জমা হয়নি। নেট চেক করে আবার চেষ্টা করুন।");
+        } finally {
+          btn.disabled = false;
+        }
+      }, true);
+
+      // পণ্যের তালিকা (স্টকসহ) আনা
+      async function loadCatalog() {
+        const res = await supabaseClient
+          .from("products")
+          .select("id,name,price,discount_percent,stock,image_url,active")
+          .eq("active", true);
+        if (!res.error && res.data) catalog = res.data;
+        renderCart();
+      }
+
+      loadCatalog();
+    })();
+  </script>
+
+
+
+  <!-- প্রোডাক্ট অনুযায়ী রিভিউ -->
+  <script>
+    (function () {
+      let allProducts = [];
+      let reviewsByPid = {};
+
+      const esc = function (v) {
+        return String(v ?? "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      };
+      const starsOf = function (n) {
+        const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0)));
+        return "★".repeat(r) + "☆".repeat(5 - r);
+      };
+      const idByName = function (name) {
+        const p = allProducts.find(function (x) { return x.name === name; });
+        return p ? p.id : null;
+      };
+
+      function fillReviewSelect() {
+        const sel = document.getElementById("reviewProduct");
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">সাধারণ রিভিউ (কোনো নির্দিষ্ট পণ্য নয়)</option>' +
+          allProducts.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join("");
+        sel.value = cur;
+      }
+
+      // প্রতিটি পণ্য কার্ডের নিচে (অর্ডার বাটনের আগে) রেটিং লাইন
+      function cardLines() {
+        document.querySelectorAll("#products .product-card").forEach(function (card) {
+          const h3 = card.querySelector("h3");
+          const pid = idByName(h3 ? h3.textContent.trim() : "");
+          let line = card.querySelector(".prod-rating");
+          if (!line) {
+            line = document.createElement("div");
+            line.className = "prod-rating";
+            const btn = card.querySelector(".btn");
+            if (btn) card.insertBefore(line, btn); else card.appendChild(line);
+          }
+          const list = pid ? (reviewsByPid[pid] || []) : [];
+          if (!list.length) {
+            line.textContent = "এখনো রিভিউ নেই";
+          } else {
+            const avg = list.reduce(function (s, r) { return s + Number(r.rating); }, 0) / list.length;
+            line.textContent = "★ " + avg.toFixed(1) + " · " + list.length + "টি রিভিউ";
+          }
+        });
+      }
+
+      // পণ্যের popup-এ ওই পণ্যের রিভিউ
+      function renderPopupReviews(pid) {
+        const box = document.getElementById("pmReviews");
+        const list = reviewsByPid[pid] || [];
+        const avg = list.length ? (list.reduce(function (s, r) { return s + Number(r.rating); }, 0) / list.length).toFixed(1) : null;
+        box.innerHTML =
+          '<h4 style="color:var(--gold);margin-bottom:6px">এই পণ্যের রিভিউ</h4>' +
+          (avg ? '<div class="sub" style="margin-bottom:8px">★ ' + avg + ' · ' + list.length + 'টি রিভিউ</div>'
+               : '<div class="sub" style="margin-bottom:8px">এখনো কোনো রিভিউ নেই।</div>') +
+          list.slice(0, 5).map(function (r) {
+            return '<div class="pm-rev-item"><b>' + esc(r.reviewer_name) + '</b> <span style="color:var(--gold)">' +
+              starsOf(r.rating) + '</span><p style="color:#ccc;margin-top:4px">' + esc(r.review_text) + '</p></div>';
+          }).join("") +
+          '<button type="button" id="pmWriteReview" data-pid="' + pid + '" style="margin-top:8px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;padding:9px 16px;font:inherit;cursor:pointer">✎ এই পণ্যের রিভিউ লিখুন</button>';
+      }
+
+      // পণ্যের কার্ডে ক্লিক করলে popup-এ রিভিউ
+      document.getElementById("products").addEventListener("click", function (e) {
+        if (e.target.closest(".btn") || e.target.closest(".wish-btn")) return;
+        const card = e.target.closest(".product-card");
+        if (!card) return;
+        const h3 = card.querySelector("h3");
+        const pid = idByName(h3 ? h3.textContent.trim() : "");
+        if (pid) renderPopupReviews(pid);
+      });
+
+      // popup থেকে "এই পণ্যের রিভিউ লিখুন"
+      document.getElementById("pmReviews").addEventListener("click", function (e) {
+        const b = e.target.closest("#pmWriteReview");
+        if (!b) return;
+        document.getElementById("reviewProduct").value = b.dataset.pid || "";
+        document.getElementById("productModal").hidden = true;
+        document.getElementById("reviewModal").hidden = false;
+        document.body.style.overflow = "hidden";
+      });
+
+      // সাধারণ "রিভিউ লিখুন" বাটনে পণ্য খালি থাকবে
+      document.getElementById("openReview").addEventListener("click", function () {
+        document.getElementById("reviewProduct").value = "";
+      });
+
+      // রিভিউ জমা: পণ্যসহ সার্ভারে যাবে, অনুমোদনের পর দেখাবে
+      const rf = document.getElementById("reviewForm");
+      rf.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const msg = document.getElementById("reviewMsg");
+        msg.textContent = "";
+        const fd = new FormData(rf);
+        const name = String(fd.get("reviewer_name") || "").trim();
+        const rating = Number(fd.get("rating"));
+        const text = String(fd.get("review_text") || "").trim();
+        const pid = String(fd.get("product_id") || "");
+        if (!name || name.length > 60 || !Number.isInteger(rating) || rating < 1 || rating > 5 || !text || text.length > 1000) {
+          msg.textContent = "তথ্যগুলো ঠিকভাবে পূরণ করুন।";
+          return;
+        }
+        const btn = rf.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        msg.textContent = "রিভিউ জমা হচ্ছে...";
+        try {
+          const res = await supabaseClient.from("reviews").insert([{
+            reviewer_name: name,
+            rating: rating,
+            review_text: text,
+            status: "Pending",
+            product_id: pid ? Number(pid) : null
+          }]);
+          if (res.error) { msg.textContent = "রিভিউ জমা হয়নি। আবার চেষ্টা করুন।"; return; }
+          msg.textContent = "ধন্যবাদ! অনুমোদনের পর তোমার রিভিউ ওয়েবসাইটে দেখা যাবে।";
+          rf.reset();
+        } catch (err) {
+          msg.textContent = "রিভিউ জমা হয়নি। নেট চেক করে আবার চেষ্টা করুন।";
+        } finally {
+          btn.disabled = false;
+        }
+      }, true);
+
+      async function load() {
+        const p = await supabaseClient.from("products").select("id,name").eq("active", true);
+        if (!p.error && p.data) allProducts = p.data;
+        fillReviewSelect();
+        const r = await supabaseClient.from("reviews")
+          .select("product_id,reviewer_name,rating,review_text,created_at")
+          .eq("status", "Approved")
+          .not("product_id", "is", null)
+          .order("created_at", { ascending: false });
+        if (!r.error && r.data) {
+          reviewsByPid = {};
+          r.data.forEach(function (x) {
+            (reviewsByPid[x.product_id] = reviewsByPid[x.product_id] || []).push(x);
+          });
+        }
+        cardLines();
+      }
+
+      new MutationObserver(cardLines).observe(document.getElementById("products"), { childList: true });
+      load();
+    })();
+  </script>
 
 </body>
 </html>
