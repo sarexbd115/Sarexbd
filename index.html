@@ -153,7 +153,7 @@
     .pm-perks span { display: block; font-size: 20px; }
 
     /* ---------- Order ---------- */
-    .order-wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; max-width: 1100px; margin: 0 auto; align-items: start; }
+    .order-wrap { display: grid; grid-template-columns: 1fr; gap: 22px; max-width: 1100px; margin: 0 auto; align-items: start; }
     .order-box { background: var(--panel); border: 1px solid #3a2f15; border-radius: 14px; padding: 28px; }
     .order-box label { display: block; font-size: 14px; color: #d6d6d6; margin-top: 6px; }
     .order-box input, .order-box textarea, .order-box select { width: 100%; padding: 13px 14px; margin: 6px 0 14px; background: var(--field); color: #fff; border: 1px solid var(--field-line); border-radius: 8px; font: inherit; font-size: 15px; }
@@ -323,16 +323,17 @@
               <option value="outside">Outside Dhaka — ৳120</option>
             </select>
 
+            <div class="summary" style="margin-bottom:18px">
+              <h3>আপনার অর্ডার (Your Order)</h3>
+              <div id="cart"></div>
+              <p style="color:var(--muted);font-size:13px;margin-top:12px">ক্যাশ অন ডেলিভারি · পণ্য হাতে পেয়ে টাকা দিন</p>
+            </div>
             <button class="btn" type="submit" data-en="Confirm Order →">Confirm Order (অর্ডার নিশ্চিত করুন) →</button>
             <p id="msg" role="status"></p>
           </form>
         </div>
 
-        <div class="summary">
-          <h3>আপনার অর্ডার (Your Order)</h3>
-          <div id="cart"></div>
-          <p style="color:var(--muted);font-size:13px;margin-top:12px">ক্যাশ অন ডেলিভারি · পণ্য হাতে পেয়ে টাকা দিন</p>
-        </div>
+
       </div>
     </section>
 
