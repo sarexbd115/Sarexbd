@@ -90,7 +90,7 @@
     body #products .product-card h3 + p { color: var(--gold); font-size: 20px; font-weight: 700; margin: 0 0 6px; }
     body #products .product-card h3 + p ~ p { color: var(--muted); font-size: 13px; font-weight: 400; margin: 0 0 12px; }
     body #products .product-card .btn { margin-top: auto; width: 100%; }
-    body #products .discount-badge { position: absolute; top: 20px; left: 20px; z-index: 2; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+    body #products .discount-badge { position: absolute; top: 46px; left: 12px; z-index: 2; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
     @media (max-width: 900px) {
       body #products.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     }
@@ -125,6 +125,12 @@
 
     .flash-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; padding: 12px 16px; background: linear-gradient(90deg, #3b2a06, #6b4d0c, #3b2a06); border-bottom: 1px solid var(--gold); text-align: center; }
     .flash-bar b { color: var(--gold2); font-size: 18px; letter-spacing: 1px; }
+
+    .card-badge { position: absolute; top: 12px; left: 12px; z-index: 2; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px; background: var(--gold); color: #111; }
+    .card-badge[data-kind="Hot"] { background: #e53935; color: #fff; }
+    .card-badge[data-kind="New"] { background: #17794a; color: #fff; }
+    .card-badge[data-kind="Combo Offer"] { background: #1e4fb3; color: #fff; }
+    .card-badge[data-kind="Premium"] { background: #111; color: var(--gold); border: 1px solid var(--gold); }
 
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
@@ -904,6 +910,19 @@
         document.querySelectorAll("#products .product-card").forEach(function (card) {
           const h3 = card.querySelector("h3");
           const pid = idByName(h3 ? h3.textContent.trim() : "");
+          const prod = allProducts.find(function (x) { return x.name === (h3 ? h3.textContent.trim() : ""); });
+          let badge = card.querySelector(".card-badge");
+          if (prod && prod.badge) {
+            if (!badge) {
+              badge = document.createElement("span");
+              badge.className = "card-badge";
+              card.insertBefore(badge, card.firstChild);
+            }
+            badge.textContent = prod.badge;
+            badge.dataset.kind = prod.badge;
+          } else if (badge) {
+            badge.remove();
+          }
           const list = pid ? (reviewsByPid[pid] || []) : [];
 
           let line = card.querySelector(".prod-rating");
@@ -1030,7 +1049,7 @@
       }, true);
 
       async function load() {
-        const p = await supabaseClient.from("products").select("id,name").eq("active", true);
+        const p = await supabaseClient.from("products").select("id,name,badge").eq("active", true);
         if (!p.error && p.data) allProducts = p.data;
         fillReviewSelect();
 
