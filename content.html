@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SAREXBD | সাইটের লেখা বদলান</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+  <style>
+    :root { --gold: #d4af37; --bg: #0b0b0d; --card: #15151a; --line: #2e2a1c; --text: #f4f4f5; --muted: #a1a1aa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: "Hind Siliguri", Arial, sans-serif; line-height: 1.5; }
+    header { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; background: #0f0f12; border-bottom: 1px solid var(--line); }
+    header b { color: var(--gold); letter-spacing: 2px; }
+    header a { color: var(--gold); font-size: 14px; }
+    main { max-width: 760px; margin: 0 auto; padding: 16px 14px 80px; }
+    .group { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 16px 0; }
+    .group h3 { margin: 0 0 10px; color: var(--gold); font-size: 17px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+    input, textarea { width: 100%; padding: 11px 12px; background: #0b0b0d; color: var(--text); border: 1px solid #3a3424; border-radius: 9px; font: inherit; font-size: 15px; }
+    textarea { min-height: 80px; resize: vertical; }
+    input[type="color"] { height: 44px; padding: 4px; width: 100%; }
+    .imgrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .imgrow img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #111; }
+    .imgrow input[type="file"] { width: auto; flex: 1; font-size: 13px; }
+    .save { position: fixed; left: 14px; right: 14px; bottom: 14px; max-width: 732px; margin: 0 auto; display: block; padding: 15px; border: 0; border-radius: 12px; background: linear-gradient(180deg, #f3d77a, #c99a2e); color: #111; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+    .save:disabled { opacity: .6; }
+    #msg { position: fixed; left: 14px; right: 14px; bottom: 74px; max-width: 732px; margin: 0 auto; text-align: center; font-size: 14px; color: var(--gold); }
+    .notice { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-top: 30px; text-align: center; }
+    .notice a { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div><b>SAREXBD</b> · সাইটের লেখা বদলান</div>
+  <a href="panel.html">← প্যানেলে ফিরুন</a>
+</header>
+
+<main>
+  <div id="needLogin" class="notice" hidden>
+    <p>আগে <a href="panel.html">অ্যাডমিন প্যানেল</a> থেকে লগইন করুন, তারপর এই পেজে আসুন।</p>
+  </div>
+
+  <form id="contentForm" hidden>
+    <div id="fields"></div>
+    <p id="msg"></p>
+    <button class="save" type="submit" id="saveBtn">সব সেভ করুন</button>
+  </form>
+</main>
+
+<script>
+  const SUPABASE_URL = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
+  const BUCKET = "product-images";
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // [key, label, type]  type: text (ডিফল্ট), area, image, url, color
+  const GROUPS = [
+    ["ওপরের ঘোষণা", [
+      ["announce_text", "ঘোষণার লেখা", "area"]
+    ]],
+    ["মেনুর লেখা", [
+      ["nav_home", "Home"], ["nav_shop", "Shop"], ["nav_about", "About"],
+      ["nav_contact", "Contact"], ["nav_order", "Order"]
+    ]],
+    ["লোগো ও প্রথম অংশ (হিরো)", [
+      ["logo_url", "লোগোর ছবি", "image"],
+      ["hero_eyebrow", "ছোট লেখা (উপরে)"],
+      ["hero_title_1", "বড় শিরোনাম — প্রথম লাইন"],
+      ["hero_title_2", "বড় শিরোনাম — দ্বিতীয় লাইন (সোনালি)"],
+      ["hero_sub", "উপ-শিরোনাম", "area"],
+      ["hero_button", "বাটনের লেখা"],
+      ["hero_image", "হিরোর পেছনের ছবি (ঐচ্ছিক, খালি রাখলে লোগো)", "image"]
+    ]],
+    ["সেকশনের শিরোনাম", [
+      ["cat_title", "ক্যাটাগরি — শিরোনাম"], ["cat_sub", "ক্যাটাগরি — ছোট লেখা"],
+      ["shop_title", "পণ্য — শিরোনাম"], ["shop_sub", "পণ্য — ছোট লেখা"],
+      ["order_title", "অর্ডার — শিরোনাম"], ["order_sub", "অর্ডার — ছোট লেখা"],
+      ["reviews_title", "রিভিউ — শিরোনাম"], ["reviews_sub", "রিভিউ — ছোট লেখা"]
+    ]],
+    ["আমাদের সম্পর্কে", [
+      ["about_title", "শিরোনাম"],
+      ["about_text", "বিবরণ", "area"]
+    ]],
+    ["যোগাযোগ", [
+      ["contact_title", "শিরোনাম"],
+      ["contact_phone", "ফোন নম্বর"],
+      ["whatsapp_number", "WhatsApp নম্বর (দেশের কোডসহ, যেমন 8801XXXXXXXXX)"],
+      ["facebook_url", "Facebook পেজের লিংক", "url"],
+      ["contact_email", "ইমেইল (খালি রাখলে দেখাবে না)"],
+      ["contact_address", "ঠিকানা"]
+    ]],
+    ["ফুটার ও ডেলিভারি", [
+      ["footer_name", "ফুটারের নাম"],
+      ["footer_tagline", "ফুটারের ট্যাগলাইন"],
+      ["delivery_note", "পণ্য ভেদে ডেলিভারির সময়ের নোট", "area"]
+    ]],
+    ["রং", [
+      ["theme_gold", "সোনালি রং", "color"],
+      ["theme_bg", "ব্যাকগ্রাউন্ডের রং", "color"]
+    ]]
+  ];
+
+  const FIELDS = GROUPS.flatMap(g => g[1]);
+
+  function esc(v) {
+    return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  function render(values) {
+    const box = document.getElementById("fields");
+    box.innerHTML = GROUPS.map(([title, items]) => `
+      <div class="group">
+        <h3>${esc(title)}</h3>
+        ${items.map(([key, label, type = "text"]) => {
+          const v = values[key] ?? "";
+          if (type === "area") return `<label for="${key}">${esc(label)}</label><textarea id="${key}" data-key="${key}">${esc(v)}</textarea>`;
+          if (type === "color") return `<label for="${key}">${esc(label)}</label><input type="color" id="${key}" data-key="${key}" value="${/^#[0-9a-f]{6}$/i.test(v) ? v : "#000000"}">`;
+          if (type === "image") return `<label for="${key}">${esc(label)}</label>
+            <div class="imgrow">
+              ${v ? `<img src="${esc(v)}" alt="">` : ""}
+              <input type="file" accept="image/*" data-upload="${key}">
+            </div>
+            <input type="text" id="${key}" data-key="${key}" value="${esc(v)}" placeholder="ছবির লিংক (আপলোড করলে নিজে বসবে)" style="margin-top:6px">`;
+          if (type === "url") return `<label for="${key}">${esc(label)}</label><input type="url" id="${key}" data-key="${key}" value="${esc(v)}">`;
+          return `<label for="${key}">${esc(label)}</label><input type="text" id="${key}" data-key="${key}" value="${esc(v)}">`;
+        }).join("")}
+      </div>`).join("");
+
+    // ছবি আপলোড
+    document.querySelectorAll("[data-upload]").forEach(input => {
+      input.addEventListener("change", async () => {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { show("ছবির সাইজ ৫ MB-এর কম রাখুন।", true); return; }
+        const key = input.dataset.upload;
+        const ext = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase();
+        const path = "site/" + key + "-" + Date.now() + "." + ext;
+        show("ছবি আপলোড হচ্ছে...");
+        const { error } = await db.storage.from(BUCKET).upload(path, file, { upsert: false, contentType: file.type });
+        if (error) { show("ছবি আপলোড হয়নি: " + error.message, true); return; }
+        const url = db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+        document.getElementById(key).value = url;
+        show("ছবি আপলোড হয়েছে। সেভ করুন চাপুন।");
+      });
+    });
+  }
+
+  function show(text, isError) {
+    const m = document.getElementById("msg");
+    m.textContent = text;
+    m.style.color = isError ? "#ff8a80" : "var(--gold)";
+  }
+
+  async function loadValues() {
+    const { data, error } = await db.from("site_content").select("key,value");
+    if (error) { show("লেখা আনা যায়নি: " + error.message, true); return {}; }
+    return Object.fromEntries((data || []).map(r => [r.key, r.value]));
+  }
+
+  document.getElementById("contentForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = true;
+    show("সেভ হচ্ছে...");
+    const now = new Date().toISOString();
+    const rows = FIELDS.map(([key]) => {
+      const el = document.querySelector('[data-key="' + key + '"]');
+      return { key, value: el ? el.value.trim() : "", updated_at: now };
+    });
+    const { error } = await db.from("site_content").upsert(rows, { onConflict: "key" });
+    btn.disabled = false;
+    if (error) { show("সেভ হয়নি: " + error.message, true); return; }
+    show("সেভ হয়েছে। ওয়েবসাইট খুলে বা রিফ্রেশ করে দেখুন।");
+    render(await loadValues());
+  });
+
+  (async function start() {
+    const { data } = await db.auth.getSession();
+    if (!data.session) {
+      document.getElementById("needLogin").hidden = false;
+      return;
+    }
+    document.getElementById("contentForm").hidden = false;
+    render(await loadValues());
+  })();
+</script>
+</body>
+</html>

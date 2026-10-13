@@ -1,495 +1,384 @@
 <!doctype html>
-<html lang="en">
-
+<html lang="bn">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>SAREXBD | Premium Leather</title>
+  <title>SAREXBD | Premium Leather Goods</title>
   <meta name="description" content="SAREXBD — প্রিমিয়াম জেনুইন লেদার পণ্য। অনলাইনে অর্ডার করুন, ঢাকার ভেতরে ও বাইরে ডেলিভারি।">
-  <meta name="theme-color" content="#090909">
-
+  <meta name="theme-color" content="#0a0a0a">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="SAREXBD | Premium Leather">
+  <meta property="og:title" content="SAREXBD | Premium Leather Goods">
   <meta property="og:description" content="প্রিমিয়াম জেনুইন লেদার পণ্য। অনলাইনে অর্ডার করুন।">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap");
+    :root {
+      --gold: #d4af37;
+      --gold2: #f3d77a;
+      --bg: #0a0a0a;
+      --bg2: #0d0d0d;
+      --card: #111113;
+      --panel: #121212;
+      --line: #2b2414;
+      --field: #080808;
+      --field-line: #3a321d;
+      --blue: #5aa9ff;
+      --text: #f5f5f5;
+      --muted: #a8a8a8;
+      --red: #e53935;
+      --hero-img: url("logo.png");
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 120px; }
+    body { font-family: "Hind Siliguri", Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: inherit; }
+    img { max-width: 100%; }
+    [hidden] { display: none !important; }
 
-:root {
-  --gold: #d4af37;
-  --gold-2: #f0d56a;
-  --bg: #0a0a0a;
-  --bg-2: #0d0d0d;
-  --card: #111113;
-  --panel: #121212;
-  --line: #2a2415;
-  --field: #080808;
-  --field-line: #3a321d;
-  --blue: #5aa9ff;
-  --text: #f5f5f5;
-  --muted: #a9a9a9;
-}
+    /* ---------- Top bar & header ---------- */
+    .topbar { background: #000; color: #fff; text-align: center; font-size: 14px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+    .topbar b { color: var(--gold); }
+    .site-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 18px; padding: 12px 4%; background: rgba(10, 10, 10, 0.97); border-bottom: 1px solid var(--line); }
+    .logo { height: 66px; width: auto; display: block; mix-blend-mode: lighten; }
+    .search { flex: 1; max-width: 520px; margin-left: auto; display: flex; border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; background: #0d0d0d; }
+    .search input { flex: 1; min-width: 0; background: transparent; border: 0; color: #fff; padding: 11px 14px; font: inherit; outline: none; }
+    .search input::placeholder { color: #888; }
+    .search button { width: 48px; border: 0; background: var(--gold); font-size: 17px; cursor: pointer; }
+    .cart-link { color: var(--gold); text-decoration: none; font-size: 24px; padding: 4px 6px; }
+    .site-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 34px; padding: 12px 4%; background: #0a0a0a; border-bottom: 1px solid var(--gold); }
+    .site-nav a { color: #ddd; text-decoration: none; font-size: 15px; padding: 6px 2px; border-bottom: 2px solid transparent; }
+    .site-nav a:hover { color: var(--gold); border-color: var(--gold); }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+    /* ---------- Hero ---------- */
+    .hero { position: relative; overflow: hidden; min-height: 80vh; display: flex; align-items: center; padding: 80px 6%; border-bottom: 1px solid var(--line);
+      background: radial-gradient(circle at 80% 40%, rgba(212, 175, 55, 0.25) 0%, rgba(20, 16, 10, 0.9) 30%, #0a0a0a 68%); }
+    .hero::after { content: ""; position: absolute; right: 4%; top: 50%; transform: translateY(-50%); width: 42%; max-width: 420px; aspect-ratio: 1; background: var(--hero-img) center / contain no-repeat; opacity: 0.12; pointer-events: none; }
+    .hero-content { position: relative; z-index: 1; max-width: 640px; }
+    .eyebrow { color: var(--gold); letter-spacing: 4px; font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+    .hero h1 { font-family: "Cormorant Garamond", Georgia, serif; font-size: clamp(44px, 7vw, 82px); font-weight: 700; line-height: 1.02; text-transform: uppercase; margin-bottom: 14px; }
+    .hero h1 .gold { display: block; color: var(--gold); }
+    .hero .sub { font-size: 20px; color: #f1e3b5; margin-bottom: 26px; }
 
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 90px;
-}
+    /* ---------- Buttons ---------- */
+    .btn { display: inline-block; border: 0; border-radius: 8px; background: linear-gradient(180deg, var(--gold2), #c99a2e); color: #111; padding: 14px 26px; font: inherit; font-size: 16px; font-weight: 700; text-decoration: none; text-align: center; cursor: pointer; transition: filter 0.2s; }
+    .btn:hover { filter: brightness(1.07); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.small { padding: 9px 16px; font-size: 14px; }
 
-body {
-  font-family: "Hind Siliguri", Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-}
+    /* ---------- Sections ---------- */
+    .block { padding: 64px 6%; }
+    .block.alt { background: var(--bg2); }
+    .title { text-align: center; margin-bottom: 36px; }
+    .title h2 { font-family: "Cormorant Garamond", Georgia, serif; font-size: clamp(30px, 4vw, 40px); font-weight: 700; }
+    .title p { color: var(--muted); margin-top: 4px; }
 
-/* ---------- Header ---------- */
-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 6%;
-  background: rgba(10, 10, 10, 0.96);
-  border-bottom: 1px solid var(--line);
-}
+    /* ---------- Categories ---------- */
+    .cats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; max-width: 1200px; margin: 0 auto; }
+    .cat { display: block; text-decoration: none; text-align: center; padding: 24px 8px; border: 1px solid var(--gold); border-radius: 12px; background: #0c0c0c; transition: background 0.2s; }
+    .cat:hover { background: #17130a; }
+    .cat .ic { display: block; font-size: 30px; margin-bottom: 8px; }
+    .cat b { display: block; font-size: 15px; font-weight: 600; }
+    .cat small { color: var(--muted); font-size: 12px; }
 
-.brand {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: 4px;
-  color: #fff;
-}
+    /* ---------- Products (app.js-এর স্টাইল এই নিয়মগুলো ছাড়িয়ে যায়) ---------- */
+    body #products.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+    body #products .product-card { position: relative; display: flex; flex-direction: column; background: var(--card); border: 1px solid #1d3450; border-radius: 14px; padding: 14px; cursor: pointer; transition: transform 0.25s, border-color 0.25s; }
+    body #products .product-card:hover { transform: translateY(-4px); border-color: var(--gold); }
+    body #products .product-image { aspect-ratio: 4 / 3; border-radius: 10px; background: #1a120a; margin-bottom: 12px; overflow: hidden; }
+    body #products .product-card h3 { color: var(--blue); font-size: 16px; font-weight: 600; line-height: 1.35; margin: 2px 0 6px; }
+    body #products .product-card h3 + p { color: var(--gold); font-size: 20px; font-weight: 700; margin: 0 0 6px; }
+    body #products .product-card h3 + p ~ p { color: var(--muted); font-size: 13px; font-weight: 400; margin: 0 0 12px; }
+    body #products .product-card .btn { margin-top: auto; width: 100%; }
+    body #products .discount-badge { position: absolute; top: 20px; left: 20px; z-index: 2; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+    @media (max-width: 900px) {
+      body #products.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    }
 
-.brand span {
-  color: var(--gold);
-}
+    /* ---------- Popups ---------- */
+    .modal { position: fixed; inset: 0; z-index: 500; background: rgba(0, 0, 0, 0.75); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-box { position: relative; width: 100%; max-width: 820px; max-height: 92vh; overflow-y: auto; background: var(--panel); border: 1px solid #3a2f15; border-radius: 16px; padding: 26px; }
+    .modal-box.small { max-width: 620px; }
+    .modal-close { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: #1d1d1d; color: var(--gold); font-size: 22px; cursor: pointer; }
+    .pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    .pm-img { aspect-ratio: 4 / 3; border-radius: 12px; background: #1a120a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .pm-img img { width: 100%; height: 100%; object-fit: cover; }
+    .pm-name { color: var(--blue); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .pm-price { color: var(--gold); font-size: 26px; font-weight: 700; }
+    .pm-price s { color: var(--muted); font-size: 15px; font-weight: 400; margin-left: 8px; }
+    .pm-desc { color: #bbb; margin: 12px 0; }
+    .pm-meta { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+    .qty { display: inline-flex; align-items: center; gap: 12px; border: 1px solid var(--field-line); border-radius: 10px; padding: 6px; margin-bottom: 14px; }
+    .qty button { width: 36px; height: 36px; border: 0; border-radius: 8px; background: #1d1d1d; color: var(--gold); font-size: 20px; cursor: pointer; }
+    .qty span { min-width: 30px; text-align: center; font-size: 18px; font-weight: 700; }
+    .pm-perks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; text-align: center; font-size: 12px; color: #ccc; }
+    .pm-perks span { display: block; font-size: 20px; }
 
-nav {
-  display: flex;
-  gap: 26px;
-}
+    /* ---------- Order ---------- */
+    .order-wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; max-width: 1100px; margin: 0 auto; align-items: start; }
+    .order-box { background: var(--panel); border: 1px solid #3a2f15; border-radius: 14px; padding: 28px; }
+    .order-box label { display: block; font-size: 14px; color: #d6d6d6; margin-top: 6px; }
+    .order-box input, .order-box textarea, .order-box select { width: 100%; padding: 13px 14px; margin: 6px 0 14px; background: var(--field); color: #fff; border: 1px solid var(--field-line); border-radius: 8px; font: inherit; font-size: 15px; }
+    .order-box textarea { min-height: 100px; resize: vertical; }
+    .order-box input:focus, .order-box textarea:focus, .order-box select:focus { outline: none; border-color: var(--gold); }
+    .order-box .btn { width: 100%; margin-top: 6px; }
+    #msg { margin-top: 14px; color: var(--gold); }
+    .summary { background: var(--panel); border: 1px solid #3a2f15; border-radius: 14px; padding: 22px; }
+    .summary h3 { color: var(--gold); margin-bottom: 12px; font-size: 18px; }
+    #cart { color: #bbb; }
+    .cart-item { background: #181818; border: 1px solid var(--field-line); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+    .cart-item strong { color: var(--gold); font-size: 17px; }
+    .cart-item p { color: #bbb; margin: 6px 0; }
+    .cart-item h3 { color: var(--gold); margin-top: 10px; }
+    .cart-item label { color: #ddd; }
 
-nav a {
-  color: #ddd;
-  text-decoration: none;
-  font-size: 15px;
-}
+    /* ---------- Reviews ---------- */
+    .rev-summary { display: grid; grid-template-columns: 220px 1fr; gap: 24px; max-width: 900px; margin: 0 auto 28px; background: var(--card); border: 1px solid #332a14; border-radius: 14px; padding: 22px; align-items: center; }
+    .rev-score { text-align: center; }
+    .rev-score b { font-size: 48px; color: #fff; display: block; line-height: 1.1; }
+    .rev-score .stars { color: var(--gold); font-size: 18px; letter-spacing: 2px; }
+    .rev-score small { color: var(--muted); }
+    .rev-bar { display: grid; grid-template-columns: 40px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; color: #ccc; margin: 4px 0; }
+    .rev-bar .track { height: 8px; background: #222; border-radius: 6px; overflow: hidden; }
+    .rev-bar .fill { height: 100%; background: linear-gradient(90deg, #c99a2e, var(--gold2)); }
+    #reviewsList { max-width: 900px; margin: 0 auto 26px; }
+    #reviewsList article { background: var(--card); border: 1px solid #332a14; border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+    #reviewsList article h4 { color: var(--gold); margin-bottom: 4px; }
+    #reviewsList article p { color: #bbb; }
+    .rev-center { text-align: center; }
+    .form-title { color: var(--gold); text-align: center; margin-bottom: 14px; }
+    #reviewForm label { display: block; font-size: 14px; color: #d6d6d6; margin-top: 6px; }
+    #reviewForm input, #reviewForm textarea, #reviewForm select { width: 100%; padding: 13px 14px; margin: 6px 0 14px; background: var(--field); color: #fff; border: 1px solid var(--field-line); border-radius: 8px; font: inherit; font-size: 15px; }
+    #reviewForm textarea { min-height: 100px; resize: vertical; }
+    #reviewForm .btn { width: 100%; }
+    #reviewMsg { margin-top: 12px; color: var(--gold); }
 
-nav a:hover {
-  color: var(--gold);
-}
+    /* ---------- About & Contact ---------- */
+    .about-text { max-width: 760px; margin: 0 auto; text-align: center; color: #b5b5b5; font-size: 17px; white-space: pre-line; }
+    #about .btn { margin: 6px; }
+    .contact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; max-width: 1100px; margin: 0 auto; }
+    .contact-card { background: var(--card); border: 1px solid #332a14; border-radius: 14px; padding: 24px 18px; text-align: center; }
+    .contact-card .ic { font-size: 28px; color: var(--gold); display: block; margin-bottom: 8px; }
+    .contact-card b { display: block; color: var(--gold); margin-bottom: 4px; }
+    .contact-card p { color: #ccc; font-size: 15px; }
+    .contact-card a { color: var(--gold); }
 
-/* ---------- Hero ---------- */
-.hero {
-  min-height: 78vh;
-  display: flex;
-  align-items: center;
-  padding: 80px 6%;
-  background:
-    radial-gradient(circle at 78% 35%, rgba(212, 175, 55, 0.22) 0%, rgba(17, 17, 17, 0.9) 28%, #0a0a0a 65%);
-  border-bottom: 1px solid var(--line);
-}
+    /* ---------- Footer ---------- */
+    footer { background: #050505; border-top: 1px solid var(--line); padding: 36px 6% 26px; text-align: center; color: #888; }
+    footer .logo { margin: 0 auto 12px; height: 80px; }
+    footer p { margin: 4px 0; }
+    footer a { color: var(--gold); }
 
-.hero-content {
-  max-width: 700px;
-}
-
-.eyebrow {
-  color: var(--gold);
-  letter-spacing: 4px;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 16px;
-}
-
-.hero h1 {
-  font-size: clamp(40px, 7vw, 76px);
-  font-weight: 800;
-  line-height: 1.05;
-  margin-bottom: 22px;
-}
-
-.hero h1 span {
-  color: var(--gold);
-}
-
-.hero p:not(.eyebrow) {
-  color: #bdbdbd;
-  font-size: 18px;
-  max-width: 600px;
-  margin-bottom: 30px;
-}
-
-/* ---------- Buttons ---------- */
-.btn {
-  display: inline-block;
-  border: none;
-  background: linear-gradient(180deg, var(--gold-2), #c99a2e);
-  color: #111;
-  padding: 14px 28px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  text-decoration: none;
-  text-align: center;
-  cursor: pointer;
-  transition: filter 0.2s;
-}
-
-.btn:hover {
-  filter: brightness(1.06);
-}
-
-.btn:disabled,
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ---------- Sections ---------- */
-section {
-  padding: 64px 6%;
-}
-
-section h2 {
-  text-align: center;
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 34px;
-}
-
-#shop {
-  background: var(--bg-2);
-}
-
-/* ---------- Product grid (app.js-এর স্টাইল ছাড়িয়ে যায়) ---------- */
-body #products.grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-body #products .product-card {
-  background: var(--card);
-  border: 1px solid #1d3450;
-  border-radius: 14px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.25s, border-color 0.25s;
-}
-
-body #products .product-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--gold);
-}
-
-body #products .product-image {
-  aspect-ratio: 4 / 3;
-  border-radius: 10px;
-  background: #1a120a;
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-
-body #products .product-card h3 {
-  color: var(--blue);
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.35;
-  margin: 2px 0 6px;
-}
-
-body #products .product-card h3 + p {
-  color: var(--gold);
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 6px;
-}
-
-body #products .product-card h3 + p ~ p {
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 400;
-  margin: 0 0 12px;
-}
-
-body #products .product-card .btn {
-  margin-top: auto;
-  width: 100%;
-}
-
-@media (max-width: 900px) {
-  body #products.grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-}
-
-/* ---------- Order form ---------- */
-form {
-  max-width: 650px;
-  margin: 0 auto;
-  background: var(--panel);
-  padding: 30px;
-  border: 1px solid #3a2f15;
-  border-radius: 14px;
-}
-
-label {
-  font-size: 14px;
-  color: #d6d6d6;
-}
-
-input,
-textarea,
-select {
-  width: 100%;
-  padding: 13px 14px;
-  margin: 6px 0 16px;
-  background: var(--field);
-  color: #fff;
-  border: 1px solid var(--field-line);
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 15px;
-}
-
-textarea {
-  min-height: 110px;
-  resize: vertical;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: var(--gold);
-}
-
-#cart {
-  margin: 10px 0 14px;
-  color: #bbb;
-}
-
-.cart-item {
-  background: #181818;
-  border: 1px solid var(--field-line);
-  border-radius: 10px;
-  padding: 18px;
-  margin-bottom: 18px;
-}
-
-.cart-item strong {
-  color: var(--gold);
-  font-size: 18px;
-}
-
-.cart-item p {
-  color: #bbb;
-  margin: 6px 0;
-}
-
-#msg {
-  margin-top: 14px;
-  color: var(--gold);
-}
-
-/* ---------- About ---------- */
-#about {
-  background: var(--bg-2);
-  text-align: center;
-}
-
-#about p {
-  max-width: 700px;
-  margin: 0 auto;
-  color: #aaa;
-  font-size: 17px;
-}
-
-/* ---------- Reviews ---------- */
-#reviewsList article {
-  background: var(--card);
-  border: 1px solid #332a14;
-  border-radius: 12px;
-  padding: 18px;
-  margin-bottom: 14px;
-}
-
-#reviewsList article h4 {
-  color: var(--gold);
-  margin-bottom: 4px;
-}
-
-#reviewsList article p {
-  color: #bbb;
-}
-
-/* ---------- Footer ---------- */
-footer {
-  text-align: center;
-  padding: 30px 15px;
-  background: #050505;
-  border-top: 1px solid var(--line);
-  color: #888;
-}
-
-footer a {
-  color: var(--gold);
-}
-
-/* ---------- Mobile ---------- */
-@media (max-width: 750px) {
-  header {
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 14px 5%;
-  }
-
-  nav {
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  nav a {
-    font-size: 13px;
-  }
-
-  .hero {
-    min-height: 70vh;
-    padding: 60px 6%;
-  }
-
-  section {
-    padding: 48px 5%;
-  }
-
-  section h2 {
-    font-size: 26px;
-  }
-
-  form {
-    padding: 20px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-  }
-}
-
-</style>
+    /* ---------- Mobile ---------- */
+    @media (max-width: 1000px) {
+      .cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .order-wrap { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 750px) {
+      .site-header { flex-wrap: wrap; justify-content: center; }
+      .logo { height: 56px; }
+      .search { order: 3; flex-basis: 100%; max-width: none; margin-left: 0; }
+      .cart-link { margin-left: auto; }
+      .site-nav { gap: 16px; }
+      .site-nav a { font-size: 13px; }
+      .hero { min-height: 70vh; padding: 60px 6%; }
+      .hero::after { width: 60%; opacity: 0.08; }
+      .block { padding: 48px 5%; }
+      .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pm-grid { grid-template-columns: 1fr; }
+      .rev-summary { grid-template-columns: 1fr; }
+      .order-box, .summary, .modal-box { padding: 20px; }
+    }
+    @media (max-width: 480px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
 </head>
-
 <body>
 
-  <header>
+  <div class="topbar">
+    📢 <span data-cms="announce_text">ফ্রি ডেলিভারি অফার — আপনার দরজায় পৌঁছে যাবে আমাদের প্রিমিয়াম লেদার পণ্য।</span>
+  </div>
 
-    <div class="brand">
-      SAREX<span>BD</span>
-    </div>
-
-    <nav>
-      <a href="#home">Home</a>
-      <a href="#shop">Shop</a>
-      <a href="#about">About</a>
-      <a href="#order">Order</a>
-    </nav>
-
+  <header class="site-header">
+    <a href="#home" aria-label="SAREXBD হোম"><img class="logo" data-cms-img="logo_url" src="logo.png" alt="SAREXBD Premium Leather Goods"></a>
+    <form class="search" id="searchForm" role="search">
+      <input id="searchInput" type="search" placeholder="পণ্য খুঁজুন... (Search for products...)" aria-label="পণ্য খুঁজুন" autocomplete="off">
+      <button type="submit" aria-label="খুঁজুন">🔍</button>
+    </form>
+    <a class="cart-link" href="#order" aria-label="কার্ট ও অর্ডার">🛒</a>
   </header>
 
+  <nav class="site-nav">
+    <a href="#home" data-cms="nav_home">🏠 Home (হোম)</a>
+    <a href="#shop" data-cms="nav_shop">🛍️ Shop (সমস্ত পণ্য)</a>
+    <a href="#about" data-cms="nav_about">ⓘ About Us (আমাদের সম্পর্কে)</a>
+    <a href="#contact" data-cms="nav_contact">📞 Contact (যোগাযোগ)</a>
+    <a href="#order" data-cms="nav_order">🛒 Order (অর্ডার করুন)</a>
+  </nav>
 
   <main>
 
-    <!-- HOME -->
-
+    <!-- HOME (app.js এখানে অফার বার ও ভরসার কার্ড যোগ করে) -->
     <section id="home" class="hero">
-
       <div class="hero-content">
-
-        <p class="eyebrow">
-          PREMIUM LEATHER GOODS
-        </p>
-
-        <h1>
-          Crafted for a <span>premium</span> life.
-        </h1>
-
-        <p>
-          Genuine leather products with a clean,
-          timeless SAREXBD finish.
-        </p>
-
-        <a class="btn" href="#shop">
-          Shop Now
-        </a>
-
+        <p class="eyebrow" data-cms="hero_eyebrow">PREMIUM LEATHER GOODS</p>
+        <h1><span data-cms="hero_title_1">Crafted for a</span> <span class="gold" data-cms="hero_title_2">Premium Life</span></h1>
+        <p class="sub" data-cms="hero_sub">প্রিমিয়াম লেদার পণ্য, আপনার স্টাইলের প্রতিচ্ছবি।</p>
+        <a class="btn" href="#shop" data-cms="hero_button">Shop Now (এখনই কিনুন) →</a>
       </div>
-
     </section>
 
+    <!-- CATEGORIES -->
+    <section class="block alt">
+      <div class="title">
+        <h2 data-cms="cat_title">Shop by Category</h2>
+        <p data-cms="cat_sub">ক্যাটাগরি অনুযায়ী কিনুন</p>
+      </div>
+      <div class="cats">
+        <a class="cat" href="#shop"><span class="ic">▦</span><b>All Products</b><small>(সব পণ্য)</small></a>
+        <a class="cat" href="#shop"><span class="ic">👛</span><b>Wallets</b><small>(ওয়ালেট)</small></a>
+        <a class="cat" href="#shop"><span class="ic">⌾</span><b>Belts</b><small>(বেল্ট)</small></a>
+        <a class="cat" href="#shop"><span class="ic">💼</span><b>Bags</b><small>(ব্যাগ)</small></a>
+        <a class="cat" href="#shop"><span class="ic">🧥</span><b>Jackets</b><small>(জ্যাকেট)</small></a>
+        <a class="cat" href="#shop"><span class="ic">🎁</span><b>Combo Set</b><small>(কম্বো সেট)</small></a>
+      </div>
+    </section>
 
-    <!-- SHOP -->
-
-    <section id="shop">
-
-      <h2>
-        Featured Products
-      </h2>
-
-      <noscript>
-        <p>প্রোডাক্ট দেখতে ব্রাউজারে JavaScript চালু করুন।</p>
-      </noscript>
-
+    <!-- SHOP (app.js এখানে পণ্য ও ক্যাটাগরি ফিল্টার বসায়) -->
+    <section id="shop" class="block">
+      <div class="title">
+        <h2 data-cms="shop_title">Popular Products</h2>
+        <p data-cms="shop_sub">জনপ্রিয় পণ্য — ছবিতে ক্লিক করলে বিস্তারিত দেখবেন</p>
+      </div>
+      <noscript><p>প্রোডাক্ট দেখতে ব্রাউজারে JavaScript চালু করুন।</p></noscript>
       <div id="products" class="grid"></div>
-
     </section>
 
-
-    <!-- CUSTOMER REVIEWS -->
-
-    <section id="reviews" class="reviews">
-
-      <h2>Customer Reviews</h2>
-
-      <p>Share your experience with SAREXBD.</p>
-
-      <div id="reviewsList">
-        <p>Customer reviews will appear here.</p>
+    <!-- ORDER -->
+    <section id="order" class="block alt">
+      <div class="title">
+        <h2 data-cms="order_title">Place Your Order</h2>
+        <p data-cms="order_sub">অর্ডার ফর্ম (অর্ডার করুন)</p>
       </div>
+      <div class="order-wrap">
+        <div class="order-box">
+          <form id="orderForm">
+            <label for="orderName">Full name (আপনার নাম) *</label>
+            <input id="orderName" type="text" name="customer_name" placeholder="Full name" maxlength="80" autocomplete="name" required>
 
-      <h3>Write a Review</h3>
+            <label for="orderPhone">Phone number (মোবাইল নম্বর) *</label>
+            <input id="orderPhone" type="tel" inputmode="tel" name="phone" placeholder="01XXXXXXXXX" maxlength="20" autocomplete="tel" required>
 
+            <label for="orderAddress">Delivery address (ডেলিভারি ঠিকানা) *</label>
+            <textarea id="orderAddress" name="address" placeholder="House / Road / Area, Thana, District" maxlength="300" autocomplete="street-address" required></textarea>
+
+            <label for="deliveryArea">Delivery area (ডেলিভারি এলাকা)</label>
+            <select id="deliveryArea" name="delivery_area">
+              <option value="dhaka">Dhaka — ৳80</option>
+              <option value="outside">Outside Dhaka — ৳120</option>
+            </select>
+
+            <button class="btn" type="submit">Confirm Order (অর্ডার নিশ্চিত করুন) →</button>
+            <p id="msg" role="status"></p>
+          </form>
+        </div>
+
+        <div class="summary">
+          <h3>আপনার অর্ডার (Your Order)</h3>
+          <div id="cart"></div>
+          <p style="color:var(--muted);font-size:13px;margin-top:12px">ক্যাশ অন ডেলিভারি · পণ্য হাতে পেয়ে টাকা দিন</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section id="reviews" class="block">
+      <div class="title">
+        <h2 data-cms="reviews_title">Customer Reviews</h2>
+        <p data-cms="reviews_sub">কাস্টমার রিভিউ — আপনার মতামত শেয়ার করুন</p>
+      </div>
+      <div id="revSummary"></div>
+      <div id="reviewsList">
+        <p class="rev-center" style="color:var(--muted)">Customer reviews will appear here.</p>
+      </div>
+      <div class="rev-center">
+        <button class="btn" type="button" id="openReview">✎ Write a Review (রিভিউ লিখুন)</button>
+      </div>
+    </section>
+
+    <!-- ABOUT (app.js এখানে WhatsApp ও Facebook বাটন যোগ করে) -->
+    <section id="about" class="block alt">
+      <div class="title">
+        <h2 data-cms="about_title">About Us</h2>
+      </div>
+      <p class="about-text" data-cms="about_text">SAREXBD একটি প্রিমিয়াম লেদার ব্র্যান্ড। আমরা এমন মানুষদের জন্য পণ্য বানাই যারা মান, স্টাইল ও টেকসইতাকে গুরুত্ব দেন।</p>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="block">
+      <div class="title">
+        <h2 data-cms="contact_title">Contact Us</h2>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-card"><span class="ic">📞</span><b>ফোন (Call)</b><p data-cms="contact_phone">01610244533</p></div>
+        <div class="contact-card"><span class="ic">💬</span><b>WhatsApp</b><p><a href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">সরাসরি মেসেজ করুন</a></p></div>
+        <div class="contact-card"><span class="ic">📘</span><b>Facebook</b><p><a href="https://www.facebook.com/profile.php?id=100087606876298" target="_blank" rel="noopener noreferrer">আমাদের পেজ</a></p></div>
+        <div class="contact-card"><span class="ic">📍</span><b>ঠিকানা (Address)</b><p data-cms="contact_address">ঢাকা, বাংলাদেশ</p></div>
+        <div class="contact-card" hidden><span class="ic">✉️</span><b>ইমেইল</b><p data-cms="contact_email"></p></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <img class="logo" data-cms-img="logo_url" src="logo.png" alt="SAREXBD">
+    <p data-cms="footer_name">SAREXBD • Premium Leather Goods</p>
+    <p data-cms="footer_tagline">More Than Just Leather — শুধু লেদার নয়, এক অনুভূতি</p>
+    <p><a href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">WhatsApp: 01610244533</a></p>
+  </footer>
+
+  <!-- পণ্যের বিস্তারিত popup -->
+  <div id="productModal" class="modal" hidden>
+    <div class="modal-box">
+      <button class="modal-close" type="button" data-close="productModal" aria-label="বন্ধ করুন">×</button>
+      <div class="pm-grid">
+        <div class="pm-img" id="pmImg"></div>
+        <div>
+          <div class="pm-name" id="pmName"></div>
+          <div class="pm-price" id="pmPrice"></div>
+          <p class="pm-desc" id="pmDesc"></p>
+          <p class="pm-meta" id="pmStock"></p>
+          <div class="qty">
+            <button type="button" id="pmMinus" aria-label="কমান">−</button>
+            <span id="pmQty">1</span>
+            <button type="button" id="pmPlus" aria-label="বাড়ান">+</button>
+          </div>
+          <br>
+          <button class="btn" type="button" id="pmOrder">🛒 অর্ডার করুন (Order Now) →</button>
+          <div class="pm-perks">
+            <div><span>🚚</span>ফ্রি ডেলিভারি</div>
+            <div><span>💵</span>ক্যাশ অন ডেলিভারি</div>
+            <div><span>🧵</span>আসল চামড়া</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- রিভিউ লেখার popup -->
+  <div id="reviewModal" class="modal" hidden>
+    <div class="modal-box small">
+      <button class="modal-close" type="button" data-close="reviewModal" aria-label="বন্ধ করুন">×</button>
       <form id="reviewForm">
+        <h3 class="form-title">Write a Review (রিভিউ লিখুন)</h3>
 
-        <label for="reviewName">Your name</label>
-        <input
-          id="reviewName"
-          type="text"
-          name="reviewer_name"
-          placeholder="Your name"
-          maxlength="60"
-          autocomplete="name"
-          required
-        >
+        <label for="reviewName">Your name (আপনার নাম) *</label>
+        <input id="reviewName" type="text" name="reviewer_name" placeholder="Your name" maxlength="60" autocomplete="name" required>
 
-        <label for="reviewRating">Your rating</label>
-
+        <label for="reviewRating">Your rating (আপনার রেটিং) *</label>
         <select id="reviewRating" name="rating" required>
           <option value="5">★★★★★ — Excellent</option>
           <option value="4">★★★★ — Very good</option>
@@ -498,129 +387,183 @@ footer a {
           <option value="1">★ — Poor</option>
         </select>
 
-        <label for="reviewText">Your review</label>
-        <textarea
-          id="reviewText"
-          name="review_text"
-          placeholder="Write your review..."
-          maxlength="1000"
-          required
-        ></textarea>
+        <label for="reviewText">Your review (আপনার মতামত) *</label>
+        <textarea id="reviewText" name="review_text" placeholder="Write your review..." maxlength="1000" required></textarea>
 
-        <button class="btn" type="submit">
-          Submit Review
-        </button>
-
+        <button class="btn" type="submit">Submit Review (রিভিউ জমা দিন)</button>
         <p id="reviewMsg" role="status"></p>
-
+        <p style="color:var(--muted);font-size:13px;margin-top:10px;text-align:center">রিভিউ অনুমোদনের পর ওয়েবসাইটে দেখা যাবে।</p>
       </form>
-
-    </section>
-
-    <!-- ORDER -->
-
-    <section id="order" class="order">
-
-      <h2>
-        Place Your Order
-      </h2>
-
-      <form id="orderForm">
-
-        <label for="orderName">Full name</label>
-        <input
-          id="orderName"
-          type="text"
-          name="customer_name"
-          placeholder="Full name"
-          maxlength="80"
-          autocomplete="name"
-          required
-        >
-
-        <label for="orderPhone">Phone number</label>
-        <input
-          id="orderPhone"
-          type="tel"
-          inputmode="tel"
-          name="phone"
-          placeholder="01XXXXXXXXX"
-          maxlength="20"
-          autocomplete="tel"
-          required
-        >
-
-        <label for="orderAddress">Delivery address</label>
-        <textarea
-          id="orderAddress"
-          name="address"
-          placeholder="Full delivery address (area, thana, district)"
-          maxlength="300"
-          autocomplete="street-address"
-          required
-        ></textarea>
-
-        <label for="deliveryArea">Delivery area</label>
-        <select id="deliveryArea" name="delivery_area">
-
-          <option value="dhaka">
-            Dhaka — ৳80
-          </option>
-
-          <option value="outside">
-            Outside Dhaka — ৳120
-          </option>
-
-        </select>
-
-        <div id="cart"></div>
-
-        <button
-          class="btn"
-          type="submit"
-        >
-          Confirm Order
-        </button>
-
-        <p id="msg" role="status"></p>
-
-      </form>
-
-    </section>
-
-
-    <!-- ABOUT -->
-
-    <section id="about">
-
-      <h2>
-        About SAREXBD
-      </h2>
-
-      <p>
-        Premium leather goods designed for customers
-        who value quality, durability and a refined look.
-      </p>
-
-    </section>
-
-  </main>
-
-
-  <footer>
-    SAREXBD • Premium Leather Goods<br>
-    <a href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">WhatsApp: 01610244533</a>
-  </footer>
-
+    </div>
+  </div>
 
   <!-- Supabase -->
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
 
-  <!-- Website JavaScript -->
+  <!-- সাইটের লেখা, ছবি ও রং অ্যাডমিন থেকে লোড -->
+  <script>
+    (function () {
+      const URL_ = "https://kkjyhhxkdgcbtwysftjt.supabase.co";
+      const KEY_ = "sb_publishable_FLYJFyWSJd2-_KVSy_ZMRA_cv9vRKs1";
+      const client = window.supabase.createClient(URL_, KEY_);
 
+      function applyContent(map) {
+        // লেখা
+        document.querySelectorAll("[data-cms]").forEach(function (el) {
+          const v = map[el.dataset.cms];
+          if (v !== undefined && v !== "") el.textContent = v;
+        });
+        // ছবি
+        document.querySelectorAll("[data-cms-img]").forEach(function (img) {
+          const v = map[img.dataset.cmsImg];
+          if (v) img.src = v;
+        });
+        // রং ও হিরোর ছবি
+        const root = document.documentElement.style;
+        if (/^#[0-9a-f]{6}$/i.test(map.theme_gold || "")) root.setProperty("--gold", map.theme_gold);
+        if (/^#[0-9a-f]{6}$/i.test(map.theme_bg || "")) root.setProperty("--bg", map.theme_bg);
+        if (map.hero_image) root.setProperty("--hero-img", 'url("' + map.hero_image + '")');
+        // ইমেইল: খালি হলে কার্ড লুকানো
+        const emailEl = document.querySelector('[data-cms="contact_email"]');
+        if (emailEl) emailEl.closest(".contact-card").hidden = !map.contact_email;
+        // WhatsApp ও Facebook লিংক (app.js-এর বাটনসহ সব জায়গায়)
+        setTimeout(function () {
+          if (map.whatsapp_number) {
+            const digits = map.whatsapp_number.replace(/\D/g, "");
+            document.querySelectorAll('a[href*="wa.me"]').forEach(function (a) { a.href = "https://wa.me/" + digits; });
+          }
+          if (map.facebook_url) {
+            document.querySelectorAll('a[href*="facebook.com"]').forEach(function (a) { a.href = map.facebook_url; });
+          }
+          if (map.delivery_note) {
+            const d = document.querySelector(".delivery-note");
+            if (d) d.textContent = map.delivery_note;
+          }
+        }, 800);
+      }
+
+      client.from("site_content").select("key,value").then(function (res) {
+        if (res.error || !res.data) return;
+        applyContent(Object.fromEntries(res.data.map(function (r) { return [r.key, r.value]; })));
+      });
+    })();
+  </script>
+
+  <!-- সার্চ, পণ্যের popup, রিভিউ popup, রিভিউ সারাংশ -->
+  <script>
+    (function () {
+      /* ----- সার্চ (বাংলা ও ইংরেজি) ----- */
+      const input = document.getElementById("searchInput");
+      function filterProducts() {
+        const q = input.value.trim().toLowerCase();
+        document.querySelectorAll("#products .product-card").forEach(function (card) {
+          card.style.display = !q || card.textContent.toLowerCase().includes(q) ? "" : "none";
+        });
+      }
+      input.addEventListener("input", filterProducts);
+      document.getElementById("searchForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        filterProducts();
+        document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+      });
+
+      /* ----- Popup ----- */
+      function openModal(id) { document.getElementById(id).hidden = false; document.body.style.overflow = "hidden"; }
+      function closeModal(id) { document.getElementById(id).hidden = true; document.body.style.overflow = ""; }
+      document.querySelectorAll("[data-close]").forEach(function (b) {
+        b.addEventListener("click", function () { closeModal(b.dataset.close); });
+      });
+      document.querySelectorAll(".modal").forEach(function (m) {
+        m.addEventListener("click", function (e) { if (e.target === m) closeModal(m.id); });
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { closeModal("productModal"); closeModal("reviewModal"); }
+      });
+
+      /* ----- পণ্যের বিস্তারিত (app.js-এর products তালিকা) ----- */
+      let pmProduct = null;
+      let pmQty = 1;
+      function setQty(n) {
+        const max = Math.max(1, Math.min(pmProduct ? Number(pmProduct.stock) || 1 : 1, 50));
+        pmQty = Math.max(1, Math.min(max, n));
+        document.getElementById("pmQty").textContent = pmQty;
+      }
+      function openProduct(name) {
+        const p = products.find(function (x) { return x.name === name; });
+        if (!p) return;
+        pmProduct = p;
+        pmQty = 1;
+        const img = document.getElementById("pmImg");
+        img.innerHTML = p.image_url
+          ? '<img src="' + p.image_url + '" alt="">'
+          : '<span style="color:#7a6040;font-size:44px">👜</span>';
+        document.getElementById("pmName").textContent = p.name;
+        const price = unitPrice(p);
+        document.getElementById("pmPrice").innerHTML =
+          taka(price) + (Number(p.discount_percent) > 0 ? "<s>" + taka(p.price) + "</s>" : "");
+        document.getElementById("pmDesc").textContent = p.description || "প্রিমিয়াম কোয়ালিটির জেনুইন লেদার পণ্য।";
+        const stock = Number(p.stock) || 0;
+        document.getElementById("pmStock").textContent = stock > 0 ? "স্টকে আছে: " + stock + " টি" : "এখন স্টকে নেই";
+        document.getElementById("pmOrder").disabled = stock <= 0;
+        setQty(1);
+        openModal("productModal");
+      }
+
+      document.getElementById("products").addEventListener("click", function (e) {
+        if (e.target.closest(".btn")) return; // Order Now বাটন আলাদাভাবে কাজ করে
+        const card = e.target.closest(".product-card");
+        if (!card) return;
+        const h3 = card.querySelector("h3");
+        if (h3) openProduct(h3.textContent.trim());
+      });
+
+      document.getElementById("pmMinus").addEventListener("click", function () { setQty(pmQty - 1); });
+      document.getElementById("pmPlus").addEventListener("click", function () { setQty(pmQty + 1); });
+      document.getElementById("pmOrder").addEventListener("click", function () {
+        if (!pmProduct) return;
+        selectProduct(pmProduct.id);   // app.js: পণ্য নির্বাচন
+        selectedQuantity = pmQty;      // পরিমাণ
+        updateCart();
+        closeModal("productModal");
+        document.getElementById("order").scrollIntoView({ behavior: "smooth" });
+      });
+
+      /* ----- রিভিউ popup ----- */
+      document.getElementById("openReview").addEventListener("click", function () { openModal("reviewModal"); });
+
+      /* ----- রিভিউ সারাংশ ----- */
+      function renderSummary(rows) {
+        const box = document.getElementById("revSummary");
+        if (!rows.length) { box.innerHTML = ""; return; }
+        const counts = [0, 0, 0, 0, 0, 0];
+        let sum = 0;
+        rows.forEach(function (r) {
+          const v = Math.max(1, Math.min(5, Math.round(Number(r.rating) || 0)));
+          counts[v]++; sum += v;
+        });
+        const avg = (sum / rows.length).toFixed(1);
+        const starsOf = function (n) { const r = Math.round(n); return "★".repeat(r) + "☆".repeat(5 - r); };
+        let bars = "";
+        for (let s = 5; s >= 1; s--) {
+          const pct = Math.round((counts[s] / rows.length) * 100);
+          bars += '<div class="rev-bar"><span>' + s + ' ★</span><div class="track"><div class="fill" style="width:' + pct + '%"></div></div><span>' + pct + '%</span></div>';
+        }
+        box.innerHTML =
+          '<div class="rev-summary"><div class="rev-score"><b>' + avg + '</b><div class="stars">' + starsOf(avg) +
+          '</div><small>' + rows.length + 'টি রিভিউ এর ভিত্তিতে</small></div><div>' + bars + '</div></div>';
+      }
+      window.addEventListener("load", function () {
+        setTimeout(async function () {
+          if (typeof supabaseClient === "undefined" || !supabaseClient) return;
+          const { data } = await supabaseClient.from("reviews").select("rating").eq("status", "Approved");
+          renderSummary(data || []);
+        }, 300);
+      });
+    })();
+  </script>
+
+  <!-- Website JavaScript -->
   <script src="app.js"></script>
 
 </body>
-
 </html>
