@@ -757,8 +757,28 @@ async function loadOrderItems(id){
  box.insertAdjacentHTML("beforeend",'<div class="card"><h3 style="margin-top:0">পণ্যের তালিকা</h3>'+
   data.map(x=>'<div class="kv"><span>'+esc(x.product_name)+' × '+x.quantity+'</span><b>'+money(x.line_total)+'</b></div>').join("")+'</div>');
 }
+function addMessageCard(id){
+ const o=ordersAll.find(x=>String(x.id)===String(id));
+ const box=$("orderDetailBox");
+ if(!o||!box)return;
+ const ph=bdPhone(o.phone);
+ if(!ph)return;
+ const nm=o.customer_name?" "+o.customer_name:"";
+ const t={
+  confirm:"আসসালামু আলাইকুম"+nm+"। আপনার অর্ডার #"+o.id+" নিশ্চিত করা হয়েছে। ধন্যবাদ, "+S.shopName+"।",
+  ship:"আসসালামু আলাইকুম"+nm+"। আপনার অর্ডার #"+o.id+" পাঠানো হয়েছে, শীঘ্রই পৌঁছে যাবে। ধন্যবাদ, "+S.shopName+"।",
+  done:"আসসালামু আলাইকুম"+nm+"। আপনার অর্ডার #"+o.id+" ডেলিভারি হয়েছে। কেনাকাটার জন্য ধন্যবাদ, "+S.shopName+"। আবার আসবেন।"
+ };
+ const link=k=>"https://wa.me/"+ph+"?text="+encodeURIComponent(t[k]);
+ box.insertAdjacentHTML("beforeend",
+  '<div class="card"><h3 style="margin-top:0">WhatsApp বার্তা পাঠান</h3><div class="btnrow">'+
+  '<a class="btn dark" href="'+link("confirm")+'" target="_blank" rel="noopener noreferrer">নিশ্চিত বার্তা</a>'+
+  '<a class="btn dark" href="'+link("ship")+'" target="_blank" rel="noopener noreferrer">পাঠানো হয়েছে</a>'+
+  '<a class="btn" href="'+link("done")+'" target="_blank" rel="noopener noreferrer">✅ ডেলিভারি হয়েছে</a>'+
+  '</div></div>');
+}
 function renderOrderDetail(id){
- setTimeout(()=>loadOrderItems(id),0);
+ setTimeout(()=>{loadOrderItems(id);addMessageCard(id)},0);
  const o=ordersAll.find(x=>String(x.id)===String(id));
  const box=$("orderDetailBox");
  if(!o){box.innerHTML='<div class="card">অর্ডারটি পাওয়া যায়নি। Orders পেজে গিয়ে Refresh করুন।</div>';return}
