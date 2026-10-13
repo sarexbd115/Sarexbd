@@ -104,6 +104,16 @@
     .pm-rev { margin-top: 16px; border-top: 1px solid var(--field-line); padding-top: 14px; }
     .pm-rev-item { background: #161616; border: 1px solid var(--field-line); border-radius: 10px; padding: 12px; margin: 8px 0; }
 
+    #reviewsList { display: none; }
+    #generalReviews { max-width: 900px; margin: 0 auto 26px; }
+    .gen-reviews .cr-item { margin-bottom: 10px; }
+    .prod-reviews { display: flex; flex-direction: column; gap: 8px; margin: 0 0 12px; }
+    .cr-item { background: #161616; border: 1px solid var(--field-line); border-radius: 10px; padding: 9px 10px; font-size: 13px; }
+    .cr-item b { color: var(--gold); }
+    .cr-item span { color: var(--gold); margin-left: 6px; letter-spacing: 1px; }
+    .cr-item p { color: #bbb; margin-top: 3px; }
+    .cr-more { background: none; border: 0; color: var(--gold); font: inherit; font-size: 13px; cursor: pointer; text-align: left; padding: 0; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -318,6 +328,7 @@
         <p data-cms="reviews_sub">কাস্টমার রিভিউ — আপনার মতামত শেয়ার করুন</p>
       </div>
       <div id="revSummary"></div>
+      <div id="generalReviews"></div>
       <div id="reviewsList">
         <p class="rev-center" style="color:var(--muted)">Customer reviews will appear here.</p>
       </div>
@@ -845,11 +856,15 @@
         sel.value = cur;
       }
 
-      // প্রতিটি পণ্য কার্ডের নিচে (অর্ডার বাটনের আগে) রেটিং লাইন
+      // প্রতিটি পণ্য কার্ডের নিচে রেটিং ও ওই পণ্যের রিভিউ
+      const expanded = new Set();
+      const clip = function (t, n) { t = String(t || ""); return t.length > n ? t.slice(0, n) + "…" : t; };
       function cardLines() {
         document.querySelectorAll("#products .product-card").forEach(function (card) {
           const h3 = card.querySelector("h3");
           const pid = idByName(h3 ? h3.textContent.trim() : "");
+          const list = pid ? (reviewsByPid[pid] || []) : [];
+
           let line = card.querySelector(".prod-rating");
           if (!line) {
             line = document.createElement("div");
@@ -857,15 +872,43 @@
             const btn = card.querySelector(".btn");
             if (btn) card.insertBefore(line, btn); else card.appendChild(line);
           }
-          const list = pid ? (reviewsByPid[pid] || []) : [];
           if (!list.length) {
             line.textContent = "এখনো রিভিউ নেই";
           } else {
             const avg = list.reduce(function (s, r) { return s + Number(r.rating); }, 0) / list.length;
             line.textContent = "★ " + avg.toFixed(1) + " · " + list.length + "টি রিভিউ";
           }
+
+          let box = card.querySelector(".prod-reviews");
+          if (!box) {
+            box = document.createElement("div");
+            box.className = "prod-reviews";
+            const btn = card.querySelector(".btn");
+            if (btn) card.insertBefore(box, btn); else card.appendChild(box);
+          }
+          if (!list.length) { box.innerHTML = ""; return; }
+          const open = expanded.has(String(pid));
+          const shown = list.slice(0, open ? 10 : 2);
+          box.innerHTML = shown.map(function (r) {
+            return '<div class="cr-item"><b>' + esc(r.reviewer_name) + '</b><span>' + starsOf(r.rating) +
+              '</span><p>' + esc(clip(r.review_text, 140)) + '</p></div>';
+          }).join("") + (list.length > 2
+            ? '<button type="button" class="cr-more" data-pid="' + pid + '">' +
+              (open ? "কম দেখান" : "সব রিভিউ দেখুন (" + list.length + ")") + '</button>'
+            : "");
         });
       }
+
+      // "সব রিভিউ দেখুন" বাটন: popup খুলবে না, শুধু তালিকা বাড়বে/কমবে
+      document.getElementById("products").addEventListener("click", function (e) {
+        const b = e.target.closest(".cr-more");
+        if (!b) return;
+        e.stopPropagation();
+        e.preventDefault();
+        const pid = String(b.dataset.pid);
+        if (expanded.has(pid)) expanded.delete(pid); else expanded.add(pid);
+        cardLines();
+      }, true);
 
       // পণ্যের popup-এ ওই পণ্যের রিভিউ
       function renderPopupReviews(pid) {
@@ -949,6 +992,7 @@
         const p = await supabaseClient.from("products").select("id,name").eq("active", true);
         if (!p.error && p.data) allProducts = p.data;
         fillReviewSelect();
+
         const r = await supabaseClient.from("reviews")
           .select("product_id,reviewer_name,rating,review_text,created_at")
           .eq("status", "Approved")
@@ -959,6 +1003,23 @@
           r.data.forEach(function (x) {
             (reviewsByPid[x.product_id] = reviewsByPid[x.product_id] || []).push(x);
           });
+        }
+
+        const g = await supabaseClient.from("reviews")
+          .select("reviewer_name,rating,review_text,created_at")
+          .eq("status", "Approved")
+          .is("product_id", null)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        const gen = document.getElementById("generalReviews");
+        if (!g.error && g.data && g.data.length) {
+          gen.innerHTML = '<h3 style="text-align:center;color:var(--gold);margin-bottom:12px">সাধারণ রিভিউ</h3>' +
+            g.data.map(function (x) {
+              return '<div class="cr-item"><b>' + esc(x.reviewer_name) + '</b><span>' + starsOf(x.rating) +
+                '</span><p>' + esc(x.review_text) + '</p></div>';
+            }).join("");
+        } else {
+          gen.innerHTML = "";
         }
         cardLines();
       }
