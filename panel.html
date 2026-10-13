@@ -267,6 +267,18 @@ summary{list-style:none}
    <div class="pagehead"><h2>⭐ রিভিউ</h2></div>
    <div class="chips" id="revChips"></div>
    <div class="sub" id="revMsg"></div>
+   <div id="revEdit" class="card hidden">
+    <h3 style="margin-top:0">রিভিউ বদলান</h3>
+    <input type="hidden" id="revEditId">
+    <label for="revEditName">কাস্টমারের নাম</label>
+    <input id="revEditName" maxlength="60">
+    <label for="revEditText">রিভিউর লেখা</label>
+    <textarea id="revEditText" maxlength="1000" style="min-height:120px"></textarea>
+    <div class="btnrow">
+     <button class="btn" type="button" data-act="revSaveEdit">সেভ করুন</button>
+     <button class="btn dark" type="button" data-act="revCancelEdit">বাতিল</button>
+    </div>
+   </div>
    <div id="revList"></div>
   </section>
 
@@ -935,18 +947,29 @@ async function setReviewStatus(id,status){
  await loadReviews();
  toast(status==="Approved"?"রিভিউ সাইটে দেখা যাবে":"রিভিউ সাইট থেকে সরানো হয়েছে","ok");
 }
-async function editReview(id){
+function editReview(id){
  const r=reviewsData.find(x=>String(x.id)===String(id));
  if(!r)return;
- const name=prompt("কাস্টমারের নাম:",r.reviewer_name||"");
- if(name===null)return;
- const text=prompt("রিভিউর লেখা:",r.review_text||"");
- if(text===null)return;
- const n=name.trim(),t=text.trim();
+ $("revEditId").value=r.id;
+ $("revEditName").value=r.reviewer_name||"";
+ $("revEditText").value=r.review_text||"";
+ $("revEdit").classList.remove("hidden");
+ $("revEdit").scrollIntoView({behavior:"smooth",block:"center"});
+}
+function cancelReviewEdit(){
+ $("revEdit").classList.add("hidden");
+ $("revEditId").value="";
+}
+async function saveReviewEdit(){
+ const id=$("revEditId").value;
+ if(!id)return;
+ const n=$("revEditName").value.trim(),t=$("revEditText").value.trim();
  if(!n||n.length>60){toast("নাম ১ থেকে ৬০ অক্ষরের মধ্যে হতে হবে","err");return}
  if(!t||t.length>1000){toast("লেখা ১ থেকে ১০০০ অক্ষরের মধ্যে হতে হবে","err");return}
- const {error}=await db.from("reviews").update({reviewer_name:n,review_text:t}).eq("id",id);
- if(error){toast("বদলানো যায়নি: "+error.message,"err");return}
+ const {data,error}=await db.from("reviews").update({reviewer_name:n,review_text:t}).eq("id",id).select("id");
+ if(error){toast("বদলানো যায়নি: "+error.message,"err",5000);return}
+ if(!data||!data.length){toast("বদলায়নি। Supabase-এ reviews টেবিলের UPDATE অনুমতি দেখুন।","err",6000);return}
+ cancelReviewEdit();
  await loadReviews();
  toast("রিভিউ বদলানো হয়েছে","ok");
 }
@@ -1160,6 +1183,8 @@ const actions={
  reviewApprove:id=>setReviewStatus(id,"Approved"),
  reviewHide:id=>setReviewStatus(id,"Hidden"),
  reviewEdit:id=>editReview(id),
+ revSaveEdit:()=>saveReviewEdit(),
+ revCancelEdit:()=>cancelReviewEdit(),
  reviewDelete:id=>deleteReview(id),
  couponToggle:async id=>{
   const c=couponsData.find(x=>x.code===id);
