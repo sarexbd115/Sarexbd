@@ -218,6 +218,11 @@ summary{list-style:none}
     <input id="pfDiscount" type="number" min="0" max="99" step="0.5" value="0">
     <label for="pfDesc">বিবরণ</label>
     <textarea id="pfDesc" maxlength="2000" placeholder="প্রোডাক্টের বিবরণ"></textarea>
+    <label for="pfSpecs">বিস্তারিত তথ্য (প্রতি লাইনে একটি: নাম: মান)</label>
+    <textarea id="pfSpecs" maxlength="3000" placeholder="উপাদান: আসল গরুর চামড়া&#10;মাপ: 19 × 10 সেমি&#10;রং: কালো&#10;ওজন: 80 গ্রাম"></textarea>
+    <label>অতিরিক্ত ছবি (সর্বোচ্চ ৮টি, নতুন ছবি যোগ করতে নিচে বাছাই করুন)</label>
+    <div id="pfGalleryBox" class="imgrow" style="margin-bottom:6px"></div>
+    <input type="file" id="pfGallery" accept="image/jpeg,image/png,image/webp" multiple>
     <label for="pfImage">ছবি (JPG, PNG, WEBP · সর্বোচ্চ ৫ MB)</label>
     <img id="pfPreview" class="preview hidden" alt="">
     <input id="pfImage" type="file" accept="image/jpeg,image/png,image/webp">
@@ -274,6 +279,8 @@ summary{list-style:none}
     <input id="revEditName" maxlength="60">
     <label for="revEditText">রিভিউর লেখা</label>
     <textarea id="revEditText" maxlength="1000" style="min-height:120px"></textarea>
+    <label for="revEditProduct">কোন পণ্যের রিভিউ?</label>
+    <select id="revEditProduct"><option value="">সাধারণ রিভিউ (কোনো পণ্য নয়)</option></select>
     <div class="btnrow">
      <button class="btn" type="button" data-act="revSaveEdit">সেভ করুন</button>
      <button class="btn dark" type="button" data-act="revCancelEdit">বাতিল</button>
@@ -584,6 +591,23 @@ function renderProducts(){
 }
 $("prodSearch").addEventListener("input",e=>{prodState.q=e.target.value;renderProducts()});
 
+let galleryList=[];
+function parseSpecs(text){
+ const out=[];
+ String(text||"").split(/\n/).forEach(function(l){
+  const i=l.indexOf(":");
+  if(i<0)return;
+  const k=l.slice(0,i).trim(),v=l.slice(i+1).trim();
+  if(k&&v&&out.length<20)out.push({k:k.slice(0,40),v:v.slice(0,200)});
+ });
+ return out;
+}
+function specsText(arr){return (Array.isArray(arr)?arr:[]).map(x=>x.k+": "+x.v).join("\n")}
+function renderGallery(){
+ $("pfGalleryBox").innerHTML=galleryList.map(function(u,i){
+  return '<div style="position:relative"><img src="'+esc(u)+'" alt="" style="width:70px;height:70px;object-fit:cover;border-radius:8px"><button type="button" data-act="galDel" data-id="'+i+'" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;padding:0;margin:0;background:#3a1717;color:#fff">×</button></div>';
+ }).join("");
+}
 function renderProductForm(arg){
  const isNew=!arg||arg==="new";
  const p=isNew?null:products.find(x=>String(x.id)===String(arg));
@@ -597,6 +621,10 @@ function renderProductForm(arg){
  $("pfDiscount").value=p?(p.discount_percent||0):0;
  $("pfDesc").value=p?.description||"";
  $("pfActive").checked=p?!!p.active:true;
+ $("pfSpecs").value=specsText(p?.specs);
+ galleryList=Array.isArray(p?.gallery)?[...p.gallery]:[];
+ $("pfGallery").value="";
+ renderGallery();
  $("pfImage").value="";
  const prev=$("pfPreview");
  if(p?.image_url){prev.src=p.image_url;prev.classList.remove("hidden")}
@@ -628,6 +656,15 @@ $("productForm").addEventListener("submit",async e=>{
    newPath=up.path;
    imageUrl=db.storage.from(BUCKET).getPublicUrl(newPath).data.publicUrl;
   }
+  const newGallery=[];
+  for(const f of Array.from($("pfGallery").files||[]).slice(0,8)){
+   if(!IMAGE_TYPES[f.type]||f.size>MAX_IMAGE_BYTES)continue;
+   const gp=Date.now()+"-g-"+Math.random().toString(36).slice(2)+"."+IMAGE_TYPES[f.type];
+   const {data:gu,error:gErr}=await db.storage.from(BUCKET).upload(gp,f,{cacheControl:"3600",upsert:false,contentType:f.type});
+   if(gErr)throw gErr;
+   newGallery.push(db.storage.from(BUCKET).getPublicUrl(gu.path).data.publicUrl);
+  }
+  galleryList=galleryList.concat(newGallery).slice(0,8);
   const product={
    name:$("pfName").value.trim(),
    description:$("pfDesc").value.trim(),
@@ -636,7 +673,9 @@ $("productForm").addEventListener("submit",async e=>{
    image_url:imageUrl,
    discount_percent:Number($("pfDiscount").value)||0,
    category:$("pfCategory").value.trim(),
-   active:$("pfActive").checked
+   active:$("pfActive").checked,
+   specs:parseSpecs($("pfSpecs").value),
+   gallery:galleryList
   };
   if(!product.name)throw Error("প্রোডাক্টের নাম দাও।");
   if(!Number.isFinite(product.price)||product.price<0)throw Error("দাম সঠিক নয়।");
@@ -953,6 +992,8 @@ function editReview(id){
  $("revEditId").value=r.id;
  $("revEditName").value=r.reviewer_name||"";
  $("revEditText").value=r.review_text||"";
+ $("revEditProduct").innerHTML='<option value="">সাধারণ রিভিউ (কোনো পণ্য নয়)</option>'+products.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");
+ $("revEditProduct").value=r.product_id?String(r.product_id):"";
  $("revEdit").classList.remove("hidden");
  $("revEdit").scrollIntoView({behavior:"smooth",block:"center"});
 }
@@ -966,7 +1007,8 @@ async function saveReviewEdit(){
  const n=$("revEditName").value.trim(),t=$("revEditText").value.trim();
  if(!n||n.length>60){toast("নাম ১ থেকে ৬০ অক্ষরের মধ্যে হতে হবে","err");return}
  if(!t||t.length>1000){toast("লেখা ১ থেকে ১০০০ অক্ষরের মধ্যে হতে হবে","err");return}
- const {data,error}=await db.from("reviews").update({reviewer_name:n,review_text:t}).eq("id",id).select("id");
+ const pv=$("revEditProduct").value;
+ const {data,error}=await db.from("reviews").update({reviewer_name:n,review_text:t,product_id:pv?Number(pv):null}).eq("id",id).select("id");
  if(error){toast("বদলানো যায়নি: "+error.message,"err",5000);return}
  if(!data||!data.length){toast("বদলায়নি। Supabase-এ reviews টেবিলের UPDATE অনুমতি দেখুন।","err",6000);return}
  cancelReviewEdit();
@@ -1202,6 +1244,7 @@ const actions={
  },
  randomCode:()=>{$("cpCode").value=randomCode()},
  saveSite:saveSite,
+ galDel:id=>{galleryList.splice(Number(id),1);renderGallery()},
  resetSettings:async()=>{
   S=Object.assign({},DEFAULTS);
   try{localStorage.removeItem(SETTINGS_KEY)}catch(e){}
