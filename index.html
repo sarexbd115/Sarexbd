@@ -114,6 +114,13 @@
     .cr-item p { color: #bbb; margin-top: 3px; }
     .cr-more { background: none; border: 0; color: var(--gold); font: inherit; font-size: 13px; cursor: pointer; text-align: left; padding: 0; }
 
+    .pm-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
+    .pm-specs div { background: #161616; border: 1px solid var(--field-line); border-radius: 8px; padding: 8px; }
+    .pm-specs span { display: block; color: var(--muted); font-size: 12px; }
+    .pm-specs b { color: #fff; font-size: 14px; font-weight: 600; }
+    .pm-gallery { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; }
+    .pm-gallery img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; cursor: pointer; flex: none; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -378,6 +385,7 @@
           <div class="pm-name" id="pmName"></div>
           <div class="pm-price" id="pmPrice"></div>
           <p class="pm-desc" id="pmDesc"></p>
+          <div id="pmExtra"></div>
           <p class="pm-meta" id="pmStock"></p>
           <div class="qty">
             <button type="button" id="pmMinus" aria-label="কমান">−</button>
@@ -1029,5 +1037,43 @@
     })();
   </script>
 
+
+  <!-- পণ্যের বিস্তারিত তথ্য ও অতিরিক্ত ছবি -->
+  <script>
+    (function () {
+      const esc = function (v) {
+        return String(v ?? "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      };
+      document.getElementById("products").addEventListener("click", async function (e) {
+        if (e.target.closest(".btn") || e.target.closest(".wish-btn") || e.target.closest(".cr-more")) return;
+        const card = e.target.closest(".product-card");
+        if (!card) return;
+        const h3 = card.querySelector("h3");
+        const name = h3 ? h3.textContent.trim() : "";
+        const box = document.getElementById("pmExtra");
+        box.innerHTML = "";
+        const p = products.find(function (x) { return x.name === name; });
+        if (!p) return;
+        const res = await supabaseClient.from("products").select("specs,gallery").eq("id", p.id).single();
+        if (res.error || !res.data) return;
+        const specs = Array.isArray(res.data.specs) ? res.data.specs : [];
+        const gal = Array.isArray(res.data.gallery) ? res.data.gallery : [];
+        let html = "";
+        if (specs.length) {
+          html += '<div class="pm-specs">' + specs.map(function (s) {
+            return "<div><span>" + esc(s.k) + "</span><b>" + esc(s.v) + "</b></div>";
+          }).join("") + "</div>";
+        }
+        if (gal.length) {
+          html += '<div class="pm-gallery">' + gal.map(function (u) {
+            return '<img src="' + esc(u) + '" alt="" onclick="document.querySelector(\'#pmImg img\').src=this.src">';
+          }).join("") + "</div>";
+        }
+        box.innerHTML = html;
+      });
+    })();
+  </script>
 </body>
 </html>
