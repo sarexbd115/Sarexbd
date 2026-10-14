@@ -14,6 +14,8 @@ window.addEventListener("error",function(e){
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"><\/script>');
 </script>
@@ -553,7 +555,7 @@ function sc(cls,ic,label,val,href){
  return '<a class="sc '+cls+'" href="#'+href+'"><div class="ic">'+ic+'</div><b>'+esc(val)+'</b><small>'+label+'</small></a>';
 }
 function orderItem(o){
- return '<div class="item click" data-go="orderDetail/'+esc(o.id)+'"><div class="grow"><div class="title">#'+esc(o.id)+' · '+esc(o.customer_name||"")+'</div><div class="sub">'+esc(o.product||"")+' × '+esc(o.quantity||1)+' · '+esc(fmtDate(o.created_at))+'</div></div><div style="text-align:right"><b>'+money(o.total)+'</b><div>'+statusBadge(o.status)+'</div></div></div>';
+ return '<div class="item click" data-go="orderDetail/'+esc(o.id)+'"><div class="grow"><div class="title">#'+esc(o.id)+' · '+esc(o.customer_name||"")+'</div><div class="sub">'+esc(o.product||"")+' × '+esc(o.quantity||1)+' · '+esc(fmtDate(o.created_at))+'</div><div class="btnrow" style="margin-top:6px"><button class="btn dark" type="button" data-act="receipt" data-id="'+esc(o.id)+'">📄 রিসিট</button></div></div><div style="text-align:right"><b>'+money(o.total)+'</b><div>'+statusBadge(o.status)+'</div></div></div>';
 }
 function renderHome(){
  const live=ordersAll.filter(o=>o.status!=="Cancelled");
@@ -758,6 +760,95 @@ function renderOrders(){
 }
 $("orderSearch").addEventListener("input",e=>{orderState.q=e.target.value;orderState.page=1;renderOrders()});
 
+function receiptHTML(o,items){
+ const subtotal=Number(o.subtotal)||0, disc=Number(o.discount)||0, pdisc=Number(o.product_discount)||0;
+ const delivery=Number(o.delivery_charge)||0, total=Number(o.total)||0;
+ const list=(items&&items.length)?items:[{product_name:o.product,quantity:o.quantity||1,line_total:subtotal}];
+ const rows=list.map(x=>`<tr><td style="padding:10px;border-bottom:1px solid #2a2a2e">${esc(x.product_name)}</td><td style="padding:10px;text-align:center;border-bottom:1px solid #2a2a2e">${esc(x.quantity)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #2a2a2e">${money(x.line_total)}</td></tr>`).join("");
+ const line=(a,b)=>`<div style="display:flex;justify-content:space-between;gap:12px"><span>${a}</span><span>${b}</span></div>`;
+ return `<div style="width:700px;background:#0b0b0d;color:#f4f4f5;font-family:'Hind Siliguri',Arial,sans-serif;padding:36px;border:2px solid #d4af37;border-radius:18px;box-sizing:border-box">
+  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #d4af37;padding-bottom:16px">
+    <div><div style="font-family:Georgia,serif;font-size:30px;letter-spacing:4px;color:#f3d77a;font-weight:700">${esc(S.shopName)}</div><div style="color:#a1a1aa;font-size:12px;letter-spacing:3px">PREMIUM LEATHER GOODS</div></div>
+    <div style="text-align:right"><div style="font-size:20px;color:#d4af37;font-weight:700">রসিদ / RECEIPT</div><div style="color:#a1a1aa;font-size:13px">অর্ডার #${esc(o.id)}</div><div style="color:#a1a1aa;font-size:13px">${esc(fmtDate(o.created_at))}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0">
+    <div><div style="color:#a1a1aa;font-size:12px">কাস্টমার</div><div style="font-size:16px;font-weight:600">${esc(o.customer_name)}</div></div>
+    <div><div style="color:#a1a1aa;font-size:12px">ফোন</div><div style="font-size:16px">${esc(o.phone)}</div></div>
+    <div style="grid-column:1/3"><div style="color:#a1a1aa;font-size:12px">ঠিকানা</div><div style="font-size:15px">${esc(o.address)}</div></div>
+    <div><div style="color:#a1a1aa;font-size:12px">ডেলিভারি এলাকা</div><div style="font-size:15px">${o.delivery_area==="outside"?"ঢাকার বাইরে":"ঢাকার ভেতরে"}</div></div>
+    <div><div style="color:#a1a1aa;font-size:12px">অর্ডারের স্ট্যাটাস</div><div style="font-size:15px;color:#f3d77a;font-weight:700">${esc(o.status||"Pending")}</div></div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <thead><tr style="background:#1c1c20;color:#d4af37"><th style="text-align:left;padding:10px">পণ্য</th><th style="padding:10px">পরিমাণ</th><th style="text-align:right;padding:10px">মূল্য</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div style="margin-top:18px;font-size:14px;line-height:2">
+    ${pdisc>0?line("পণ্যের ছাড়","−"+money(pdisc)):""}
+    ${line("পণ্যের মোট",money(subtotal))}
+    ${disc>0?line("কুপন ছাড়"+(o.coupon_code?" ("+esc(o.coupon_code)+")":""),"−"+money(disc)):""}
+    ${line("ডেলিভারি চার্জ",money(delivery))}
+  </div>
+  <div style="margin-top:12px;border-top:2px solid #d4af37;padding-top:12px;display:flex;justify-content:space-between;font-size:22px;font-weight:700"><span>সর্বমোট</span><span style="color:#f3d77a">${money(total)}</span></div>
+  <div style="margin-top:16px;color:#a1a1aa;font-size:13px;text-align:center">পেমেন্ট: ক্যাশ অন ডেলিভারি · আমাদের সাথে কেনাকাটার জন্য ধন্যবাদ</div>
+  <div style="margin-top:6px;color:#a1a1aa;font-size:12px;text-align:center">${esc([S.whatsapp?"WhatsApp: "+S.whatsapp:"",S.address].filter(Boolean).join(" · "))}</div>
+ </div>`;
+}
+async function fetchReceiptItems(id){
+ const r=await db.from("order_items").select("product_name,quantity,line_total").eq("order_id",id);
+ return r.error?[]:(r.data||[]);
+}
+async function makeReceiptEl(id){
+ const o=ordersAll.find(x=>String(x.id)===String(id));
+ if(!o)throw Error("অর্ডার পাওয়া যায়নি");
+ const items=await fetchReceiptItems(o.id);
+ const box=document.createElement("div");
+ box.style.cssText="position:fixed;left:-10000px;top:0;";
+ box.innerHTML=receiptHTML(o,items);
+ document.body.appendChild(box);
+ return {o:o,box:box};
+}
+async function downloadReceipt(id){
+ let made=null;
+ toast("রিসিট তৈরি হচ্ছে...");
+ try{
+  if(!window.html2canvas||!window.jspdf)throw Error("রিসিট লাইব্রেরি লোড হয়নি। ইন্টারনেট চেক করুন।");
+  made=await makeReceiptEl(id);
+  const canvas=await html2canvas(made.box.firstElementChild,{scale:2,backgroundColor:"#0b0b0d",useCORS:true});
+  const w=canvas.width/2,hgt=canvas.height/2;
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:"px",format:[w,hgt],orientation:hgt>w?"portrait":"landscape"});
+  pdf.addImage(canvas.toDataURL("image/png"),"PNG",0,0,w,hgt);
+  pdf.save("receipt-"+made.o.id+".pdf");
+  toast("রিসিট ডাউনলোড হয়েছে","ok");
+ }catch(err){
+  toast("রিসিট তৈরি হয়নি: "+errText(err),"err",5000);
+ }finally{
+  if(made)made.box.remove();
+ }
+}
+async function printReceipt(id){
+ let made=null;
+ try{
+  made=await makeReceiptEl(id);
+  const w=window.open("","_blank");
+  if(!w){toast("পপ-আপ ব্লক করা আছে। অনুমতি দিয়ে আবার চেষ্টা করুন।","err");return}
+  w.document.write('<html><head><meta charset="UTF-8"><title>Receipt #'+made.o.id+'</title><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet"></head><body style="margin:0;padding:20px;background:#fff">'+made.box.innerHTML+'<script>window.onload=function(){setTimeout(function(){window.print()},600)}<\\/script></body></html>');
+  w.document.close();
+ }catch(err){
+  toast("রিসিট খোলা যায়নি: "+errText(err),"err",5000);
+ }finally{
+  if(made)made.box.remove();
+ }
+}
+function addReceiptCard(id){
+ const box=$("orderDetailBox");
+ if(!box)return;
+ box.insertAdjacentHTML("beforeend",
+  '<div class="card"><h3 style="margin-top:0">রিসিট</h3><div class="btnrow">'+
+  '<button class="btn" type="button" data-act="receipt" data-id="'+esc(id)+'">📄 রিসিট ডাউনলোড (PDF)</button>'+
+  '<button class="btn dark" type="button" data-act="receiptPrint" data-id="'+esc(id)+'">🖨️ প্রিন্ট</button>'+
+  '</div></div>');
+}
 async function loadOrderItems(id){
  const box=$("orderDetailBox");
  const {data,error}=await db.from("order_items").select("product_name,quantity,line_total").eq("order_id",id);
@@ -786,7 +877,7 @@ function addMessageCard(id){
   '</div></div>');
 }
 function renderOrderDetail(id){
- setTimeout(()=>{loadOrderItems(id);addMessageCard(id)},0);
+ setTimeout(()=>{loadOrderItems(id);addMessageCard(id);addReceiptCard(id)},0);
  const o=ordersAll.find(x=>String(x.id)===String(id));
  const box=$("orderDetailBox");
  if(!o){box.innerHTML='<div class="card">অর্ডারটি পাওয়া যায়নি। Orders পেজে গিয়ে Refresh করুন।</div>';return}
@@ -1285,6 +1376,8 @@ const actions={
  randomCode:()=>{$("cpCode").value=randomCode()},
  saveSite:saveSite,
  galDel:id=>{galleryList.splice(Number(id),1);renderGallery()},
+ receipt:id=>downloadReceipt(id),
+ receiptPrint:id=>printReceipt(id),
  resetSettings:async()=>{
   S=Object.assign({},DEFAULTS);
   try{localStorage.removeItem(SETTINGS_KEY)}catch(e){}
