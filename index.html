@@ -257,16 +257,17 @@
   </header>
 
   <nav class="site-nav">
-    <a href="#home" data-cms="nav_home" data-en="🏠 Home">🏠 Home (হোম)</a>
-    <a href="#shop" data-cms="nav_shop" data-en="🛍️ Shop">🛍️ Shop (সমস্ত পণ্য)</a>
-    <a href="#about" data-cms="nav_about" data-en="ⓘ About Us">ⓘ About Us (আমাদের সম্পর্কে)</a>
-    <a href="#contact" data-cms="nav_contact" data-en="📞 Contact">📞 Contact (যোগাযোগ)</a>
-    <a href="#order" data-cms="nav_order" data-en="🛒 Order">🛒 Order (অর্ডার করুন)</a>
+    <a href="#home" data-page="home">🏠 Home (হোম)</a>
+    <a href="#shop" data-page="shop">🛍️ Shop (সমস্ত পণ্য)</a>
+    <a href="#reviews" data-page="reviews">⭐ Reviews (রিভিউ)</a>
+    <a href="#about" data-page="about">ⓘ About (আমাদের সম্পর্কে)</a>
+    <a href="#order" data-page="shop">🛒 Order (অর্ডার করুন)</a>
   </nav>
 
   <main>
 
     <!-- HOME (app.js এখানে অফার বার ও ভরসার কার্ড যোগ করে) -->
+  <div class="page" id="page-home">
     <section id="home" class="hero">
       <div class="hero-content">
         <p class="eyebrow" data-cms="hero_eyebrow" data-en="PREMIUM LEATHER GOODS">PREMIUM LEATHER GOODS</p>
@@ -285,16 +286,23 @@
         <p data-cms="cat_sub" data-en="Shop by category">ক্যাটাগরি অনুযায়ী কিনুন</p>
       </div>
       <div class="cats">
-        <a class="cat" href="#shop"><span class="ic" data-cms="cat1_icon">▦</span><b data-cms="cat1_title">All Products</b><small data-cms="cat1_sub">(সব পণ্য)</small></a>
-        <a class="cat" href="#shop"><span class="ic" data-cms="cat2_icon">👛</span><b data-cms="cat2_title">Wallets</b><small data-cms="cat2_sub">(ওয়ালেট)</small></a>
-        <a class="cat" href="#shop"><span class="ic" data-cms="cat3_icon">⌾</span><b data-cms="cat3_title">Belts</b><small data-cms="cat3_sub">(বেল্ট)</small></a>
-        <a class="cat" href="#shop"><span class="ic" data-cms="cat4_icon">💼</span><b data-cms="cat4_title">Bags</b><small data-cms="cat4_sub">(ব্যাগ)</small></a>
-        <a class="cat" href="#shop"><span class="ic" data-cms="cat5_icon">🧥</span><b data-cms="cat5_title">Jackets</b><small data-cms="cat5_sub">(জ্যাকেট)</small></a>
-        <a class="cat" href="#shop"><span class="ic" data-cms="cat6_icon">🎁</span><b data-cms="cat6_title">Combo Set</b><small data-cms="cat6_sub">(কম্বো সেট)</small></a>
+        <a class="cat" data-cat="all" href="#shop"><span class="ic" data-cms="cat1_icon">▦</span><b data-cms="cat1_title">All Products</b><small data-cms="cat1_sub">(সব পণ্য)</small></a>
+        <a class="cat" data-cat="wallet" href="#shop"><span class="ic" data-cms="cat2_icon">👛</span><b data-cms="cat2_title">Wallets</b><small data-cms="cat2_sub">(ওয়ালেট)</small></a>
+        <a class="cat" data-cat="belt" href="#shop"><span class="ic" data-cms="cat3_icon">⌾</span><b data-cms="cat3_title">Belts</b><small data-cms="cat3_sub">(বেল্ট)</small></a>
+        <a class="cat" data-cat="bag" href="#shop"><span class="ic" data-cms="cat4_icon">💼</span><b data-cms="cat4_title">Bags</b><small data-cms="cat4_sub">(ব্যাগ)</small></a>
+        <a class="cat" data-cat="jacket" href="#shop"><span class="ic" data-cms="cat5_icon">🧥</span><b data-cms="cat5_title">Jackets</b><small data-cms="cat5_sub">(জ্যাকেট)</small></a>
+        <a class="cat" data-cat="combo" href="#shop"><span class="ic" data-cms="cat6_icon">🎁</span><b data-cms="cat6_title">Combo Set</b><small data-cms="cat6_sub">(কম্বো সেট)</small></a>
       </div>
     </section>
 
     <!-- SHOP (app.js এখানে পণ্য ও ক্যাটাগরি ফিল্টার বসায়) -->
+    <section class="block alt">
+      <div class="title"><h2>জনপ্রিয় পণ্য</h2><p>আমাদের সেরা পণ্যগুলো</p></div>
+      <div id="homeSlot"></div>
+      <div class="rev-center" style="margin-top:20px"><a class="btn" href="#shop">সব পণ্য দেখুন →</a></div>
+    </section>
+  </div>
+  <div class="page" id="page-shop">
     <section id="shop" class="block">
       <div class="title">
         <h2 data-cms="shop_title" data-en="Popular Products">Popular Products</h2>
@@ -302,7 +310,7 @@
       </div>
       <noscript><p>প্রোডাক্ট দেখতে ব্রাউজারে JavaScript চালু করুন।</p></noscript>
       <div class="wish-bar"><button type="button" id="wishOnly">♡ শুধু পছন্দের পণ্য (<span id="wishCount">0</span>)</button></div>
-      <div id="products" class="grid"></div>
+      <div id="shopSlot"><div id="shopBody"><div id="products" class="grid"></div></div></div>
     </section>
 
     <!-- ORDER -->
@@ -344,6 +352,8 @@
     </section>
 
     <!-- REVIEWS -->
+  </div>
+  <div class="page" id="page-reviews">
     <section id="reviews" class="block">
       <div class="title">
         <h2 data-cms="reviews_title" data-en="Customer Reviews">Customer Reviews</h2>
@@ -351,6 +361,7 @@
       </div>
       <div id="revSummary"></div>
       <div id="generalReviews"></div>
+      <div id="allReviews"></div>
       <div id="reviewsList">
         <p class="rev-center" style="color:var(--muted)">Customer reviews will appear here.</p>
       </div>
@@ -360,6 +371,8 @@
     </section>
 
     <!-- ABOUT (app.js এখানে WhatsApp ও Facebook বাটন যোগ করে) -->
+  </div>
+  <div class="page" id="page-about">
     <section id="about" class="block alt">
       <div class="title">
         <h2 data-cms="about_title" data-en="About Us">About Us</h2>
@@ -368,6 +381,15 @@
     </section>
 
     <!-- CONTACT -->
+    <section class="block">
+      <div class="title"><h2>আমাদের চামড়া ও তৈরির প্রক্রিয়া</h2><p>প্রতিটি পণ্যের পেছনের গল্প</p></div>
+      <div class="contact-grid">
+        <div class="contact-card"><span class="ic">🐄</span><b>আসল চামড়া</b><p>আমরা নির্বাচিত আসল চামড়া ব্যবহার করি। এটি নিশ্চিত করা হয় প্রতিটি ধাপে।</p></div>
+        <div class="contact-card"><span class="ic">✂️</span><b>হাতে তৈরি</b><p>কাটিং, সেলাই ও ফিনিশিং দক্ষ কারিগররা হাতে করেন।</p></div>
+        <div class="contact-card"><span class="ic">🔍</span><b>মান যাচাই</b><p>প্রতিটি পণ্য পাঠানোর আগে সেলাই ও চামড়ার মান দেখা হয়।</p></div>
+        <div class="contact-card"><span class="ic">🛡️</span><b>বিশ্বাসযোগ্যতা</b><p>সমস্যা হলে সরাসরি যোগাযোগ করুন, আমরা সাহায্য করব।</p></div>
+      </div>
+    </section>
     <section id="contact" class="block">
       <div class="title">
         <h2 data-cms="contact_title" data-en="Contact Us">Contact Us</h2>
@@ -381,6 +403,7 @@
       </div>
     </section>
 
+  </div>
   </main>
 
   <footer>
@@ -594,7 +617,7 @@
       document.getElementById("searchForm").addEventListener("submit", function (e) {
         e.preventDefault();
         filterProducts();
-        document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+        location.hash = "#shop";
       });
 
       /* ----- Popup ----- */
@@ -653,7 +676,7 @@
         if (!pmProduct) return;
         addToCart(pmProduct.id, pmQty); // কার্টে যোগ
         closeModal("productModal");
-        document.getElementById("order").scrollIntoView({ behavior: "smooth" });
+        location.hash = "#order";
       });
 
       /* ----- রিভিউ popup ----- */
@@ -793,7 +816,7 @@
         const p = catalog.find(function (x) { return x.name === name; });
         if (p) {
           addToCart(p.id, 1);
-          document.getElementById("order").scrollIntoView({ behavior: "smooth" });
+          location.hash = "#order";
         }
       }, true);
 
@@ -1157,6 +1180,90 @@
       let saved = "bn";
       try { saved = localStorage.getItem("sarexbd_lang") || "bn"; } catch (e) {}
       if (saved === "en") apply("en");
+    })();
+  </script>
+
+  <!-- পেজ ভাগ: হোম, শপ, রিভিউ, আমাদের সম্পর্কে -->
+  <script>
+    (function () {
+      const esc = function (v) {
+        return String(v ?? "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      };
+      const starsOf = function (n) {
+        const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0)));
+        return "★".repeat(r) + "☆".repeat(5 - r);
+      };
+
+      // সব প্রোডাক্টের রিভিউ, প্রোডাক্ট আইডি সহ
+      async function renderAllReviews() {
+        const box = document.getElementById("allReviews");
+        if (!box || typeof supabaseClient === "undefined" || !supabaseClient) return;
+        const r = await supabaseClient.from("reviews")
+          .select("id,product_id,reviewer_name,rating,review_text,created_at")
+          .eq("status", "Approved")
+          .order("created_at", { ascending: false });
+        if (r.error || !r.data || !r.data.length) {
+          box.innerHTML = '<p class="rev-center" style="color:var(--muted)">এখনো কোনো রিভিউ নেই।</p>';
+          return;
+        }
+        const pr = await supabaseClient.from("products").select("id,name");
+        const names = {};
+        (pr.data || []).forEach(function (p) { names[p.id] = p.name; });
+        box.innerHTML = '<h3 style="text-align:center;color:var(--gold);margin:18px 0 12px">সব প্রোডাক্টের রিভিউ</h3>' +
+          r.data.map(function (x) {
+            const label = x.product_id
+              ? esc(names[x.product_id] || "পণ্য") + " (পণ্য আইডি: " + x.product_id + ")"
+              : "সাধারণ রিভিউ";
+            return '<div class="cr-item"><b>' + esc(x.reviewer_name) + '</b><span>' + starsOf(x.rating) +
+              '</span><div class="sub" style="margin-top:2px">' + label + '</div><p>' + esc(x.review_text) + '</p></div>';
+          }).join("");
+      }
+
+      function showPage(name) {
+        const pages = ["home", "shop", "reviews", "about"];
+        if (!pages.includes(name)) name = "home";
+        document.querySelectorAll(".page").forEach(function (p) { p.hidden = p.id !== "page-" + name; });
+        document.querySelectorAll(".site-nav a").forEach(function (a) {
+          a.classList.toggle("active", a.dataset.page === name);
+        });
+        const body = document.getElementById("shopBody");
+        const slot = name === "home" ? document.getElementById("homeSlot") : document.getElementById("shopSlot");
+        if (body && slot) slot.appendChild(body);
+        if (name === "reviews") renderAllReviews();
+        window.scrollTo(0, 0);
+      }
+
+      function route() {
+        const h = (location.hash || "#home").slice(1);
+        const map = { order: "shop", contact: "about" };
+        showPage(map[h] || h);
+        if (h === "order" || h === "contact") {
+          setTimeout(function () {
+            const el = document.getElementById(h);
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }, 60);
+        }
+      }
+      window.addEventListener("hashchange", route);
+
+      // ক্যাটাগরি বাটন: শপ পেজে গিয়ে ওই ক্যাটাগরি বেছে নেবে
+      document.querySelectorAll(".cat[data-cat]").forEach(function (tile) {
+        tile.addEventListener("click", function (e) {
+          e.preventDefault();
+          const key = tile.dataset.cat;
+          location.hash = "#shop";
+          setTimeout(function () {
+            const chips = Array.from(document.querySelectorAll("#categoryBar button"));
+            const chip = key === "all" ? chips[0]
+              : chips.find(function (b) { return b.textContent.trim().toLowerCase().includes(key); });
+            if (chip) chip.click();
+          }, 150);
+        });
+      });
+
+      route();
     })();
   </script>
 </body>
