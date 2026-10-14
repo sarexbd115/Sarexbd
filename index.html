@@ -138,6 +138,12 @@
     .ff b { color: var(--gold2); font-weight: 600; }
     .ff small { color: var(--muted); font-size: 11px; }
 
+    .ico-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; text-decoration: none; font-size: 18px; background: transparent; }
+    .ico-btn:hover { background: #17130a; }
+    .foot-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+    .fbtn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 99px; border: 1px solid var(--gold); color: var(--gold2); text-decoration: none; font-weight: 600; font-size: 14px; }
+    .fbtn:hover { background: #17130a; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -259,6 +265,8 @@
       <button type="submit" aria-label="খুঁজুন">🔍</button>
     </form>
     <a class="cart-link" href="#order" aria-label="কার্ট ও অর্ডার">🛒<span class="cbadge" id="cartBadge">0</span></a>
+    <a class="ico-btn" href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">💬</a>
+    <a class="ico-btn" href="https://www.facebook.com/profile.php?id=100087606876298" target="_blank" rel="noopener noreferrer" aria-label="Facebook">📘</a>
     <button type="button" id="langBtn" class="lang-btn">EN</button>
   </header>
 
@@ -421,7 +429,10 @@
     </div>
     <p data-cms="footer_name">SAREXBD • Premium Leather Goods</p>
     <p data-cms="footer_tagline">More Than Just Leather — শুধু লেদার নয়, এক অনুভূতি</p>
-    <p><a href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">WhatsApp: 01610244533</a></p>
+    <div class="foot-btns">
+      <a class="fbtn" href="https://wa.me/8801610244533" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+      <a class="fbtn" href="https://www.facebook.com/profile.php?id=100087606876298" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
+    </div>
   </footer>
 
   <!-- পণ্যের বিস্তারিত popup -->
@@ -1272,6 +1283,14 @@
             if (chip) chip.click();
           }, 150);
         });
+      });
+
+      document.querySelectorAll("footer a").forEach(function (a) {
+        if (!a.classList.contains("fbtn") && a.textContent.trim() === "Facebook") {
+          const prev = a.previousSibling;
+          if (prev && prev.nodeType === 3) prev.remove();
+          a.remove();
+        }
       });
 
       route();
