@@ -214,6 +214,10 @@ summary{list-style:none}
      <div><label for="pfPrice">দাম (৳) *</label><input id="pfPrice" type="number" min="0" step="0.01" required></div>
      <div><label for="pfStock">স্টক *</label><input id="pfStock" type="number" min="0" step="1" required></div>
     </div>
+    <label for="pfSku">কোড / SKU (ঐচ্ছিক)</label>
+    <input id="pfSku" maxlength="40" placeholder="যেমন: LWG2-Green">
+    <label for="pfHighlights">মূল বৈশিষ্ট্য (প্রতি লাইনে একটি)</label>
+    <textarea id="pfHighlights" maxlength="1000" placeholder="Full Grain Cow Leather&#10;1 Year Warranty&#10;Free Gift Box"></textarea>
     <label for="pfBadge">ব্যাজ (ছবির ওপরে দেখাবে)</label>
     <select id="pfBadge"><option value="">কোনো ব্যাজ নেই</option><option>Best Seller</option><option>Hot</option><option>New</option><option>Premium</option><option>Combo Offer</option></select>
     <label for="pfDiscount">প্রোডাক্ট ছাড় (%) — ০ মানে ছাড় নেই</label>
@@ -622,6 +626,8 @@ function renderProductForm(arg){
  $("pfStock").value=p?p.stock:"";
  $("pfDiscount").value=p?(p.discount_percent||0):0;
  $("pfBadge").value=p?.badge||"";
+ $("pfSku").value=p?.sku||"";
+ $("pfHighlights").value=p?.highlights||"";
  $("pfDesc").value=p?.description||"";
  $("pfActive").checked=p?!!p.active:true;
  $("pfSpecs").value=specsText(p?.specs);
@@ -678,6 +684,8 @@ $("productForm").addEventListener("submit",async e=>{
    category:$("pfCategory").value.trim(),
    active:$("pfActive").checked,
    badge:$("pfBadge").value,
+   sku:$("pfSku").value.trim(),
+   highlights:$("pfHighlights").value.trim(),
    specs:parseSpecs($("pfSpecs").value),
    gallery:galleryList
   };
@@ -1124,7 +1132,7 @@ const SITE_GROUPS=[
    ["footer_tagline","ফুটারের ট্যাগলাইন"],
    ["delivery_note","পণ্য ভেদে ডেলিভারির সময়ের নোট","area"]
  ]],
- ["ক্যাটাগরি (সাইটের বাটন)",[["cat1_icon","ক্যাটাগরি 1 — আইকন"],["cat1_title","ক্যাটাগরি 1 — নাম"],["cat1_sub","ক্যাটাগরি 1 — বাংলা নাম"],["cat2_icon","ক্যাটাগরি 2 — আইকন"],["cat2_title","ক্যাটাগরি 2 — নাম"],["cat2_sub","ক্যাটাগরি 2 — বাংলা নাম"],["cat3_icon","ক্যাটাগরি 3 — আইকন"],["cat3_title","ক্যাটাগরি 3 — নাম"],["cat3_sub","ক্যাটাগরি 3 — বাংলা নাম"],["cat4_icon","ক্যাটাগরি 4 — আইকন"],["cat4_title","ক্যাটাগরি 4 — নাম"],["cat4_sub","ক্যাটাগরি 4 — বাংলা নাম"],["cat5_icon","ক্যাটাগরি 5 — আইকন"],["cat5_title","ক্যাটাগরি 5 — নাম"],["cat5_sub","ক্যাটাগরি 5 — বাংলা নাম"],["cat6_icon","ক্যাটাগরি 6 — আইকন"],["cat6_title","ক্যাটাগরি 6 — নাম"],["cat6_sub","ক্যাটাগরি 6 — বাংলা নাম"]]],["ভরসার কার্ড (ওপরের তিনটি)",[["trust1_icon","কার্ড 1 — আইকন"],["trust1_title","কার্ড 1 — শিরোনাম"],["trust1_sub","কার্ড 1 — ছোট লেখা"],["trust2_icon","কার্ড 2 — আইকন"],["trust2_title","কার্ড 2 — শিরোনাম"],["trust2_sub","কার্ড 2 — ছোট লেখা"],["trust3_icon","কার্ড 3 — আইকন"],["trust3_title","কার্ড 3 — শিরোনাম"],["trust3_sub","কার্ড 3 — ছোট লেখা"]]],["ফ্ল্যাশ সেল (ব্যানার)",[["flash_on","চালু করতে yes লিখুন (খালি = বন্ধ)"],["flash_text","ব্যানারের লেখা"],["flash_end","শেষ হওয়ার সময় (যেমন 2026-10-20T23:59)"]]],["রং",[["theme_gold","সোনালি রং","color"],["theme_bg","ব্যাকগ্রাউন্ডের রং","color"]]]
+ ["ক্যাটাগরি (সাইটের বাটন)",[["cat1_icon","ক্যাটাগরি 1 — আইকন"],["cat1_title","ক্যাটাগরি 1 — নাম"],["cat1_sub","ক্যাটাগরি 1 — বাংলা নাম"],["cat2_icon","ক্যাটাগরি 2 — আইকন"],["cat2_title","ক্যাটাগরি 2 — নাম"],["cat2_sub","ক্যাটাগরি 2 — বাংলা নাম"],["cat3_icon","ক্যাটাগরি 3 — আইকন"],["cat3_title","ক্যাটাগরি 3 — নাম"],["cat3_sub","ক্যাটাগরি 3 — বাংলা নাম"],["cat4_icon","ক্যাটাগরি 4 — আইকন"],["cat4_title","ক্যাটাগরি 4 — নাম"],["cat4_sub","ক্যাটাগরি 4 — বাংলা নাম"],["cat5_icon","ক্যাটাগরি 5 — আইকন"],["cat5_title","ক্যাটাগরি 5 — নাম"],["cat5_sub","ক্যাটাগরি 5 — বাংলা নাম"],["cat6_icon","ক্যাটাগরি 6 — আইকন"],["cat6_title","ক্যাটাগরি 6 — নাম"],["cat6_sub","ক্যাটাগরি 6 — বাংলা নাম"]]],["ভরসার কার্ড (ওপরের তিনটি)",[["trust1_icon","কার্ড 1 — আইকন"],["trust1_title","কার্ড 1 — শিরোনাম"],["trust1_sub","কার্ড 1 — ছোট লেখা"],["trust2_icon","কার্ড 2 — আইকন"],["trust2_title","কার্ড 2 — শিরোনাম"],["trust2_sub","কার্ড 2 — ছোট লেখা"],["trust3_icon","কার্ড 3 — আইকন"],["trust3_title","কার্ড 3 — শিরোনাম"],["trust3_sub","কার্ড 3 — ছোট লেখা"]]],["ফ্ল্যাশ সেল (ব্যানার)",[["flash_on","চালু করতে yes লিখুন (খালি = বন্ধ)"],["flash_text","ব্যানারের লেখা"],["flash_end","শেষ হওয়ার সময় (যেমন 2026-10-20T23:59)"]]],["পণ্যের নীতি (রিটার্ন ও ডেলিভারি)",[["return_policy","পণ্য ডিটেইলের নিচে যে নীতি দেখাবে","area"]]],["রং",[["theme_gold","সোনালি রং","color"],["theme_bg","ব্যাকগ্রাউন্ডের রং","color"]]]
 ];
 const SITE_FIELDS=SITE_GROUPS.flatMap(g=>g[1]);
 
