@@ -1,4 +1,4 @@
-<!doctype html>
+ <!doctype html>
 <html lang="bn">
 <head>
   <meta charset="utf-8">
@@ -1625,6 +1625,7 @@
           document.getElementById("dmRevs").hidden = t !== "rev";
           return;
         }
+        if (e.target.closest("#dmGoOrder")) { close(); location.hash = "#order"; return; }
         const sz = e.target.closest("[data-size]");
         if (sz) {
           chosen = sz.dataset.size; customMode = false;
@@ -1672,8 +1673,14 @@
         if (e.target.closest("#dmBuy") && cur) {
           if (!sizeOk()) return;
           window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
-          close();
-          location.hash = "#order";
+          let box = document.getElementById("dmAddMsg");
+          if (!box) {
+            box = document.createElement("div");
+            box.id = "dmAddMsg";
+            box.className = "dm-msg";
+            document.getElementById("dmBuy").parentElement.after(box);
+          }
+          box.innerHTML = '<span style="color:#6ee0a0">✓ কার্টে যোগ হয়েছে।</span> <button class="dm-chip on" type="button" id="dmGoOrder" style="margin-left:8px">অর্ডার ফর্মে যান →</button>';
           return;
         }
         const rel = e.target.closest("[data-open]");
