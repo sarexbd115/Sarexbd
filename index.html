@@ -159,6 +159,43 @@
 
     button.cat { font: inherit; color: inherit; cursor: pointer; width: 100%; }
 
+    /* ---------- পণ্যের বিস্তারিত পেজ (popup) ---------- */
+    .dm-box { max-width: 980px; }
+    .dm-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 26px; align-items: start; }
+    .dm-main { aspect-ratio: 4 / 3; border-radius: 12px; background: #1a120a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .dm-main img { width: 100%; height: 100%; object-fit: cover; }
+    .dm-thumbs { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; }
+    .dm-thumbs img { width: 66px; height: 66px; object-fit: cover; border-radius: 8px; cursor: pointer; flex: none; border: 1px solid var(--field-line); }
+    .dm-cat { color: var(--muted); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    .dm-name { font-size: 24px; font-weight: 700; margin: 6px 0 10px; color: #fff; }
+    .dm-price { color: var(--gold); font-size: 28px; font-weight: 700; }
+    .dm-price s { color: var(--muted); font-size: 15px; font-weight: 400; margin: 0 8px; }
+    .dm-off { background: var(--red); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; vertical-align: middle; }
+    .dm-stock { font-size: 14px; margin: 8px 0; }
+    .dm-stock.ok { color: #6ee0a0; }
+    .dm-stock.no { color: #ff8a80; }
+    .dm-btns { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+    .dm-btns .btn { flex: 1; min-width: 150px; }
+    .dm-btns .btn.dark { background: #111; color: #fff; border: 1px solid var(--gold); }
+    .dm-hl { list-style: none; margin: 14px 0; color: #ddd; }
+    .dm-hl li { padding: 4px 0; }
+    .dm-hl li:before { content: "✔ "; color: var(--gold); }
+    .dm-meta { color: var(--muted); font-size: 13px; }
+    .dm-tabs { display: flex; gap: 8px; margin-top: 22px; border-bottom: 1px solid var(--field-line); flex-wrap: wrap; }
+    .dm-tabs button { background: none; border: 0; color: var(--muted); padding: 10px 14px; font: inherit; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
+    .dm-tabs button.on { color: var(--gold); border-color: var(--gold); }
+    .dm-pane { padding: 16px 0; color: #ccc; white-space: pre-line; line-height: 1.8; }
+    .dm-policy { margin-top: 22px; border: 1px dashed var(--gold); border-radius: 12px; padding: 14px; color: #ddd; white-space: pre-line; }
+    .dm-related { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+    .dm-rel { background: #151515; border: 1px solid #2a2a2a; border-radius: 10px; padding: 8px; color: #fff; text-align: left; cursor: pointer; font: inherit; }
+    .dm-rel img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; margin-bottom: 6px; }
+    .dm-rel b { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .dm-rel span { color: var(--gold); font-size: 13px; }
+    @media (max-width: 800px) {
+      .dm-grid { grid-template-columns: 1fr; }
+      .dm-related { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -484,6 +521,14 @@
     </div>
   </div>
 
+  <!-- পণ্যের বিস্তারিত (নতুন) -->
+  <div id="detailModal" class="modal" hidden>
+    <div class="modal-box dm-box">
+      <button class="modal-close" type="button" data-dclose aria-label="বন্ধ করুন">×</button>
+      <div id="dmBody"></div>
+    </div>
+  </div>
+
   <!-- রিভিউ লেখার popup -->
   <div id="reviewModal" class="modal" hidden>
     <div class="modal-box small">
@@ -697,7 +742,7 @@
           taka(price) + (Number(p.discount_percent) > 0 ? "<s>" + taka(p.price) + "</s>" : "");
         document.getElementById("pmDesc").textContent = p.description || "প্রিমিয়াম কোয়ালিটির জেনুইন লেদার পণ্য।";
         const stock = Number(p.stock) || 0;
-        document.getElementById("pmStock").textContent = stock > 0 ? "স্টকে আছে: " + stock + " টি" : "এখন স্টকে নেই";
+        document.getElementById("pmStock").textContent = "";
         document.getElementById("pmOrder").disabled = stock <= 0;
         setQty(1);
         openModal("productModal");
@@ -771,7 +816,7 @@
         });
       };
       const unitOf = function (p) { return Math.round(Number(p.price) * (100 - (Number(p.discount_percent) || 0)) / 100); };
-      const maxQty = function (p) { return Math.max(1, Math.min(Number(p.stock) || 1, 50)); };
+      const maxQty = function (p) { return 50; };
       const findP = function (id) { return catalog.find(function (p) { return String(p.id) === String(id); }); };
       const countItems = function () { return cart.reduce(function (s, i) { return s + i.qty; }, 0); };
       const deliveryFee = function () {
@@ -811,7 +856,6 @@
       function addToCart(id, qty) {
         const p = findP(id);
         if (!p) { setMsg("পণ্যটি এখন পাওয়া যাচ্ছে না। পেজ রিফ্রেশ করুন।"); return; }
-        if (Number(p.stock) <= 0) { setMsg("এই পণ্যটি এখন স্টকে নেই।"); return; }
         const it = cart.find(function (i) { return String(i.id) === String(id); });
         const want = (it ? it.qty : 0) + (qty || 1);
         const q = Math.min(want, maxQty(p));
@@ -861,6 +905,18 @@
         }
       }, true);
 
+      // অর্ডারের ত্রুটির বার্তা (স্টক সম্পর্কে কিছু বলা হবে না)
+      window.orderErrorMessage = function (error) {
+        const t = String((error && error.message) || "");
+        if (t.indexOf("out_of_stock") >= 0 || t.indexOf("product_unavailable") >= 0)
+          return "দুঃখিত, এই পণ্যটি এখন অর্ডার নেওয়া যাচ্ছে না। অন্য পণ্য বেছে নিন বা একটু পরে আবার চেষ্টা করুন।";
+        if (t.indexOf("too_many_orders") >= 0) return "অল্প সময়ে অনেকগুলো অর্ডার হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন।";
+        if (t.indexOf("invalid_coupon") >= 0) return "কুপন কোডটি সঠিক নয় বা মেয়াদ শেষ।";
+        if (t.indexOf("coupon_used") >= 0) return "এই ফোন নম্বরে কুপনটি আগেই ব্যবহার করা হয়েছে।";
+        if (t.indexOf("invalid_input") >= 0) return "তথ্য ঠিক নেই। নাম, ফোন ও ঠিকানা আবার দেখুন।";
+        return "অর্ডার জমা হয়নি। আবার চেষ্টা করুন।";
+      };
+
       // অর্ডার জমা: একাধিক পণ্য একসাথে সার্ভারে যাবে
       const form = document.getElementById("orderForm");
       form.addEventListener("submit", async function (e) {
@@ -890,7 +946,7 @@
             p_coupon: coupon || null, p_items: items
           });
           if (error) {
-            setMsg(orderErrorMessage(error) + " [" + (error.message || "") + "]");
+            setMsg(orderErrorMessage(error));
             await loadCatalog();
             loadProducts(true);
             return;
@@ -1345,6 +1401,198 @@
       renderCatTiles();
 
       route();
+    })();
+  </script>
+
+  <!-- পণ্যের বিস্তারিত পেজের কাজ -->
+  <script>
+    (function () {
+      const modal = document.getElementById("detailModal");
+      const body = document.getElementById("dmBody");
+      const esc = function (v) {
+        return String(v ?? "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      };
+      const money = function (n) { return "৳" + Number(n || 0).toLocaleString("en-US"); };
+      const unitOf = function (p) { return Math.round(Number(p.price) * (100 - (Number(p.discount_percent) || 0)) / 100); };
+      const starsOf = function (n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return "★".repeat(r) + "☆".repeat(5 - r); };
+      const lines = function (t) { return String(t || "").split("\n").map(function (x) { return x.trim(); }).filter(Boolean); };
+      const PH = '<span style="color:#7a6040;font-size:44px">👜</span>';
+
+      let cur = null, qty = 1, policy = null;
+
+      function close() { modal.hidden = true; document.body.style.overflow = ""; }
+
+      async function loadPolicy() {
+        if (policy !== null) return policy;
+        const r = await supabaseClient.from("site_content").select("value").eq("key", "return_policy").maybeSingle();
+        policy = (r.data && r.data.value) ? r.data.value : "পণ্য হাতে পেয়ে কোনো সমস্যা থাকলে জানাবেন। যাচাই সাপেক্ষে পরিবর্তন বা ফেরতের ব্যবস্থা।";
+        return policy;
+      }
+
+      function gallery(p) {
+        return [p.image_url].concat(Array.isArray(p.gallery) ? p.gallery : []).filter(Boolean);
+      }
+
+      function paint(p) {
+        const g = gallery(p);
+        const disc = Number(p.discount_percent) || 0;
+        const n = Number(p.stock) || 0;
+        const specs = Array.isArray(p.specs) ? p.specs : [];
+        const hl = lines(p.highlights);
+        body.innerHTML =
+          '<div class="dm-grid">' +
+            '<div>' +
+              '<div class="dm-main" id="dmMain">' + (g[0] ? '<img src="' + esc(g[0]) + '" alt="">' : PH) + '</div>' +
+              (g.length > 1 ? '<div class="dm-thumbs">' + g.map(function (u) {
+                return '<img src="' + esc(u) + '" alt="" data-thumb="' + esc(u) + '">';
+              }).join("") + '</div>' : '') +
+            '</div>' +
+            '<div>' +
+              (p.category ? '<div class="dm-cat">' + esc(p.category) + '</div>' : '') +
+              '<div class="dm-name">' + esc(p.name) + '</div>' +
+              '<div class="dm-price">' + money(unitOf(p)) +
+                (disc > 0 ? '<s>' + money(p.price) + '</s><span class="dm-off">-' + disc + '%</span>' : '') + '</div>' +
+              
+              (p.sku ? '<div class="dm-meta">SKU: ' + esc(p.sku) + '</div>' : '') +
+              '<div class="qty" style="margin-top:12px"><button type="button" data-q="-1">−</button><span id="dmQty">' + qty + '</span><button type="button" data-q="1">+</button></div>' +
+              '<div class="dm-btns">' +
+                '<button class="btn dark" type="button" id="dmAdd"' + '' + '>🛒 কার্টে যোগ করুন</button>' +
+                '<button class="btn" type="button" id="dmBuy"' + '' + '>এখনই কিনুন →</button>' +
+              '</div>' +
+              (hl.length ? '<ul class="dm-hl">' + hl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') +
+              '<div class="pm-perks" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;font-size:12px;color:#ccc">' +
+                '<div><span style="display:block;font-size:20px">🚚</span>ফ্রি ডেলিভারি</div>' +
+                '<div><span style="display:block;font-size:20px">💵</span>ক্যাশ অন ডেলিভারি</div>' +
+                '<div><span style="display:block;font-size:20px">🧵</span>আসল চামড়া</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="dm-tabs">' +
+            '<button type="button" class="on" data-tab="desc">বিবরণ</button>' +
+            '<button type="button" data-tab="spec">বৈশিষ্ট্য</button>' +
+            '<button type="button" data-tab="rev">রিভিউ</button>' +
+          '</div>' +
+          '<div class="dm-pane" id="dmPane">' + esc(p.description || "এই পণ্যের বিবরণ শীঘ্রই যোগ হবে।") + '</div>' +
+          '<div id="dmSpecs" hidden>' + (specs.length ? '<div class="pm-specs">' + specs.map(function (s) {
+            return '<div><span>' + esc(s.k) + '</span><b>' + esc(s.v) + '</b></div>';
+          }).join("") + '</div>' : '<div class="dm-pane">কোনো বৈশিষ্ট্য যোগ করা হয়নি।</div>') + '</div>' +
+          '<div id="dmRevs" hidden><div class="dm-pane">লোড হচ্ছে...</div></div>' +
+          '<div class="dm-policy" id="dmPolicy">লোড হচ্ছে...</div>' +
+          '<h3 style="margin:22px 0 6px;color:var(--gold)">আরও পণ্য</h3>' +
+          '<div class="dm-related" id="dmRelated"></div>';
+      }
+
+      async function loadRelated(p) {
+        const box = document.getElementById("dmRelated");
+        if (!box || !p.category) { if (box) box.innerHTML = ""; return; }
+        const r = await supabaseClient.from("products")
+          .select("id,name,price,discount_percent,image_url")
+          .eq("active", true).eq("category", p.category).neq("id", p.id).limit(4);
+        box.innerHTML = (r.data || []).map(function (x) {
+          return '<button class="dm-rel" type="button" data-open="' + x.id + '">' +
+            (x.image_url ? '<img src="' + esc(x.image_url) + '" alt="">' : '<div style="aspect-ratio:1;display:grid;place-items:center;font-size:30px">👜</div>') +
+            '<b>' + esc(x.name) + '</b><span>' + money(unitOf(x)) + '</span></button>';
+        }).join("");
+      }
+
+      async function loadReviews(p) {
+        const box = document.getElementById("dmRevs");
+        const r = await supabaseClient.from("reviews")
+          .select("reviewer_name,rating,review_text")
+          .eq("status", "Approved").eq("product_id", p.id)
+          .order("created_at", { ascending: false });
+        const list = r.data || [];
+        box.innerHTML = '<div class="dm-pane" style="white-space:normal">' +
+          (list.length ? list.map(function (x) {
+            return '<div class="cr-item"><b>' + esc(x.reviewer_name) + '</b><span>' + starsOf(x.rating) + '</span><p>' + esc(x.review_text) + '</p></div>';
+          }).join("") : '<p>এখনো কোনো রিভিউ নেই।</p>') +
+          '<button type="button" class="btn small" id="dmWriteRev" style="margin-top:10px">✎ এই পণ্যের রিভিউ লিখুন</button></div>';
+        const tabBtn = body.querySelector('[data-tab="rev"]');
+        if (tabBtn) tabBtn.textContent = "রিভিউ (" + list.length + ")";
+      }
+
+      async function openDetail(id) {
+        const res = await supabaseClient.from("products").select("*").eq("id", id).single();
+        if (res.error || !res.data) return;
+        cur = res.data;
+        qty = 1;
+        paint(cur);
+        modal.hidden = false;
+        document.body.style.overflow = "hidden";
+        modal.scrollTop = 0;
+        const bx = modal.querySelector(".dm-box");
+        if (bx) bx.scrollTop = 0;
+        loadRelated(cur);
+        loadReviews(cur);
+        loadPolicy().then(function (t) {
+          const el = document.getElementById("dmPolicy");
+          if (el) el.textContent = "রিটার্ন ও ডেলিভারি নীতি\n" + t;
+        });
+      }
+
+      // কার্ডে ক্লিক: পুরনো popup খুলবে না, নতুন বিস্তারিত খুলবে
+      document.getElementById("products").addEventListener("click", function (e) {
+        if (e.target.closest(".btn, .wish-btn, .cr-more")) return;
+        const card = e.target.closest(".product-card");
+        if (!card) return;
+        const h3 = card.querySelector("h3");
+        const name = h3 ? h3.textContent.trim() : "";
+        const p = (typeof products !== "undefined" ? products : []).find(function (x) { return x.name === name; });
+        if (!p) return;
+        e.stopPropagation();
+        e.preventDefault();
+        openDetail(p.id);
+      }, true);
+
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal || e.target.closest("[data-dclose]")) { close(); return; }
+        const tab = e.target.closest("[data-tab]");
+        if (tab) {
+          body.querySelectorAll("[data-tab]").forEach(function (b) { b.classList.toggle("on", b === tab); });
+          const t = tab.dataset.tab;
+          document.getElementById("dmPane").hidden = t !== "desc";
+          document.getElementById("dmSpecs").hidden = t !== "spec";
+          document.getElementById("dmRevs").hidden = t !== "rev";
+          return;
+        }
+        const q = e.target.closest("[data-q]");
+        if (q && cur) {
+          const max = 50;
+          qty = Math.max(1, Math.min(max, qty + Number(q.dataset.q)));
+          document.getElementById("dmQty").textContent = qty;
+          return;
+        }
+        const th = e.target.closest("[data-thumb]");
+        if (th) {
+          document.getElementById("dmMain").innerHTML = '<img src="' + esc(th.dataset.thumb) + '" alt="">';
+          return;
+        }
+        if (e.target.closest("#dmAdd") && cur) {
+          window.addToCart(cur.id, qty);
+          const b = document.getElementById("dmAdd");
+          b.textContent = "✓ কার্টে যোগ হয়েছে";
+          setTimeout(function () { b.textContent = "🛒 কার্টে যোগ করুন"; }, 1500);
+          return;
+        }
+        if (e.target.closest("#dmBuy") && cur) {
+          window.addToCart(cur.id, qty);
+          close();
+          location.hash = "#order";
+          return;
+        }
+        const rel = e.target.closest("[data-open]");
+        if (rel) { openDetail(rel.dataset.open); return; }
+        if (e.target.closest("#dmWriteRev") && cur) {
+          close();
+          document.getElementById("reviewProduct").value = String(cur.id);
+          document.getElementById("reviewModal").hidden = false;
+          document.body.style.overflow = "hidden";
+        }
+      });
+
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
     })();
   </script>
 </body>
