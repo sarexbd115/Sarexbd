@@ -612,6 +612,9 @@ function renderProducts(){
 $("prodSearch").addEventListener("input",e=>{prodState.q=e.target.value;renderProducts()});
 
 let sizeRows=[];
+document.addEventListener("change",function(e){
+ if(e.target&&e.target.id==="pfSizeType"){$("pfSizeOn").checked=e.target.value!=="none"}
+});
 document.addEventListener("input",function(e){
  const i=e.target&&e.target.dataset?e.target.dataset.i:undefined;
  if(i!==undefined&&e.target.closest&&e.target.closest("#pfSizeList")){sizeRows[Number(i)].label=e.target.value}
@@ -734,7 +737,7 @@ $("productForm").addEventListener("submit",async e=>{
    category:$("pfCategory").value.trim(),
    active:$("pfActive").checked,
    badge:$("pfBadge").value,
-   size_enabled:$("pfSizeOn").checked,
+   size_enabled:$("pfSizeOn").checked || $("pfSizeType").value!=="none",
    size_type:$("pfSizeType").value,
    sku:$("pfSku").value.trim(),
    highlights:$("pfHighlights").value.trim(),
