@@ -1,4 +1,4 @@
- <!doctype html>
+<!doctype html>
 <html lang="bn">
 <head>
   <meta charset="utf-8">
@@ -1673,14 +1673,8 @@
         if (e.target.closest("#dmBuy") && cur) {
           if (!sizeOk()) return;
           window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
-          let box = document.getElementById("dmAddMsg");
-          if (!box) {
-            box = document.createElement("div");
-            box.id = "dmAddMsg";
-            box.className = "dm-msg";
-            document.getElementById("dmBuy").parentElement.after(box);
-          }
-          box.innerHTML = '<span style="color:#6ee0a0">✓ কার্টে যোগ হয়েছে।</span> <button class="dm-chip on" type="button" id="dmGoOrder" style="margin-left:8px">অর্ডার ফর্মে যান →</button>';
+          close();
+          location.hash = "#order";
           return;
         }
         const rel = e.target.closest("[data-open]");
