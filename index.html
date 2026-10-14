@@ -196,6 +196,15 @@
       .dm-related { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
+    .dm-size { margin: 12px 0; }
+    .dm-size-title { font-weight: 600; margin-bottom: 6px; color: #fff; }
+    .dm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dm-chip { border: 1px solid var(--gold); background: transparent; color: var(--gold2); border-radius: 99px; padding: 7px 14px; font: inherit; cursor: pointer; }
+    .dm-chip.on { background: var(--gold); color: #111; font-weight: 700; }
+    .dm-chip:hover { background: #17130a; }
+    .dm-msg { color: #ff8a80; font-size: 14px; margin-top: 6px; min-height: 18px; }
+    .dm-chart { margin-top: 8px; background: #161616; border: 1px solid var(--field-line); border-radius: 10px; padding: 12px; font-size: 13px; color: #ddd; white-space: pre-line; line-height: 1.7; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -802,13 +811,16 @@
   <!-- Website JavaScript -->
   <script src="app.js"></script>
 
-  <!-- কার্ট (একাধিক পণ্য) — app.js-এর পরে লোড হয় -->
+  <!-- কার্ট (একাধিক পণ্য ও সাইজসহ) — app.js-এর পরে লোড হয় -->
   <script>
     (function () {
       const CART_KEY = "sarexbd_cart";
       let cart = [];
       let catalog = [];
       try { cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch (e) { cart = []; }
+      cart = cart.filter(function (i) { return i && i.id; }).map(function (i) {
+        return { id: i.id, qty: i.qty || 1, size: i.size || "", custom: i.custom || "" };
+      });
 
       const esc = function (v) {
         return String(v ?? "").replace(/[&<>"']/g, function (c) {
@@ -816,7 +828,7 @@
         });
       };
       const unitOf = function (p) { return Math.round(Number(p.price) * (100 - (Number(p.discount_percent) || 0)) / 100); };
-      const maxQty = function (p) { return 50; };
+      const maxQty = function () { return 50; };
       const findP = function (id) { return catalog.find(function (p) { return String(p.id) === String(id); }); };
       const countItems = function () { return cart.reduce(function (s, i) { return s + i.qty; }, 0); };
       const deliveryFee = function () {
@@ -824,11 +836,18 @@
       };
       const saveCart = function () { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {} };
       const setMsg = function (t) { document.getElementById("msg").textContent = t; };
+      const sizeText = function (i) {
+        let s = "";
+        if (i.size) s += "সাইজ: " + i.size;
+        if (i.custom) s += (s ? " · " : "") + "কাস্টম মাপ: " + i.custom;
+        return s;
+      };
 
       function renderCart() {
         document.getElementById("cartBadge").textContent = countItems();
         const box = document.getElementById("cart");
-        const lines = cart.map(function (i) { return { i: i, p: findP(i.id) }; }).filter(function (x) { return x.p; });
+        const lines = cart.map(function (i, idx) { return { i: i, idx: idx, p: findP(i.id) }; })
+          .filter(function (x) { return x.p; });
         if (!lines.length) {
           box.innerHTML = '<p>কার্ট খালি। পণ্যের কার্ডে "অর্ডার করুন" চাপুন।</p>';
           return;
@@ -838,10 +857,12 @@
           const price = unitOf(x.p);
           const line = price * x.i.qty;
           subtotal += line;
+          const st = sizeText(x.i);
           return '<div class="cart-item"><strong>' + esc(x.p.name) + '</strong>' +
+            (st ? '<div style="color:#f3d77a;font-size:13px;margin-top:2px">' + esc(st) + '</div>' : '') +
             '<p>' + taka(price) + ' × ' + x.i.qty + ' = ' + taka(line) + '</p>' +
-            '<div class="qty"><button type="button" data-dec="' + esc(x.p.id) + '">−</button><span>' + x.i.qty + '</span><button type="button" data-inc="' + esc(x.p.id) + '">+</button></div>' +
-            '<button type="button" data-rm="' + esc(x.p.id) + '" style="margin-top:8px;background:none;border:0;color:#ff8a80;cursor:pointer">মুছুন</button></div>';
+            '<div class="qty"><button type="button" data-dec="' + x.idx + '">−</button><span>' + x.i.qty + '</span><button type="button" data-inc="' + x.idx + '">+</button></div>' +
+            '<button type="button" data-rm="' + x.idx + '" style="margin-top:8px;background:none;border:0;color:#ff8a80;cursor:pointer">মুছুন</button></div>';
         }).join("");
         const discount = appliedCoupon ? Math.round(subtotal * appliedCoupon.percent / 100) : 0;
         const delivery = deliveryFee();
@@ -853,42 +874,45 @@
           '<div style="margin-top:6px">সর্বমোট: <b>' + taka(total) + '</b></div></div>';
       }
 
-      function addToCart(id, qty) {
+      // পণ্য, পরিমাণ ও সাইজ দিয়ে কার্টে যোগ
+      function addToCart(id, qty, size, custom) {
         const p = findP(id);
         if (!p) { setMsg("পণ্যটি এখন পাওয়া যাচ্ছে না। পেজ রিফ্রেশ করুন।"); return; }
-        const it = cart.find(function (i) { return String(i.id) === String(id); });
+        size = size || ""; custom = custom || "";
+        const it = cart.find(function (i) {
+          return String(i.id) === String(id) && i.size === size && i.custom === custom;
+        });
         const want = (it ? it.qty : 0) + (qty || 1);
-        const q = Math.min(want, maxQty(p));
-        if (it) it.qty = q; else cart.push({ id: p.id, qty: q });
+        const q = Math.min(want, maxQty());
+        if (it) it.qty = q; else cart.push({ id: p.id, qty: q, size: size, custom: custom });
         setMsg("");
         saveCart();
         renderCart();
       }
       window.addToCart = addToCart;
-      window.updateCart = renderCart; // app.js-এর পুরনো কার্ট ফাংশনের জায়গায়
+      window.updateCart = renderCart;
 
-      // কার্টের +, − ও মুছুন বাটন
+      // কার্টের +, − ও মুছুন
       document.getElementById("cart").addEventListener("click", function (e) {
         const t = e.target;
         const inc = t.dataset.inc, dec = t.dataset.dec, rm = t.dataset.rm;
-        if (inc) {
-          const it = cart.find(function (i) { return String(i.id) === inc; });
-          const p = findP(inc);
-          if (it && p && it.qty < maxQty(p)) it.qty++;
+        if (inc !== undefined && cart[Number(inc)]) {
+          const it = cart[Number(inc)];
+          if (it.qty < maxQty()) it.qty++;
         }
-        if (dec) {
-          const it = cart.find(function (i) { return String(i.id) === dec; });
-          if (it) it.qty--;
+        if (dec !== undefined && cart[Number(dec)]) {
+          cart[Number(dec)].qty--;
           cart = cart.filter(function (i) { return i.qty > 0; });
         }
-        if (rm) cart = cart.filter(function (i) { return String(i.id) !== rm; });
-        if (inc || dec || rm) { saveCart(); renderCart(); }
+        if (rm !== undefined && cart[Number(rm)]) {
+          cart.splice(Number(rm), 1);
+        }
+        if (inc !== undefined || dec !== undefined || rm !== undefined) { saveCart(); renderCart(); }
       });
 
-      // ডেলিভারি এলাকা বদলালে সর্বমোট আপডেট
       document.getElementById("deliveryArea").addEventListener("change", renderCart);
 
-      // পণ্যের কার্ডের "অর্ডার করুন" এখন কার্টে যোগ করবে
+      // পণ্যের কার্ডের "অর্ডার করুন": সাইজ লাগলে বিস্তারিত খুলবে, নইলে সরাসরি কার্টে
       document.getElementById("products").addEventListener("click", function (e) {
         const btn = e.target.closest(".btn");
         if (!btn) return;
@@ -899,10 +923,13 @@
         const h3 = card.querySelector("h3");
         const name = h3 ? h3.textContent.trim() : "";
         const p = catalog.find(function (x) { return x.name === name; });
-        if (p) {
-          addToCart(p.id, 1);
-          location.hash = "#order";
+        if (!p) return;
+        if (p.size_enabled) {
+          if (window.openProductDetail) window.openProductDetail(p.id);
+          return;
         }
+        addToCart(p.id, 1, "", "");
+        location.hash = "#order";
       }, true);
 
       // অর্ডারের ত্রুটির বার্তা (স্টক সম্পর্কে কিছু বলা হবে না)
@@ -917,7 +944,7 @@
         return "অর্ডার জমা হয়নি। আবার চেষ্টা করুন।";
       };
 
-      // অর্ডার জমা: একাধিক পণ্য একসাথে সার্ভারে যাবে
+      // অর্ডার জমা
       const form = document.getElementById("orderForm");
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -925,6 +952,13 @@
         setMsg("");
         const lines = cart.filter(function (i) { return findP(i.id); });
         if (!lines.length) { setMsg("আগে কার্টে পণ্য যোগ করুন।"); return; }
+        for (const i of lines) {
+          const p = findP(i.id);
+          if (p.size_enabled && !i.size && !i.custom) {
+            setMsg("সাইজ নির্বাচন না করে অর্ডার করা যাবে না: " + p.name);
+            return;
+          }
+        }
 
         const fd = new FormData(form);
         const name = String(fd.get("customer_name") || "").trim();
@@ -939,23 +973,29 @@
         btn.disabled = true;
         setMsg("অর্ডার জমা হচ্ছে...");
         try {
-          const items = lines.map(function (i) { return { product_id: Number(i.id), quantity: i.qty }; });
+          const items = lines.map(function (i) {
+            return { product_id: Number(i.id), quantity: i.qty, size: i.size || "", custom_size: i.custom || "" };
+          });
           const coupon = couponInput ? couponInput.value.trim() : "";
-          const { data, error } = await supabaseClient.rpc("place_order_multi", {
+          const res = await supabaseClient.rpc("place_order_multi", {
             p_name: name, p_phone: phone, p_address: address, p_area: area,
             p_coupon: coupon || null, p_items: items
           });
-          if (error) {
-            setMsg(orderErrorMessage(error));
+          if (res.error) {
+            setMsg(orderErrorMessage(res.error));
             await loadCatalog();
             loadProducts(true);
             return;
           }
-          const r = data || {};
+          const r = res.data || {};
           const summary = {
             name: name,
             phone: phone,
-            product: lines.map(function (i) { return findP(i.id).name + " × " + i.qty; }).join(", "),
+            product: lines.map(function (i) {
+              const p = findP(i.id);
+              const s = i.size ? " (" + i.size + ")" : (i.custom ? " (কাস্টম: " + i.custom + ")" : "");
+              return p.name + s + " × " + i.qty;
+            }).join(", "),
             quantity: lines.reduce(function (s, i) { return s + i.qty; }, 0),
             total: Number(r.total) || 0,
             discount: Number(r.discount) || 0,
@@ -979,11 +1019,10 @@
         }
       }, true);
 
-      // পণ্যের তালিকা (স্টকসহ) আনা
       async function loadCatalog() {
         const res = await supabaseClient
           .from("products")
-          .select("id,name,price,discount_percent,stock,image_url,active")
+          .select("id,name,price,discount_percent,stock,image_url,active,size_enabled")
           .eq("active", true);
         if (!res.error && res.data) catalog = res.data;
         renderCart();
@@ -1421,6 +1460,7 @@
       const PH = '<span style="color:#7a6040;font-size:44px">👜</span>';
 
       let cur = null, qty = 1, policy = null;
+      let chosen = "", customMode = false, customText = "";
 
       function close() { modal.hidden = true; document.body.style.overflow = ""; }
 
@@ -1429,6 +1469,31 @@
         const r = await supabaseClient.from("site_content").select("value").eq("key", "return_policy").maybeSingle();
         policy = (r.data && r.data.value) ? r.data.value : "পণ্য হাতে পেয়ে কোনো সমস্যা থাকলে জানাবেন। যাচাই সাপেক্ষে পরিবর্তন বা ফেরতের ব্যবস্থা।";
         return policy;
+      }
+
+      function chartText(t) {
+        if (t === "belt") return "বেল্টের সাইজ = কোমরের মাপ (ইঞ্চিতে)\nপ্যান্ট যেখানে কোমরে থাকে, সেখানে ফিতা দিয়ে মাপুন।\nকোমর ৩৪ ইঞ্চি হলে ৩৪ ইঞ্চি বেছে নিন।\n\n(আনুমানিক। সন্দেহ থাকলে আমাদের জানান।)";
+        if (t === "shoe") return "জুতার সাইজ (EU নম্বর), আনুমানিক পায়ের দৈর্ঘ্য:\n39 ≈ 24.5 সেমি\n40 ≈ 25 সেমি\n41 ≈ 26 সেমি\n42 ≈ 26.5 সেমি\n43 ≈ 27.5 সেমি\n44 ≈ 28 সেমি\n\nদেওয়ালে পিঠ ঠেকিয়ে পা মেঝেতে রেখে সবচেয়ে লম্বা আঙুল পর্যন্ত মাপুন।";
+        if (t === "apparel") return "জ্যাকেটের আনুমানিক বুকের মাপ (ইঞ্চি):\nS ≈ 36–38\nM ≈ 38–40\nL ≈ 40–42\nXL ≈ 42–44\nXXL ≈ 44–46\n\nবুকের সবচেয়ে চওড়া জায়গায় মাপ নিন। মাপ দুই সাইজের মাঝে হলে বড়টি নিন।";
+        return "নিজের মাপ দিতে 'নিজের মাপ দিন' চাপুন, তারপর মাপ লিখুন।";
+      }
+
+      async function renderSizeBox(p) {
+        const box = document.getElementById("dmChips");
+        if (!box) return;
+        const r = await supabaseClient.from("product_sizes").select("label").eq("product_id", p.id).eq("active", true).order("sort_order");
+        const list = r.data || [];
+        box.innerHTML = list.length
+          ? list.map(function (x) { return '<button class="dm-chip" type="button" data-size="' + esc(x.label) + '">' + esc(x.label) + '</button>'; }).join("")
+          : '<span style="color:var(--muted);font-size:14px">এই পণ্যের সাইজ এখনো যোগ করা হয়নি। নিজের মাপ দিন।</span>';
+      }
+
+      function sizeOk() {
+        if (!cur || !cur.size_enabled) return true;
+        const m = document.getElementById("dmMsg");
+        if (chosen || (customMode && customText.trim())) { if (m) m.textContent = ""; return true; }
+        if (m) m.textContent = "অর্ডার করার আগে সাইজ নির্বাচন করুন।";
+        return false;
       }
 
       function gallery(p) {
@@ -1455,6 +1520,7 @@
               '<div class="dm-price">' + money(unitOf(p)) +
                 (disc > 0 ? '<s>' + money(p.price) + '</s><span class="dm-off">-' + disc + '%</span>' : '') + '</div>' +
               
+              (p.size_enabled ? '<div class="dm-size"><div class="dm-size-title">সাইজ নির্বাচন করুন *</div><div class="dm-chips" id="dmChips"></div><div class="dm-chips" style="margin-top:8px"><button class="dm-chip" type="button" id="dmCustomBtn">নিজের মাপ দিন</button><button class="dm-chip" type="button" id="dmChartBtn">📏 সাইজ চার্ট</button></div><input id="dmCustom" placeholder="আপনার মাপ লিখুন (যেমন কোমর 34, পায়ের দৈর্ঘ্য 26 সেমি)" style="display:none;margin-top:8px"><div class="dm-chart" id="dmChart" hidden></div><div class="dm-msg" id="dmMsg"></div></div>' : '') +
               (p.sku ? '<div class="dm-meta">SKU: ' + esc(p.sku) + '</div>' : '') +
               '<div class="qty" style="margin-top:12px"><button type="button" data-q="-1">−</button><span id="dmQty">' + qty + '</span><button type="button" data-q="1">+</button></div>' +
               '<div class="dm-btns">' +
@@ -1518,7 +1584,9 @@
         if (res.error || !res.data) return;
         cur = res.data;
         qty = 1;
+        chosen = ""; customMode = false; customText = "";
         paint(cur);
+        if (cur.size_enabled) renderSizeBox(cur);
         modal.hidden = false;
         document.body.style.overflow = "hidden";
         modal.scrollTop = 0;
@@ -1557,6 +1625,30 @@
           document.getElementById("dmRevs").hidden = t !== "rev";
           return;
         }
+        const sz = e.target.closest("[data-size]");
+        if (sz) {
+          chosen = sz.dataset.size; customMode = false;
+          body.querySelectorAll("[data-size]").forEach(function (b) { b.classList.toggle("on", b.dataset.size === chosen); });
+          document.getElementById("dmCustomBtn").classList.remove("on");
+          document.getElementById("dmCustom").style.display = "none";
+          document.getElementById("dmMsg").textContent = "";
+          return;
+        }
+        if (e.target.closest("#dmCustomBtn")) {
+          customMode = !customMode;
+          if (customMode) chosen = "";
+          body.querySelectorAll("[data-size]").forEach(function (b) { b.classList.remove("on"); });
+          document.getElementById("dmCustom").style.display = customMode ? "block" : "none";
+          document.getElementById("dmCustomBtn").classList.toggle("on", customMode);
+          document.getElementById("dmMsg").textContent = "";
+          return;
+        }
+        if (e.target.closest("#dmChartBtn")) {
+          const ch = document.getElementById("dmChart");
+          ch.hidden = !ch.hidden;
+          ch.textContent = chartText(cur && cur.size_type);
+          return;
+        }
         const q = e.target.closest("[data-q]");
         if (q && cur) {
           const max = 50;
@@ -1570,14 +1662,16 @@
           return;
         }
         if (e.target.closest("#dmAdd") && cur) {
-          window.addToCart(cur.id, qty);
+          if (!sizeOk()) return;
+          window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
           const b = document.getElementById("dmAdd");
           b.textContent = "✓ কার্টে যোগ হয়েছে";
           setTimeout(function () { b.textContent = "🛒 কার্টে যোগ করুন"; }, 1500);
           return;
         }
         if (e.target.closest("#dmBuy") && cur) {
-          window.addToCart(cur.id, qty);
+          if (!sizeOk()) return;
+          window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
           close();
           location.hash = "#order";
           return;
@@ -1593,6 +1687,8 @@
       });
 
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+      modal.addEventListener("input", function (e) { if (e.target && e.target.id === "dmCustom") customText = e.target.value; });
+      window.openProductDetail = openDetail;
     })();
   </script>
 </body>
