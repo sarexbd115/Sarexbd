@@ -150,6 +150,8 @@
     .brand-points { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
     .brand-points li { border: 1px solid var(--field-line); border-radius: 99px; padding: 6px 14px; font-size: 13px; color: #ddd; background: #0f0f0f; }
 
+    button.cat { font: inherit; color: inherit; cursor: pointer; width: 100%; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -305,14 +307,7 @@
         <h2 data-cms="cat_title" data-en="Shop by Category">Shop by Category</h2>
         <p data-cms="cat_sub" data-en="Shop by category">ক্যাটাগরি অনুযায়ী কিনুন</p>
       </div>
-      <div class="cats">
-        <a class="cat" data-cat="all" href="#shop"><span class="ic" data-cms="cat1_icon">▦</span><b data-cms="cat1_title">All Products</b><small data-cms="cat1_sub">(সব পণ্য)</small></a>
-        <a class="cat" data-cat="wallet" href="#shop"><span class="ic" data-cms="cat2_icon">👛</span><b data-cms="cat2_title">Wallets</b><small data-cms="cat2_sub">(ওয়ালেট)</small></a>
-        <a class="cat" data-cat="belt" href="#shop"><span class="ic" data-cms="cat3_icon">⌾</span><b data-cms="cat3_title">Belts</b><small data-cms="cat3_sub">(বেল্ট)</small></a>
-        <a class="cat" data-cat="bag" href="#shop"><span class="ic" data-cms="cat4_icon">💼</span><b data-cms="cat4_title">Bags</b><small data-cms="cat4_sub">(ব্যাগ)</small></a>
-        <a class="cat" data-cat="jacket" href="#shop"><span class="ic" data-cms="cat5_icon">🧥</span><b data-cms="cat5_title">Jackets</b><small data-cms="cat5_sub">(জ্যাকেট)</small></a>
-        <a class="cat" data-cat="combo" href="#shop"><span class="ic" data-cms="cat6_icon">🎁</span><b data-cms="cat6_title">Combo Set</b><small data-cms="cat6_sub">(কম্বো সেট)</small></a>
-      </div>
+      <div class="cats" id="catTiles"></div>
     </section>
 
     <!-- SHOP (app.js এখানে পণ্য ও ক্যাটাগরি ফিল্টার বসায়) -->
@@ -1309,6 +1304,38 @@
           a.remove();
         }
       });
+
+      async function renderCatTiles() {
+        const box = document.getElementById("catTiles");
+        if (!box || typeof supabaseClient === "undefined" || !supabaseClient) return;
+        const r = await supabaseClient.from("products").select("category").eq("active", true);
+        const names = Array.from(new Set((r.data || []).map(function (x) { return String(x.category || "").trim(); })
+          .filter(Boolean))).sort();
+        const iconOf = function (n) {
+          const s = n.toLowerCase();
+          const map = [["wallet", "👛"], ["belt", "⌾"], ["backpack", "🎒"], ["bag", "💼"], ["jacket", "🧥"],
+                       ["combo", "🎁"], ["shoe", "👟"], ["card", "💳"], ["key", "🔑"]];
+          const f = map.find(function (m) { return s.includes(m[0]); });
+          return f ? f[1] : "🏷️";
+        };
+        box.innerHTML = '<button class="cat" type="button" data-name=""><span class="ic">▦</span><b>সব পণ্য</b><small>All Products</small></button>' +
+          names.map(function (n) {
+            return '<button class="cat" type="button" data-name="' + esc(n) + '"><span class="ic">' + iconOf(n) + '</span><b>' + esc(n) + '</b></button>';
+          }).join("");
+        box.addEventListener("click", function (e) {
+          const b = e.target.closest(".cat");
+          if (!b) return;
+          const name = b.dataset.name || "";
+          location.hash = "#shop";
+          setTimeout(function () {
+            const chips = Array.from(document.querySelectorAll("#categoryBar button"));
+            const chip = !name ? chips[0]
+              : chips.find(function (x) { return x.textContent.trim().toLowerCase() === name.toLowerCase(); });
+            if (chip) chip.click();
+          }, 150);
+        });
+      }
+      renderCatTiles();
 
       route();
     })();
