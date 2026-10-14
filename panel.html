@@ -216,6 +216,18 @@ summary{list-style:none}
      <div><label for="pfPrice">দাম (৳) *</label><input id="pfPrice" type="number" min="0" step="0.01" required></div>
      <div><label for="pfStock">স্টক *</label><input id="pfStock" type="number" min="0" step="1" required></div>
     </div>
+    <label class="check"><input id="pfSizeOn" type="checkbox" style="width:auto"> এই পণ্যে সাইজ নির্বাচন লাগবে</label>
+    <label for="pfSizeType">সাইজের ধরন</label>
+    <select id="pfSizeType">
+      <option value="none">কোনো সাইজ নেই</option>
+      <option value="belt">বেল্ট (ইঞ্চি)</option>
+      <option value="shoe">জুতা (নম্বর)</option>
+      <option value="apparel">জ্যাকেট / পোশাক (S–XXL)</option>
+      <option value="custom">নিজের সাইজ তালিকা</option>
+    </select>
+    <div class="btnrow"><button class="btn dark" type="button" data-act="sizePreset">ধরন অনুযায়ী সাইজ বসান</button></div>
+    <div id="pfSizeList"></div>
+    <div class="btnrow"><button class="btn dark" type="button" data-act="sizeAdd">＋ সাইজ যোগ</button></div>
     <label for="pfSku">কোড / SKU (ঐচ্ছিক)</label>
     <input id="pfSku" maxlength="40" placeholder="যেমন: LWG2-Green">
     <label for="pfHighlights">মূল বৈশিষ্ট্য (প্রতি লাইনে একটি)</label>
@@ -599,6 +611,37 @@ function renderProducts(){
 }
 $("prodSearch").addEventListener("input",e=>{prodState.q=e.target.value;renderProducts()});
 
+let sizeRows=[];
+document.addEventListener("input",function(e){
+ const i=e.target&&e.target.dataset?e.target.dataset.i:undefined;
+ if(i!==undefined&&e.target.closest&&e.target.closest("#pfSizeList")){sizeRows[Number(i)].label=e.target.value}
+});
+const SIZE_PRESETS={
+ belt:["30 inch","32 inch","34 inch","36 inch","38 inch","40 inch"],
+ shoe:["39","40","41","42","43","44"],
+ apparel:["S","M","L","XL","XXL"]
+};
+function renderSizeRows(){
+ $("pfSizeList").innerHTML=sizeRows.length?sizeRows.map(function(r,i){
+  return '<div class="btnrow" style="align-items:center"><input data-i="'+i+'" value="'+esc(r.label)+'" placeholder="সাইজ লিখুন" style="flex:1"><button class="btn danger" type="button" data-act="sizeDel" data-id="'+i+'">মুছুন</button></div>';
+ }).join(""):'<p class="sub">এই পণ্যে এখনো কোনো সাইজ নেই।</p>';
+}
+async function loadSizeRows(pid){
+ const r=await db.from("product_sizes").select("label,sort_order").eq("product_id",pid).order("sort_order");
+ if(r.error||!r.data)return;
+ sizeRows=r.data.map(function(x){return {label:x.label}});
+ renderSizeRows();
+}
+async function saveSizeRows(pid){
+ if(!pid)return;
+ const uniq=[...new Set(sizeRows.map(function(r){return String(r.label||"").trim()}).filter(Boolean))];
+ const del=await db.from("product_sizes").delete().eq("product_id",pid);
+ if(del.error)throw del.error;
+ if(uniq.length){
+  const ins=await db.from("product_sizes").insert(uniq.map(function(l,i){return {product_id:pid,label:l,sort_order:i+1}}));
+  if(ins.error)throw ins.error;
+ }
+}
 let galleryList=[];
 function parseSpecs(text){
  const out=[];
@@ -628,6 +671,11 @@ function renderProductForm(arg){
  $("pfStock").value=p?p.stock:"";
  $("pfDiscount").value=p?(p.discount_percent||0):0;
  $("pfBadge").value=p?.badge||"";
+ $("pfSizeOn").checked=!!(p&&p.size_enabled);
+ $("pfSizeType").value=(p&&p.size_type)||"none";
+ sizeRows=[];
+ renderSizeRows();
+ if(p)loadSizeRows(p.id);
  $("pfSku").value=p?.sku||"";
  $("pfHighlights").value=p?.highlights||"";
  $("pfDesc").value=p?.description||"";
@@ -686,6 +734,8 @@ $("productForm").addEventListener("submit",async e=>{
    category:$("pfCategory").value.trim(),
    active:$("pfActive").checked,
    badge:$("pfBadge").value,
+   size_enabled:$("pfSizeOn").checked,
+   size_type:$("pfSizeType").value,
    sku:$("pfSku").value.trim(),
    highlights:$("pfHighlights").value.trim(),
    specs:parseSpecs($("pfSpecs").value),
@@ -695,8 +745,9 @@ $("productForm").addEventListener("submit",async e=>{
   if(!Number.isFinite(product.price)||product.price<0)throw Error("দাম সঠিক নয়।");
   if(!Number.isInteger(product.stock)||product.stock<0)throw Error("স্টক অবশ্যই ০ বা তার বেশি পূর্ণ সংখ্যা হতে হবে।");
   if(product.discount_percent<0||product.discount_percent>=100)throw Error("ছাড় ০ থেকে ৯৯ এর মধ্যে হতে হবে।");
-  const result=id?await db.from("products").update(product).eq("id",id):await db.from("products").insert(product);
+  const result=id?await db.from("products").update(product).eq("id",id):await db.from("products").insert(product).select("id");
   if(result.error)throw result.error;
+  await saveSizeRows(id||(result.data&&result.data[0]&&result.data[0].id));
   if(file&&old?.image_url&&old.image_url!==imageUrl)await removeImage(old.image_url);
   newPath=null;
   await loadProducts();
@@ -764,7 +815,7 @@ function receiptHTML(o,items){
  const subtotal=Number(o.subtotal)||0, disc=Number(o.discount)||0, pdisc=Number(o.product_discount)||0;
  const delivery=Number(o.delivery_charge)||0, total=Number(o.total)||0;
  const list=(items&&items.length)?items:[{product_name:o.product,quantity:o.quantity||1,line_total:subtotal}];
- const rows=list.map(x=>`<tr><td style="padding:10px;border-bottom:1px solid #2a2a2e">${esc(x.product_name)}</td><td style="padding:10px;text-align:center;border-bottom:1px solid #2a2a2e">${esc(x.quantity)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #2a2a2e">${money(x.line_total)}</td></tr>`).join("");
+ const rows=list.map(x=>`<tr><td style="padding:10px;border-bottom:1px solid #2a2a2e">${esc(x.product_name)}${x.size?" <span style=\"color:#f3d77a\">(সাইজ: "+esc(x.size)+")</span>":""}${x.custom_size?" <span style=\"color:#f3d77a\">(কাস্টম: "+esc(x.custom_size)+")</span>":""}</td><td style="padding:10px;text-align:center;border-bottom:1px solid #2a2a2e">${esc(x.quantity)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #2a2a2e">${money(x.line_total)}</td></tr>`).join("");
  const line=(a,b)=>`<div style="display:flex;justify-content:space-between;gap:12px"><span>${a}</span><span>${b}</span></div>`;
  return `<div style="width:700px;background:#0b0b0d;color:#f4f4f5;font-family:'Hind Siliguri',Arial,sans-serif;padding:36px;border:2px solid #d4af37;border-radius:18px;box-sizing:border-box">
   <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #d4af37;padding-bottom:16px">
@@ -794,7 +845,7 @@ function receiptHTML(o,items){
  </div>`;
 }
 async function fetchReceiptItems(id){
- const r=await db.from("order_items").select("product_name,quantity,line_total").eq("order_id",id);
+ const r=await db.from("order_items").select("product_name,quantity,line_total,size,custom_size").eq("order_id",id);
  return r.error?[]:(r.data||[]);
 }
 async function makeReceiptEl(id){
@@ -851,7 +902,7 @@ function addReceiptCard(id){
 }
 async function loadOrderItems(id){
  const box=$("orderDetailBox");
- const {data,error}=await db.from("order_items").select("product_name,quantity,line_total").eq("order_id",id);
+ const {data,error}=await db.from("order_items").select("product_name,quantity,line_total,size,custom_size").eq("order_id",id);
  if(error||!data||!data.length)return;
  box.insertAdjacentHTML("beforeend",'<div class="card"><h3 style="margin-top:0">পণ্যের তালিকা</h3>'+
   data.map(x=>'<div class="kv"><span>'+esc(x.product_name)+' × '+x.quantity+'</span><b>'+money(x.line_total)+'</b></div>').join("")+'</div>');
@@ -1376,6 +1427,13 @@ const actions={
  randomCode:()=>{$("cpCode").value=randomCode()},
  saveSite:saveSite,
  galDel:id=>{galleryList.splice(Number(id),1);renderGallery()},
+ sizePreset:()=>{
+  const t=$("pfSizeType").value;
+  if(SIZE_PRESETS[t]){sizeRows=SIZE_PRESETS[t].map(function(l){return {label:l}});renderSizeRows();toast("সাইজ বসানো হয়েছে, প্রয়োজন হলে বদলান","ok")}
+  else toast("এই ধরনে নিজের সাইজ লিখুন","ok");
+ },
+ sizeAdd:()=>{sizeRows.push({label:""});renderSizeRows()},
+ sizeDel:i=>{sizeRows.splice(Number(i),1);renderSizeRows()},
  receipt:id=>downloadReceipt(id),
  receiptPrint:id=>printReceipt(id),
  resetSettings:async()=>{
