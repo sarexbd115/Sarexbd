@@ -1675,6 +1675,10 @@
           window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
           close();
           location.hash = "#order";
+          setTimeout(function () {
+            const o = document.getElementById("order");
+            if (o) o.scrollIntoView({ behavior: "smooth" });
+          }, 250);
           return;
         }
         const rel = e.target.closest("[data-open]");
