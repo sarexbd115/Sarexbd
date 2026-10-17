@@ -1551,7 +1551,7 @@
               (p.colors && p.colors.length ? '<div class="dm-size"><div class="dm-size-title">রং নির্বাচন করুন *</div><div class="dm-chips">' + p.colors.map(function (c) {
                 return '<button class="dm-chip" type="button" data-color="' + esc(c.name) + '"><span class="sw" style="background:' + esc(c.hex) + '"></span>' + esc(c.name) + '</button>';
               }).join("") + '</div><div class="dm-msg" id="dmColMsg"></div></div>' : '') +
-              (p.size_enabled ? '<div class="dm-size"><div class="dm-size-title">সাইজ নির্বাচন করুন *</div><div class="dm-chips" id="dmChips"></div><div class="dm-chips" style="margin-top:8px"><button class="dm-chip" type="button" id="dmCustomBtn">নিজের মাপ দিন</button><button class="dm-chip" type="button" id="dmChartBtn">📏 সাইজ চার্ট</button></div><input id="dmCustom" placeholder="আপনার মাপ লিখুন (যেমন কোমর 34, পায়ের দৈর্ঘ্য 26 সেমি)" style="display:none;margin-top:8px"><div class="dm-chart" id="dmChart" hidden></div><div class="dm-msg" id="dmMsg"></div></div>' : '') +
+              (p.size_enabled ? '<div class="dm-size"><div class="dm-size-title">সাইজ নির্বাচন করুন *</div><div class="dm-chips" id="dmChips"></div><div class="dm-chips" style="margin-top:8px"><button class="dm-chip" type="button" id="dmCustomBtn">নিজের মাপ দিন</button>' + (p.show_size_chart === false ? '' : '<button class="dm-chip" type="button" id="dmChartBtn">📏 সাইজ চার্ট</button>') + '</div><input id="dmCustom" placeholder="আপনার মাপ লিখুন (যেমন কোমর 34, পায়ের দৈর্ঘ্য 26 সেমি)" style="display:none;margin-top:8px"><div class="dm-chart" id="dmChart" hidden></div><div class="dm-msg" id="dmMsg"></div></div>' : '') +
               (p.sku ? '<div class="dm-meta">SKU: ' + esc(p.sku) + '</div>' : '') +
               '<div class="qty" style="margin-top:12px"><button type="button" data-q="-1">−</button><span id="dmQty">' + qty + '</span><button type="button" data-q="1">+</button></div>' +
               '<div class="dm-btns">' +
@@ -1621,6 +1621,8 @@
         cur.colors = cr.data || [];
         const fr = await supabaseClient.from("product_faqs").select("question,answer").eq("product_id", id).order("sort_order");
         cur.faqs = fr.data || [];
+        const po = await supabaseClient.from("product_options").select("show_size_chart").eq("product_id", id).maybeSingle();
+        cur.show_size_chart = po.data ? po.data.show_size_chart : true;
         qty = 1;
         chosen = ""; customMode = false; customText = ""; chosenColor = "";
         paint(cur);
