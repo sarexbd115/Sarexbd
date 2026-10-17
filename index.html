@@ -1586,6 +1586,8 @@
         const res = await supabaseClient.from("products").select("*").eq("id", id).single();
         if (res.error || !res.data) return;
         cur = res.data;
+        const di = await supabaseClient.from("product_info").select("delivery_time").eq("product_id", id).maybeSingle();
+        if (di.data) cur.delivery_time = di.data.delivery_time;
         qty = 1;
         chosen = ""; customMode = false; customText = "";
         paint(cur);
