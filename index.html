@@ -205,6 +205,11 @@
     .dm-msg { color: #ff8a80; font-size: 14px; margin-top: 6px; min-height: 18px; }
     .dm-chart { margin-top: 8px; background: #161616; border: 1px solid var(--field-line); border-radius: 10px; padding: 12px; font-size: 13px; color: #ddd; white-space: pre-line; line-height: 1.7; }
 
+    .dm-h { color: var(--gold); font-size: 17px; margin: 22px 0 8px; }
+    .dm-deliv { display: inline-block; border: 1px solid var(--red); color: #ff8a80; border-radius: 8px; padding: 8px 12px; margin: 10px 0; font-size: 14px; }
+    .dm-btns { position: sticky; bottom: 0; background: #121212; padding: 10px 0; z-index: 2; }
+    .dm-pane { white-space: pre-line; }
+
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
     .wish-btn.on { color: var(--red); border-color: var(--red); }
@@ -1527,7 +1532,6 @@
                 '<button class="btn dark" type="button" id="dmAdd"' + '' + '>🛒 কার্টে যোগ করুন</button>' +
                 '<button class="btn" type="button" id="dmBuy"' + '' + '>এখনই কিনুন →</button>' +
               '</div>' +
-              (hl.length ? '<ul class="dm-hl">' + hl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') +
               '<div class="pm-perks" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;font-size:12px;color:#ccc">' +
                 '<div><span style="display:block;font-size:20px">🚚</span>ফ্রি ডেলিভারি</div>' +
                 '<div><span style="display:block;font-size:20px">💵</span>ক্যাশ অন ডেলিভারি</div>' +
@@ -1535,16 +1539,15 @@
               '</div>' +
             '</div>' +
           '</div>' +
-          '<div class="dm-tabs">' +
-            '<button type="button" class="on" data-tab="desc">বিবরণ</button>' +
-            '<button type="button" data-tab="spec">বৈশিষ্ট্য</button>' +
-            '<button type="button" data-tab="rev">রিভিউ</button>' +
-          '</div>' +
+          (p.delivery_time ? '<div class="dm-deliv">🚚 ডেলিভারি সময়: <b>' + esc(p.delivery_time) + '</b></div>' : '') +
+          '<h4 class="dm-h">বিবরণ</h4>' +
           '<div class="dm-pane" id="dmPane">' + esc(p.description || "এই পণ্যের বিবরণ শীঘ্রই যোগ হবে।") + '</div>' +
-          '<div id="dmSpecs" hidden>' + (specs.length ? '<div class="pm-specs">' + specs.map(function (s) {
+          (hl.length ? '<h4 class="dm-h">মূল বৈশিষ্ট্য</h4><ul class="dm-hl">' + hl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '') +
+          '<h4 class="dm-h">বৈশিষ্ট্য</h4><div id="dmSpecs">' + (specs.length ? '<div class="pm-specs">' + specs.map(function (s) {
             return '<div><span>' + esc(s.k) + '</span><b>' + esc(s.v) + '</b></div>';
           }).join("") + '</div>' : '<div class="dm-pane">কোনো বৈশিষ্ট্য যোগ করা হয়নি।</div>') + '</div>' +
-          '<div id="dmRevs" hidden><div class="dm-pane">লোড হচ্ছে...</div></div>' +
+          '<h4 class="dm-h">রিভিউ</h4>' +
+          '<div id="dmRevs"><div class="dm-pane">লোড হচ্ছে...</div></div>' +
           '<div class="dm-policy" id="dmPolicy">লোড হচ্ছে...</div>' +
           '<h3 style="margin:22px 0 6px;color:var(--gold)">আরও পণ্য</h3>' +
           '<div class="dm-related" id="dmRelated"></div>';
