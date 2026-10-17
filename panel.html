@@ -225,6 +225,7 @@ summary{list-style:none}
       <option value="apparel">জ্যাকেট / পোশাক (S–XXL)</option>
       <option value="custom">নিজের সাইজ তালিকা</option>
     </select>
+    <label class="check"><input id="pfSizeChart" type="checkbox" checked style="width:auto"> ওয়েবসাইটে সাইজ চার্ট দেখাবে</label>
     <div class="btnrow"><button class="btn dark" type="button" data-act="sizePreset">ধরন অনুযায়ী সাইজ বসান</button></div>
     <div id="pfSizeList"></div>
     <div class="btnrow"><button class="btn dark" type="button" data-act="sizeAdd">＋ সাইজ যোগ</button></div>
@@ -731,6 +732,8 @@ function renderProductForm(arg){
  if(p)loadSizeRows(p.id);
  colorRows=[];faqRows=[];renderColorRows();renderFaqRows();
  if(p)loadColorFaq(p.id);
+ $("pfSizeChart").checked=true;
+ if(p)db.from("product_options").select("show_size_chart").eq("product_id",p.id).maybeSingle().then(function(r){if(r.data)$("pfSizeChart").checked=r.data.show_size_chart});
  $("pfSku").value=p?.sku||"";
  $("pfDeliveryTime").value="";
  if(p)db.from("product_info").select("delivery_time").eq("product_id",p.id).maybeSingle().then(function(r){if(r.data)$("pfDeliveryTime").value=r.data.delivery_time||""});
@@ -807,6 +810,10 @@ $("productForm").addEventListener("submit",async e=>{
   const pidInfo=id||(result.data&&result.data[0]&&result.data[0].id);
   await saveSizeRows(pidInfo);
   await saveColorFaq(pidInfo);
+  if(pidInfo){
+   const po=await db.from("product_options").upsert([{product_id:pidInfo,show_size_chart:$("pfSizeChart").checked}],{onConflict:"product_id"});
+   if(po.error)throw po.error;
+  }
   if(pidInfo){
    const di=await db.from("product_info").upsert([{product_id:pidInfo,delivery_time:$("pfDeliveryTime").value.trim()}],{onConflict:"product_id"});
    if(di.error)throw di.error;
