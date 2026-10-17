@@ -682,7 +682,8 @@ function renderProductForm(arg){
  renderSizeRows();
  if(p)loadSizeRows(p.id);
  $("pfSku").value=p?.sku||"";
- $("pfDeliveryTime").value=p?.delivery_time||"";
+ $("pfDeliveryTime").value="";
+ if(p)db.from("product_info").select("delivery_time").eq("product_id",p.id).maybeSingle().then(function(r){if(r.data)$("pfDeliveryTime").value=r.data.delivery_time||""});
  $("pfHighlights").value=p?.highlights||"";
  $("pfDesc").value=p?.description||"";
  $("pfActive").checked=p?!!p.active:true;
@@ -742,7 +743,6 @@ $("productForm").addEventListener("submit",async e=>{
    badge:$("pfBadge").value,
    size_enabled:$("pfSizeOn").checked || $("pfSizeType").value!=="none",
    size_type:$("pfSizeType").value,
-   delivery_time:$("pfDeliveryTime").value.trim(),
    sku:$("pfSku").value.trim(),
    highlights:$("pfHighlights").value.trim(),
    specs:parseSpecs($("pfSpecs").value),
@@ -754,7 +754,12 @@ $("productForm").addEventListener("submit",async e=>{
   if(product.discount_percent<0||product.discount_percent>=100)throw Error("ছাড় ০ থেকে ৯৯ এর মধ্যে হতে হবে।");
   const result=id?await db.from("products").update(product).eq("id",id):await db.from("products").insert(product).select("id");
   if(result.error)throw result.error;
-  await saveSizeRows(id||(result.data&&result.data[0]&&result.data[0].id));
+  const pidInfo=id||(result.data&&result.data[0]&&result.data[0].id);
+  await saveSizeRows(pidInfo);
+  if(pidInfo){
+   const di=await db.from("product_info").upsert([{product_id:pidInfo,delivery_time:$("pfDeliveryTime").value.trim()}],{onConflict:"product_id"});
+   if(di.error)throw di.error;
+  }
   if(file&&old?.image_url&&old.image_url!==imageUrl)await removeImage(old.image_url);
   newPath=null;
   await loadProducts();
