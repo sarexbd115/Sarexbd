@@ -228,6 +228,8 @@ summary{list-style:none}
     <div class="btnrow"><button class="btn dark" type="button" data-act="sizePreset">ধরন অনুযায়ী সাইজ বসান</button></div>
     <div id="pfSizeList"></div>
     <div class="btnrow"><button class="btn dark" type="button" data-act="sizeAdd">＋ সাইজ যোগ</button></div>
+    <label for="pfDeliveryTime">ডেলিভারি সময় (যেমন 2 to 3 Days, ঐচ্ছিক)</label>
+    <input id="pfDeliveryTime" maxlength="60" placeholder="2 to 3 Days">
     <label for="pfSku">কোড / SKU (ঐচ্ছিক)</label>
     <input id="pfSku" maxlength="40" placeholder="যেমন: LWG2-Green">
     <label for="pfHighlights">মূল বৈশিষ্ট্য (প্রতি লাইনে একটি)</label>
@@ -680,6 +682,7 @@ function renderProductForm(arg){
  renderSizeRows();
  if(p)loadSizeRows(p.id);
  $("pfSku").value=p?.sku||"";
+ $("pfDeliveryTime").value=p?.delivery_time||"";
  $("pfHighlights").value=p?.highlights||"";
  $("pfDesc").value=p?.description||"";
  $("pfActive").checked=p?!!p.active:true;
@@ -739,6 +742,7 @@ $("productForm").addEventListener("submit",async e=>{
    badge:$("pfBadge").value,
    size_enabled:$("pfSizeOn").checked || $("pfSizeType").value!=="none",
    size_type:$("pfSizeType").value,
+   delivery_time:$("pfDeliveryTime").value.trim(),
    sku:$("pfSku").value.trim(),
    highlights:$("pfHighlights").value.trim(),
    specs:parseSpecs($("pfSpecs").value),
