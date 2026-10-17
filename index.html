@@ -205,10 +205,23 @@
     .dm-msg { color: #ff8a80; font-size: 14px; margin-top: 6px; min-height: 18px; }
     .dm-chart { margin-top: 8px; background: #161616; border: 1px solid var(--field-line); border-radius: 10px; padding: 12px; font-size: 13px; color: #ddd; white-space: pre-line; line-height: 1.7; }
 
-    .dm-h { color: var(--gold); font-size: 17px; margin: 22px 0 8px; }
+    .dm-h { color: var(--gold); font-size: 17px; margin: 22px 0 8px; letter-spacing: 1px; }
+    .dm-main { cursor: zoom-in; border: 1px solid var(--field-line); }
+    .dm-stock { display: inline-block; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 99px; margin: 6px 0; }
+    .dm-stock.ok { background: #12301f; color: #6ee0a0; border: 1px solid #1f6a40; }
+    .dm-stock.no { background: #3a1717; color: #ffb4b4; border: 1px solid #6b2a2a; }
+    .dm-price { font-size: 30px; }
+    .lb { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: 700; display: flex; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
+    .lb img { max-width: 100%; max-height: 90vh; border-radius: 12px; border: 1px solid var(--gold); }
+    .lb-x { position: absolute; top: 14px; right: 14px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--gold); background: #111; color: var(--gold); font-size: 24px; cursor: pointer; }
     .dm-deliv { display: inline-block; border: 1px solid var(--red); color: #ff8a80; border-radius: 8px; padding: 8px 12px; margin: 10px 0; font-size: 14px; }
     .dm-btns { position: sticky; bottom: 0; background: #121212; padding: 10px 0; z-index: 2; }
     .dm-pane { white-space: pre-line; }
+
+    .sw { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; border: 1px solid #666; }
+    .dm-faq { border: 1px solid var(--field-line); border-radius: 10px; padding: 10px 14px; margin: 8px 0; background: #141414; }
+    .dm-faq summary { cursor: pointer; color: #fff; font-weight: 600; }
+    .dm-faq-a { margin-top: 8px; color: #ccc; white-space: pre-line; line-height: 1.7; }
 
     /* ---------- Wishlist ---------- */
     .wish-btn { position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
@@ -534,6 +547,9 @@
       </div>
     </div>
   </div>
+
+  <!-- পণ্যের বিস্তারিত (নতুন) -->
+  <div id="lightbox" class="lb" hidden><button class="lb-x" type="button" id="lbClose" aria-label="বন্ধ করুন">×</button><img id="lbImg" alt=""></div>
 
   <!-- পণ্যের বিস্তারিত (নতুন) -->
   <div id="detailModal" class="modal" hidden>
@@ -1465,7 +1481,7 @@
       const PH = '<span style="color:#7a6040;font-size:44px">👜</span>';
 
       let cur = null, qty = 1, policy = null;
-      let chosen = "", customMode = false, customText = "";
+      let chosen = "", customMode = false, customText = "", chosenColor = "";
 
       function close() { modal.hidden = true; document.body.style.overflow = ""; }
 
@@ -1493,7 +1509,13 @@
           : '<span style="color:var(--muted);font-size:14px">এই পণ্যের সাইজ এখনো যোগ করা হয়নি। নিজের মাপ দিন।</span>';
       }
 
+      function selOpt() { return [chosenColor, chosen].filter(Boolean).join(" / "); }
       function sizeOk() {
+        if (cur && cur.colors && cur.colors.length && !chosenColor) {
+          const cm = document.getElementById("dmColMsg");
+          if (cm) cm.textContent = "রং নির্বাচন করুন।";
+          return false;
+        }
         if (!cur || !cur.size_enabled) return true;
         const m = document.getElementById("dmMsg");
         if (chosen || (customMode && customText.trim())) { if (m) m.textContent = ""; return true; }
@@ -1524,13 +1546,17 @@
               '<div class="dm-name">' + esc(p.name) + '</div>' +
               '<div class="dm-price">' + money(unitOf(p)) +
                 (disc > 0 ? '<s>' + money(p.price) + '</s><span class="dm-off">-' + disc + '%</span>' : '') + '</div>' +
+              '<div class="dm-stock ' + (n > 0 ? 'ok' : 'no') + '">' + (n > 0 ? '✔ স্টক আছে' : 'স্টক শেষ') + '</div>' +
               
+              (p.colors && p.colors.length ? '<div class="dm-size"><div class="dm-size-title">রং নির্বাচন করুন *</div><div class="dm-chips">' + p.colors.map(function (c) {
+                return '<button class="dm-chip" type="button" data-color="' + esc(c.name) + '"><span class="sw" style="background:' + esc(c.hex) + '"></span>' + esc(c.name) + '</button>';
+              }).join("") + '</div><div class="dm-msg" id="dmColMsg"></div></div>' : '') +
               (p.size_enabled ? '<div class="dm-size"><div class="dm-size-title">সাইজ নির্বাচন করুন *</div><div class="dm-chips" id="dmChips"></div><div class="dm-chips" style="margin-top:8px"><button class="dm-chip" type="button" id="dmCustomBtn">নিজের মাপ দিন</button><button class="dm-chip" type="button" id="dmChartBtn">📏 সাইজ চার্ট</button></div><input id="dmCustom" placeholder="আপনার মাপ লিখুন (যেমন কোমর 34, পায়ের দৈর্ঘ্য 26 সেমি)" style="display:none;margin-top:8px"><div class="dm-chart" id="dmChart" hidden></div><div class="dm-msg" id="dmMsg"></div></div>' : '') +
               (p.sku ? '<div class="dm-meta">SKU: ' + esc(p.sku) + '</div>' : '') +
               '<div class="qty" style="margin-top:12px"><button type="button" data-q="-1">−</button><span id="dmQty">' + qty + '</span><button type="button" data-q="1">+</button></div>' +
               '<div class="dm-btns">' +
-                '<button class="btn dark" type="button" id="dmAdd"' + '' + '>🛒 কার্টে যোগ করুন</button>' +
-                '<button class="btn" type="button" id="dmBuy"' + '' + '>এখনই কিনুন →</button>' +
+                '<button class="btn dark" type="button" id="dmAdd"' + (n <= 0 ? ' disabled' : '') + '>🛒 কার্টে যোগ করুন</button>' +
+                '<button class="btn" type="button" id="dmBuy"' + (n <= 0 ? ' disabled' : '') + '>এখনই কিনুন →</button>' +
               '</div>' +
               '<div class="pm-perks" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;font-size:12px;color:#ccc">' +
                 '<div><span style="display:block;font-size:20px">🚚</span>ফ্রি ডেলিভারি</div>' +
@@ -1546,6 +1572,9 @@
           '<h4 class="dm-h">বৈশিষ্ট্য</h4><div id="dmSpecs">' + (specs.length ? '<div class="pm-specs">' + specs.map(function (s) {
             return '<div><span>' + esc(s.k) + '</span><b>' + esc(s.v) + '</b></div>';
           }).join("") + '</div>' : '<div class="dm-pane">কোনো বৈশিষ্ট্য যোগ করা হয়নি।</div>') + '</div>' +
+          (p.faqs && p.faqs.length ? '<h4 class="dm-h">প্রশ্নোত্তর</h4>' + p.faqs.map(function (f) {
+            return '<details class="dm-faq"><summary>' + esc(f.question) + '</summary><div class="dm-faq-a">' + esc(f.answer) + '</div></details>';
+          }).join("") : '') +
           '<h4 class="dm-h">রিভিউ</h4>' +
           '<div id="dmRevs"><div class="dm-pane">লোড হচ্ছে...</div></div>' +
           '<div class="dm-policy" id="dmPolicy">লোড হচ্ছে...</div>' +
@@ -1588,8 +1617,12 @@
         cur = res.data;
         const di = await supabaseClient.from("product_info").select("delivery_time").eq("product_id", id).maybeSingle();
         if (di.data) cur.delivery_time = di.data.delivery_time;
+        const cr = await supabaseClient.from("product_colors").select("name,hex").eq("product_id", id).order("sort_order");
+        cur.colors = cr.data || [];
+        const fr = await supabaseClient.from("product_faqs").select("question,answer").eq("product_id", id).order("sort_order");
+        cur.faqs = fr.data || [];
         qty = 1;
-        chosen = ""; customMode = false; customText = "";
+        chosen = ""; customMode = false; customText = ""; chosenColor = "";
         paint(cur);
         if (cur.size_enabled) renderSizeBox(cur);
         modal.hidden = false;
@@ -1620,6 +1653,12 @@
       }, true);
 
       modal.addEventListener("click", function (e) {
+        const mi = e.target.closest("#dmMain img");
+        if (mi) {
+          document.getElementById("lbImg").src = mi.src;
+          document.getElementById("lightbox").hidden = false;
+          return;
+        }
         if (e.target === modal || e.target.closest("[data-dclose]")) { close(); return; }
         const tab = e.target.closest("[data-tab]");
         if (tab) {
@@ -1631,6 +1670,14 @@
           return;
         }
         if (e.target.closest("#dmGoOrder")) { close(); location.hash = "#order"; return; }
+        const co = e.target.closest("[data-color]");
+        if (co) {
+          chosenColor = co.dataset.color;
+          body.querySelectorAll("[data-color]").forEach(function (b) { b.classList.toggle("on", b.dataset.color === chosenColor); });
+          const cm = document.getElementById("dmColMsg");
+          if (cm) cm.textContent = "";
+          return;
+        }
         const sz = e.target.closest("[data-size]");
         if (sz) {
           chosen = sz.dataset.size; customMode = false;
@@ -1669,7 +1716,7 @@
         }
         if (e.target.closest("#dmAdd") && cur) {
           if (!sizeOk()) return;
-          window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
+          window.addToCart(cur.id, qty, selOpt(), customMode ? customText.trim() : "");
           const b = document.getElementById("dmAdd");
           b.textContent = "✓ কার্টে যোগ হয়েছে";
           setTimeout(function () { b.textContent = "🛒 কার্টে যোগ করুন"; }, 1500);
@@ -1677,7 +1724,7 @@
         }
         if (e.target.closest("#dmBuy") && cur) {
           if (!sizeOk()) return;
-          window.addToCart(cur.id, qty, chosen, customMode ? customText.trim() : "");
+          window.addToCart(cur.id, qty, selOpt(), customMode ? customText.trim() : "");
           close();
           location.hash = "#order";
           setTimeout(function () {
@@ -1697,6 +1744,8 @@
       });
 
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+      const lb = document.getElementById("lightbox");
+      lb.addEventListener("click", function () { lb.hidden = true; });
       modal.addEventListener("input", function (e) { if (e.target && e.target.id === "dmCustom") customText = e.target.value; });
       window.openProductDetail = openDetail;
     })();
