@@ -228,6 +228,12 @@ summary{list-style:none}
     <div class="btnrow"><button class="btn dark" type="button" data-act="sizePreset">ধরন অনুযায়ী সাইজ বসান</button></div>
     <div id="pfSizeList"></div>
     <div class="btnrow"><button class="btn dark" type="button" data-act="sizeAdd">＋ সাইজ যোগ</button></div>
+    <label>রং (ঐচ্ছিক, যেমন Black, Brown)</label>
+    <div id="pfColorList"></div>
+    <div class="btnrow"><button class="btn dark" type="button" data-act="colorAdd">＋ রং যোগ</button></div>
+    <label>প্রশ্নোত্তর (FAQ, ঐচ্ছিক)</label>
+    <div id="pfFaqList"></div>
+    <div class="btnrow"><button class="btn dark" type="button" data-act="faqAdd">＋ প্রশ্ন যোগ</button></div>
     <label for="pfDeliveryTime">ডেলিভারি সময় (যেমন 2 to 3 Days, ঐচ্ছিক)</label>
     <input id="pfDeliveryTime" maxlength="60" placeholder="2 to 3 Days">
     <label for="pfSku">কোড / SKU (ঐচ্ছিক)</label>
@@ -647,6 +653,48 @@ async function saveSizeRows(pid){
   if(ins.error)throw ins.error;
  }
 }
+let colorRows=[],faqRows=[];
+function renderColorRows(){
+ $("pfColorList").innerHTML=colorRows.length?colorRows.map(function(r,i){
+  return '<div class="btnrow" style="align-items:center"><input data-cname="'+i+'" value="'+esc(r.name)+'" placeholder="রংয়ের নাম" style="flex:1"><input type="color" data-chex="'+i+'" value="'+(/^#[0-9a-f]{6}$/i.test(r.hex)?r.hex:"#000000")+'" style="width:60px;height:44px;padding:2px"><button class="btn danger" type="button" data-act="colorDel" data-id="'+i+'">মুছুন</button></div>';
+ }).join(""):'<p class="sub">এই পণ্যে কোনো রং যোগ করা হয়নি।</p>';
+}
+function renderFaqRows(){
+ $("pfFaqList").innerHTML=faqRows.length?faqRows.map(function(r,i){
+  return '<div class="card" style="margin:8px 0"><input data-fq="'+i+'" value="'+esc(r.q)+'" placeholder="প্রশ্ন" style="margin-bottom:6px"><textarea data-fa="'+i+'" placeholder="উত্তর" style="min-height:70px">'+esc(r.a)+'</textarea><div class="btnrow"><button class="btn danger" type="button" data-act="faqDel" data-id="'+i+'">মুছুন</button></div></div>';
+ }).join(""):'<p class="sub">এই পণ্যে কোনো প্রশ্নোত্তর নেই।</p>';
+}
+async function loadColorFaq(pid){
+ const c=await db.from("product_colors").select("name,hex").eq("product_id",pid).order("sort_order");
+ colorRows=(c.data||[]).map(function(x){return {name:x.name,hex:x.hex}});
+ renderColorRows();
+ const f=await db.from("product_faqs").select("question,answer").eq("product_id",pid).order("sort_order");
+ faqRows=(f.data||[]).map(function(x){return {q:x.question,a:x.answer}});
+ renderFaqRows();
+}
+async function saveColorFaq(pid){
+ if(!pid)return;
+ const dc=await db.from("product_colors").delete().eq("product_id",pid);
+ if(dc.error)throw dc.error;
+ const seen={};
+ const cols=colorRows.map(function(r){return {name:String(r.name||"").trim(),hex:r.hex||"#000000"}})
+   .filter(function(r){ if(!r.name||seen[r.name])return false; seen[r.name]=1; return true; })
+   .map(function(r,i){return {product_id:pid,name:r.name,hex:r.hex,sort_order:i+1}});
+ if(cols.length){const ic=await db.from("product_colors").insert(cols); if(ic.error)throw ic.error;}
+ const df=await db.from("product_faqs").delete().eq("product_id",pid);
+ if(df.error)throw df.error;
+ const fq=faqRows.map(function(r){return {q:String(r.q||"").trim(),a:String(r.a||"").trim()}})
+   .filter(function(r){return r.q})
+   .map(function(r,i){return {product_id:pid,question:r.q,answer:r.a,sort_order:i+1}});
+ if(fq.length){const iq=await db.from("product_faqs").insert(fq); if(iq.error)throw iq.error;}
+}
+document.addEventListener("input",function(e){
+ const t=e.target; if(!t||!t.dataset)return;
+ if(t.dataset.cname!==undefined&&colorRows[+t.dataset.cname])colorRows[+t.dataset.cname].name=t.value;
+ if(t.dataset.chex!==undefined&&colorRows[+t.dataset.chex])colorRows[+t.dataset.chex].hex=t.value;
+ if(t.dataset.fq!==undefined&&faqRows[+t.dataset.fq])faqRows[+t.dataset.fq].q=t.value;
+ if(t.dataset.fa!==undefined&&faqRows[+t.dataset.fa])faqRows[+t.dataset.fa].a=t.value;
+});
 let galleryList=[];
 function parseSpecs(text){
  const out=[];
@@ -681,6 +729,8 @@ function renderProductForm(arg){
  sizeRows=[];
  renderSizeRows();
  if(p)loadSizeRows(p.id);
+ colorRows=[];faqRows=[];renderColorRows();renderFaqRows();
+ if(p)loadColorFaq(p.id);
  $("pfSku").value=p?.sku||"";
  $("pfDeliveryTime").value="";
  if(p)db.from("product_info").select("delivery_time").eq("product_id",p.id).maybeSingle().then(function(r){if(r.data)$("pfDeliveryTime").value=r.data.delivery_time||""});
@@ -756,6 +806,7 @@ $("productForm").addEventListener("submit",async e=>{
   if(result.error)throw result.error;
   const pidInfo=id||(result.data&&result.data[0]&&result.data[0].id);
   await saveSizeRows(pidInfo);
+  await saveColorFaq(pidInfo);
   if(pidInfo){
    const di=await db.from("product_info").upsert([{product_id:pidInfo,delivery_time:$("pfDeliveryTime").value.trim()}],{onConflict:"product_id"});
    if(di.error)throw di.error;
@@ -1439,6 +1490,10 @@ const actions={
  randomCode:()=>{$("cpCode").value=randomCode()},
  saveSite:saveSite,
  galDel:id=>{galleryList.splice(Number(id),1);renderGallery()},
+ colorAdd:()=>{colorRows.push({name:"",hex:"#000000"});renderColorRows()},
+ colorDel:i=>{colorRows.splice(Number(i),1);renderColorRows()},
+ faqAdd:()=>{faqRows.push({q:"",a:""});renderFaqRows()},
+ faqDel:i=>{faqRows.splice(Number(i),1);renderFaqRows()},
  sizePreset:()=>{
   const t=$("pfSizeType").value;
   if(SIZE_PRESETS[t]){sizeRows=SIZE_PRESETS[t].map(function(l){return {label:l}});renderSizeRows();toast("সাইজ বসানো হয়েছে, প্রয়োজন হলে বদলান","ok")}
